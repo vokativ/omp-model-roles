@@ -4,6 +4,21 @@ This repo holds a **snapshot**, not a fixed answer. Subscriptions change, model 
 change, workload mix changes — re-derive the allocation instead of copying `model-roles.yml`
 blind once any of those have moved.
 
+## Staleness check (do this first, before importing or updating anything)
+
+`model-roles.yml` and `README.md` each carry a `Generated: YYYY-MM-DD · Snapshot version: N`
+line. Before importing this config on a machine, or before treating it as current:
+
+1. Compare that date to today. **Older than ~4-6 weeks → treat as stale.**
+2. Regardless of date, treat it as stale **immediately** if: any subscription/plan changed,
+   a provider was added or dropped, or the model catalog (`omp models`) looks meaningfully
+   different from what's referenced in `model-roles.yml`.
+3. If stale by either rule: **don't import as-is.** Tell me it looks stale and ask the
+   subscription checklist below before applying anything. If it's still current, say so and
+   proceed.
+4. Whenever you do re-derive and update the files, bump `Snapshot version` by 1 and set
+   `Generated` to today's date, in both `model-roles.yml` and `README.md`.
+
 ## One-shot prompt (paste into a fresh OMP session on any machine)
 
 ```

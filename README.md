@@ -1,5 +1,8 @@
 # OMP model-role setup — import instructions
 
+**Snapshot: 2026-08-14 · v1.** Stale after ~4-6 weeks, or immediately if any subscription
+changed — check `RESEARCH-PLAYBOOK.md`'s staleness check before importing this blind.
+
 `model-roles.yml` is a config **overlay**: only `modelRoles` and `retry.fallbackChains`.
 No API keys. Safe to copy anywhere, commit to a repo, or paste into an existing config.
 

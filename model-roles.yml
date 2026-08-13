@@ -1,6 +1,6 @@
 ## OMP model-role export — quota-aware allocation
-## Generated from `omp config get modelRoles/retry.fallbackChains` (omp 17.3.0), reallocated against
-## actual subscription capacity (see README.md for the full rationale/sources). No API keys/secrets.
+## Generated: 2026-08-14 · Snapshot version: 1
+## Stale? See RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
 ##
 ## Assumes these logins exist on the target machine:
 ##   - anthropic        (Claude Pro, $20/mo — the SCARCE pool, keep light)
