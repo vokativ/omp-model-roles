@@ -1,0 +1,45 @@
+## OMP model-role export — quota-aware allocation
+## Generated from `omp config get modelRoles/retry.fallbackChains` (omp 17.3.0), reallocated against
+## actual subscription capacity (see README.md for the full rationale/sources). No API keys/secrets.
+##
+## Assumes these logins exist on the target machine:
+##   - anthropic        (Claude Pro, $20/mo — the SCARCE pool, keep light)
+##   - openai-codex      (ChatGPT Pro, $100/mo, 5x quota — the ABUNDANT pool)
+##   - google-antigravity (free preview; also proxies Claude models at no cost to the Anthropic pool)
+##   - xai-oauth         (X Premium $8/mo bundled SuperGrok credits — small, weekly reset, use sparingly)
+##   - nvidia             (free NIM catalog — unmetered last-resort fallback)
+
+modelRoles:
+  default: anthropic/claude-sonnet-5
+  smol: openai-codex/gpt-5.6-luna
+  slow: openai-codex/gpt-5.6-sol
+  vision: google-antigravity/gemini-3.6-flash
+  plan: openai-codex/gpt-5.6-sol
+  commit: xai-oauth/grok-build
+  designer: google-antigravity/gemini-3.6-flash
+  task: openai-codex/gpt-5.6-terra
+  advisor: google-antigravity/claude-sonnet-4-6
+
+retry:
+  fallbackChains:
+    default:
+      - google-antigravity/claude-sonnet-4-6
+      - openai-codex/gpt-5.6-terra
+    smol:
+      - google-antigravity/gemini-3.1-flash-lite
+      - nvidia/deepseek-ai/deepseek-v4-flash
+    slow:
+      - anthropic/claude-opus-5
+      - xai-oauth/grok-4.6
+    plan:
+      - anthropic/claude-opus-5
+      - xai-oauth/grok-4.6
+    commit:
+      - openai-codex/gpt-5.6-luna
+    designer:
+      - anthropic/claude-sonnet-5
+    task:
+      - google-antigravity/gemini-3.1-flash-lite
+      - nvidia/deepseek-ai/deepseek-v4-flash
+    advisor:
+      - openai-codex/gpt-5.6-terra
