@@ -1,10 +1,11 @@
 # OMP model-role setup — import instructions
 
-**Snapshot: 2026-08-14 · v1.** Stale after ~4-6 weeks, or immediately if any subscription
+**Snapshot: 2026-08-14 · v3.** Stale after ~4-6 weeks, or immediately if any subscription
 changed — check `RESEARCH-PLAYBOOK.md`'s staleness check before importing this blind.
 
-`model-roles.yml` is a config **overlay**: only `modelRoles` and `retry.fallbackChains`.
-No API keys. Safe to copy anywhere, commit to a repo, or paste into an existing config.
+`model-roles.yml` is a config **overlay**: `modelRoles`, `retry.fallbackChains`, and
+`retry.usageAwareFallback`/`retry.usageReservePolicy`. No API keys. Safe to copy anywhere,
+commit to a repo, or paste into an existing config.
 
 Subscriptions or workload change? Don't hand-edit this file — see `RESEARCH-PLAYBOOK.md`
 in this repo for the methodology and the questions to re-run before updating it.
@@ -30,6 +31,9 @@ Consequences baked into this file:
 - `commit` (once per commit — genuinely low frequency) is the one place `xai-oauth/grok-build` is used as primary, so the X login gets real use without meaningfully risking its small weekly pool. `grok-4.6` also appears as the last-resort tail of the `slow`/`plan` fallback chains for the same reason — rarely triggered, so it can't drain the pool through routine use.
 - Every fallback chain uses a *different provider* than its primary, so a single provider outage/quota exhaustion doesn't take out both tiers at once.
 - Deliberately **not** using `claude-fable-5`/`claude-mythos-5` (Anthropic's largest models) anywhere — on the Pro plan those bill through separate credits, i.e. the "buy more" trap.
+- `vision`/`designer` upgraded to `gemini-3.7-flash` (GA Aug 13 2026, newest stable Flash tier); `gemini-3.6-flash` is still live but one generation behind.
+- `retry.usageAwareFallback: true` + `retry.usageReservePolicy: "auto"` — when the Anthropic 5-hour window is nearly exhausted, OMP proactively switches to the `default` fallback chain without waiting for a 429 and without prompting. Prevents the session from stopping cold on token exhaustion.
+- `smol`/`task` fallback chains upgraded from `gemini-3.1-flash-lite` to `gemini-3.5-flash-lite` — 3.5-Lite is specifically optimized for agentic sub-agent workflows (vs 3.1-Lite which targets bulk/classification workloads). Cost difference is nominal at API rates and irrelevant here since `google-antigravity` is a free proxy.
 
 If the target machine's subscriptions differ from the table above, don't paste this file blind —
 re-derive the allocation from whatever pools that machine actually has (`omp usage` after logging in).
@@ -47,17 +51,20 @@ the rationale table, since the allocation assumes Pro-tier Anthropic/OpenAI, not
 
 ### Option A — merge into the global config (affects every project on that machine)
 1. Open `~/.omp/agent/config.yml` (create it if missing).
-2. Copy in the `modelRoles:` and `retry:` blocks from `model-roles.yml`.
-   - If `modelRoles` or `retry.fallbackChains` already exist there, replace them
-     wholesale (these are YAML *records*, not appended — the whole map wins).
+2. Copy in the `modelRoles:` and `retry:` blocks from `model-roles.yml` (the whole `retry:` map,
+   including `fallbackChains`, `usageAwareFallback`, and `usageReservePolicy`).
+   - If `modelRoles` or `retry` already exist there, replace them wholesale.
    - Leave every other key in that file untouched.
 3. Restart any running `omp` session.
 
 Equivalent one-liners (no manual paste):
 ```bash
-omp config set modelRoles '{"default":"anthropic/claude-sonnet-5","smol":"openai-codex/gpt-5.6-luna","slow":"openai-codex/gpt-5.6-sol","vision":"google-antigravity/gemini-3.6-flash","plan":"openai-codex/gpt-5.6-sol","commit":"xai-oauth/grok-build","designer":"google-antigravity/gemini-3.6-flash","task":"openai-codex/gpt-5.6-terra","advisor":"google-antigravity/claude-sonnet-4-6"}'
+omp config set modelRoles '{"default":"anthropic/claude-sonnet-5","smol":"openai-codex/gpt-5.6-luna","slow":"openai-codex/gpt-5.6-sol","vision":"google-antigravity/gemini-3.7-flash","plan":"openai-codex/gpt-5.6-sol","commit":"xai-oauth/grok-build","designer":"google-antigravity/gemini-3.7-flash","task":"openai-codex/gpt-5.6-terra","advisor":"google-antigravity/claude-sonnet-4-6"}'
 
-omp config set retry.fallbackChains '{"default":["google-antigravity/claude-sonnet-4-6","openai-codex/gpt-5.6-terra"],"smol":["google-antigravity/gemini-3.1-flash-lite","nvidia/deepseek-ai/deepseek-v4-flash"],"slow":["anthropic/claude-opus-5","xai-oauth/grok-4.6"],"plan":["anthropic/claude-opus-5","xai-oauth/grok-4.6"],"commit":["openai-codex/gpt-5.6-luna"],"designer":["anthropic/claude-sonnet-5"],"task":["google-antigravity/gemini-3.1-flash-lite","nvidia/deepseek-ai/deepseek-v4-flash"],"advisor":["openai-codex/gpt-5.6-terra"]}'
+omp config set retry.fallbackChains '{"default":["google-antigravity/claude-sonnet-4-6","openai-codex/gpt-5.6-terra"],"smol":["google-antigravity/gemini-3.5-flash-lite","nvidia/deepseek-ai/deepseek-v4-flash"],"slow":["anthropic/claude-opus-5","xai-oauth/grok-4.6"],"plan":["anthropic/claude-opus-5","xai-oauth/grok-4.6"],"commit":["openai-codex/gpt-5.6-luna"],"designer":["anthropic/claude-sonnet-5"],"task":["google-antigravity/gemini-3.5-flash-lite","nvidia/deepseek-ai/deepseek-v4-flash"],"advisor":["openai-codex/gpt-5.6-terra"]}'
+
+omp config set retry.usageAwareFallback true
+omp config set retry.usageReservePolicy '"auto"'
 ```
 
 ### Option B — project-scoped (only affects repos you drop this into)
@@ -86,6 +93,8 @@ dotfiles repo propagates to every machine without any `omp config set`.
 ```bash
 omp config get modelRoles --json
 omp config get retry.fallbackChains --json
+omp config get retry.usageAwareFallback --json
+omp config get retry.usageReservePolicy --json
 omp usage   # confirm which pools are actually getting hit
 ```
 Then `/model` inside a session to confirm each role resolves to an available (authenticated)
