@@ -1,6 +1,6 @@
 # OMP model-role setup — import instructions
 
-**Snapshot: 2026-08-14 · v4.** Stale after ~4-6 weeks, or immediately if any subscription
+**Snapshot: 2026-08-15 · v5.** Stale after ~4-6 weeks, or immediately if any subscription
 changed — check `RESEARCH-PLAYBOOK.md`'s staleness check before importing this blind.
 
 `model-roles.yml` is a config **overlay**: `modelRoles`, `retry.fallbackChains`, and
@@ -34,7 +34,7 @@ Consequences baked into this file:
 - Deliberately **not** using `claude-fable-5`/`claude-mythos-5` (Anthropic's largest models) anywhere — on the Pro plan those bill through separate credits, i.e. the "buy more" trap.
 - `vision`/`designer` upgraded to `gemini-3.7-flash` (GA Aug 13 2026, newest stable Flash tier); `gemini-3.6-flash` is still live but one generation behind.
 - `retry.usageAwareFallback: true` + `retry.usageReservePolicy: "auto"` — when the Anthropic 5-hour window is nearly exhausted, OMP proactively switches to the `default` fallback chain without waiting for a 429 and without prompting. Prevents the session from stopping cold on token exhaustion.
-- `smol`/`task` fallback chains upgraded from `gemini-3.1-flash-lite` to `gemini-3.5-flash-lite` — 3.5-Lite is specifically optimized for agentic sub-agent workflows (vs 3.1-Lite which targets bulk/classification workloads). Cost difference is nominal at API rates and irrelevant here since `google-antigravity` is a free proxy.
+- `smol`/`task` fallback chains: `smol` routes to `gemini-3.1-flash-lite` (the fast, lightweight Flash-Lite tier for background/bulk classification tasks), while `task` routes to `gemini-3.7-flash` (Google's flagship agent model on the free Antigravity Google lane, ensuring high tool-calling and reasoning quality for delegated subagent execution). Both fall back to `nvidia/deepseek-ai/deepseek-v4-flash` as an unmetered last resort.
 - `tiny` remains unset: OMP delegates its low-impact background work to `@smol` (Luna). No separate tiny-model allocation is justified by the current workload or catalog evidence.
 
 If the target machine's subscriptions differ from the table above, don't paste this file blind —
@@ -63,7 +63,7 @@ Equivalent one-liners (no manual paste):
 ```bash
 omp config set modelRoles '{"default":"anthropic/claude-sonnet-5","smol":"openai-codex/gpt-5.6-luna","slow":"openai-codex/gpt-5.6-sol","vision":"google-antigravity/gemini-3.7-flash","plan":"openai-codex/gpt-5.6-sol","commit":"xai-oauth/grok-build","designer":"google-antigravity/gemini-3.7-flash","task":"openai-codex/gpt-5.6-terra","advisor":"google-antigravity/claude-sonnet-4-6"}'
 
-omp config set retry.fallbackChains '{"default":["google-antigravity/gemini-3.7-flash","openai-codex/gpt-5.6-terra","xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-pro"],"smol":["google-antigravity/gemini-3.5-flash-lite","nvidia/deepseek-ai/deepseek-v4-flash"],"slow":["xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-pro"],"vision":["openai-codex/gpt-5.6-terra","xai-oauth/grok-4.6"],"plan":["xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-pro"],"commit":["openai-codex/gpt-5.6-luna"],"designer":["openai-codex/gpt-5.6-terra","xai-oauth/grok-4.6"],"task":["google-antigravity/gemini-3.5-flash-lite","nvidia/deepseek-ai/deepseek-v4-flash"],"advisor":["openai-codex/gpt-5.6-terra"]}'
+omp config set retry.fallbackChains '{"default":["google-antigravity/gemini-3.7-flash","openai-codex/gpt-5.6-terra","xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-pro"],"smol":["google-antigravity/gemini-3.1-flash-lite","nvidia/deepseek-ai/deepseek-v4-flash"],"slow":["xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-pro"],"vision":["openai-codex/gpt-5.6-terra","xai-oauth/grok-4.6"],"plan":["xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-pro"],"commit":["openai-codex/gpt-5.6-luna"],"designer":["openai-codex/gpt-5.6-terra","xai-oauth/grok-4.6"],"task":["google-antigravity/gemini-3.7-flash","nvidia/deepseek-ai/deepseek-v4-flash"],"advisor":["openai-codex/gpt-5.6-terra"]}'
 
 omp config set retry.usageAwareFallback true
 omp config set retry.usageReservePolicy '"auto"'
