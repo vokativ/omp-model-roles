@@ -76,6 +76,6 @@ match what you applied, and commit + push.
 
 ## Files in this repo
 
-- `model-roles.yml` — the current applied `modelRoles` + `retry.fallbackChains` overlay (importable via `--config`, `PI_CONFIG_FILES`, or manual merge into `config.yml`).
+- `model-roles.yml` — the current applied `modelRoles` + `retry.fallbackChains` overlay (importable via `PI_CONFIG_FILES` or manual merge into `config.yml`).
 - `README.md` — import instructions plus the rationale/subscription table that justified the current values.
 - `RESEARCH-PLAYBOOK.md` — this file.

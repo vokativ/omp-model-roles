@@ -1,5 +1,5 @@
 ## OMP model-role export — quota-aware allocation
-## Generated: 2026-08-14 · Snapshot version: 3
+## Generated: 2026-08-14 · Snapshot version: 4
 ## Stale? See RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
 ##
 ## Assumes these logins exist on the target machine:
@@ -23,21 +23,27 @@ modelRoles:
 retry:
   fallbackChains:
     default:
-      - google-antigravity/claude-sonnet-4-6
+      - google-antigravity/gemini-3.7-flash
       - openai-codex/gpt-5.6-terra
+      - xai-oauth/grok-4.6
+      - nvidia/deepseek-ai/deepseek-v4-pro
     smol:
       - google-antigravity/gemini-3.5-flash-lite
       - nvidia/deepseek-ai/deepseek-v4-flash
     slow:
-      - anthropic/claude-opus-5
+      - xai-oauth/grok-4.6
+      - nvidia/deepseek-ai/deepseek-v4-pro
+    vision:
+      - openai-codex/gpt-5.6-terra
       - xai-oauth/grok-4.6
     plan:
-      - anthropic/claude-opus-5
       - xai-oauth/grok-4.6
+      - nvidia/deepseek-ai/deepseek-v4-pro
     commit:
       - openai-codex/gpt-5.6-luna
     designer:
-      - anthropic/claude-sonnet-5
+      - openai-codex/gpt-5.6-terra
+      - xai-oauth/grok-4.6
     task:
       - google-antigravity/gemini-3.5-flash-lite
       - nvidia/deepseek-ai/deepseek-v4-flash
