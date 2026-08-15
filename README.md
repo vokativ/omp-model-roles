@@ -1,6 +1,6 @@
 # OMP model-role setup — import instructions
 
-**Snapshot: 2026-08-15 · v5.** Stale after ~4-6 weeks, or immediately if any subscription
+**Snapshot: 2026-08-15 · v6.** Stale after ~4-6 weeks, or immediately if any subscription
 changed — check `RESEARCH-PLAYBOOK.md`'s staleness check before importing this blind.
 
 `model-roles.yml` is a config **overlay**: `modelRoles`, `retry.fallbackChains`, and
@@ -17,23 +17,28 @@ subscription capacity, confirmed via `omp usage` on the source machine:
 
 | Login | Plan | Capacity signal | Treat as |
 |---|---|---|---|
-| `anthropic` | Claude Pro, $20/mo | Smallest pool (rolling 5h/7d windows) | **scarce** — reserve for the one highest-value role |
+| `anthropic` | Claude Pro, $20/mo | Smallest pool (rolling 5h/7d windows) | **scarce** — kept off `default`'s primary path, used only as its fallback safety net |
 | `openai-codex` | ChatGPT Pro, $100/mo | 5x Plus quota | **abundant** — absorb the heavy/high-volume roles |
 | `google-antigravity` | free public preview | Separately meters Google/OpenAI/**Anthropic** usage — i.e. it's a free proxy that includes Claude models | **free pressure release** — use for anything that would otherwise double up on a paid pool |
 | `xai-oauth` | X Premium, $8/mo (bundled SuperGrok credits, *not* standalone SuperGrok) | Small, weekly-reset credit pool | **sparingly** — one low-frequency role + last-resort fallback only |
 | `nvidia` | free NIM catalog | unmetered | **last-resort fallback**, quality is behind frontier |
 
 Consequences baked into this file:
-- `default` (highest-volume, fires every turn) stays on `anthropic/claude-sonnet-5` — that pool's smallness is fine because it's not also asked to carry `slow`/`plan`/`advisor`.
+- `default` (highest-volume, fires every turn) was moved off the scarce Anthropic pool onto
+  `google-antigravity/gemini-3.7-flash` — it rides Antigravity's independent, daily-resetting
+  Google lane instead of competing with `slow`/`plan`/`advisor` for the Claude Pro 5h/7d window.
+  `anthropic/claude-sonnet-5` is now `default`'s first fallback instead of its primary: with
+  `retry.usageAwareFallback: true` + `usageReservePolicy: "auto"`, OMP proactively hops to it
+  before Gemini's daily lane hard-fails, so the scarce paid pool now sits almost idle as a
+  safety net rather than absorbing every-turn volume directly.
 - `slow`/`plan` (max-thinking, expensive-per-call) remain on `openai-codex/gpt-5.6-sol` — the flagship Codex tier on the pool with headroom. Their fallback chain is `grok-4.6` then NVIDIA DeepSeek V4 Pro: direct Anthropic Opus was removed because it shares the already-exhausted Claude Pro five-hour window.
-- `advisor` (would double per-turn cost the moment it's enabled) points at `google-antigravity/claude-sonnet-4-6` — free Claude access, so turning advisor on doesn't touch the paid Anthropic pool at all.
-- `default` overflow now takes `gemini-3.7-flash` → `gpt-5.6-terra` → `grok-4.6` → DeepSeek V4 Pro. Gemini is first because it uses Antigravity's independent Google lane (0% used during this audit), carries a 1M context window, and is Google’s current stable mixed coding/knowledge-work agent model. Terra draws from the 94%-remaining Codex pool; Grok and NVIDIA are separately metered emergency tiers.
+- `advisor` (would double per-turn cost the moment it's enabled) points at `google-antigravity/claude-sonnet-4-6` — free Claude access via Antigravity's separately-metered Anthropic-proxy lane, so turning advisor on doesn't touch the paid Anthropic pool at all.
 - `vision`/`designer` fallback to `gpt-5.6-terra` then `grok-4.6`, both image-capable and independent of the Google primary. This replaces the designer's direct Sonnet fallback, which cannot be relied on when the Claude Pro window is exhausted.
 - `commit` (once per commit — genuinely low frequency) is the one place `xai-oauth/grok-build` is used as primary, so the X login gets real use without meaningfully risking its small weekly pool. `grok-4.6` is the first non-OpenAI contingency for `slow`/`plan`, followed by NVIDIA; it cannot drain the pool through routine use.
 - Every fallback chain uses a *different provider* than its primary, so a single provider outage/quota exhaustion doesn't take out both tiers at once.
 - Deliberately **not** using `claude-fable-5`/`claude-mythos-5` (Anthropic's largest models) anywhere — on the Pro plan those bill through separate credits, i.e. the "buy more" trap.
-- `vision`/`designer` upgraded to `gemini-3.7-flash` (GA Aug 13 2026, newest stable Flash tier); `gemini-3.6-flash` is still live but one generation behind.
-- `retry.usageAwareFallback: true` + `retry.usageReservePolicy: "auto"` — when the Anthropic 5-hour window is nearly exhausted, OMP proactively switches to the `default` fallback chain without waiting for a 429 and without prompting. Prevents the session from stopping cold on token exhaustion.
+- `vision`/`designer`/`default` all run `gemini-3.7-flash` (GA Aug 13 2026, newest stable Flash tier); `gemini-3.6-flash` is still live but one generation behind. Note: `default`, `vision`, and `designer` now all primary on this exact model/meter — fine given its daily reset and 1M context, but a heavy day concentrates load on one Google-lane meter instead of spreading across providers; the Sonnet-5 fallback absorbs any overflow.
+- `retry.usageAwareFallback: true` + `retry.usageReservePolicy: "auto"` — when the active pool is nearly exhausted, OMP proactively switches to the configured fallback chain without waiting for a 429 and without prompting. Prevents the session from stopping cold on token exhaustion.
 - `smol`/`task` fallback chains: `smol` routes to `gemini-3.1-flash-lite` (the fast, lightweight Flash-Lite tier for background/bulk classification tasks), while `task` routes to `gemini-3.7-flash` (Google's flagship agent model on the free Antigravity Google lane, ensuring high tool-calling and reasoning quality for delegated subagent execution). Both fall back to `nvidia/deepseek-ai/deepseek-v4-flash` as an unmetered last resort.
 - `tiny` remains unset: OMP delegates its low-impact background work to `@smol` (Luna). No separate tiny-model allocation is justified by the current workload or catalog evidence.
 
@@ -61,12 +66,12 @@ the rationale table, since the allocation assumes Pro-tier Anthropic/OpenAI, not
 
 Equivalent one-liners (no manual paste):
 ```bash
-omp config set modelRoles '{"default":"anthropic/claude-sonnet-5","smol":"openai-codex/gpt-5.6-luna","slow":"openai-codex/gpt-5.6-sol","vision":"google-antigravity/gemini-3.7-flash","plan":"openai-codex/gpt-5.6-sol","commit":"xai-oauth/grok-build","designer":"google-antigravity/gemini-3.7-flash","task":"openai-codex/gpt-5.6-terra","advisor":"google-antigravity/claude-sonnet-4-6"}'
+omp config set modelRoles '{"default":"google-antigravity/gemini-3.7-flash","smol":"openai-codex/gpt-5.6-luna","slow":"openai-codex/gpt-5.6-sol","vision":"google-antigravity/gemini-3.7-flash","plan":"openai-codex/gpt-5.6-sol","commit":"xai-oauth/grok-build","designer":"google-antigravity/gemini-3.7-flash","task":"openai-codex/gpt-5.6-terra","advisor":"google-antigravity/claude-sonnet-4-6"}'
 
-omp config set retry.fallbackChains '{"default":["google-antigravity/gemini-3.7-flash","openai-codex/gpt-5.6-terra","xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-pro"],"smol":["google-antigravity/gemini-3.1-flash-lite","nvidia/deepseek-ai/deepseek-v4-flash"],"slow":["xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-pro"],"vision":["openai-codex/gpt-5.6-terra","xai-oauth/grok-4.6"],"plan":["xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-pro"],"commit":["openai-codex/gpt-5.6-luna"],"designer":["openai-codex/gpt-5.6-terra","xai-oauth/grok-4.6"],"task":["google-antigravity/gemini-3.7-flash","nvidia/deepseek-ai/deepseek-v4-flash"],"advisor":["openai-codex/gpt-5.6-terra"]}'
+omp config set retry.fallbackChains '{"default":["anthropic/claude-sonnet-5","openai-codex/gpt-5.6-terra","xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-pro"],"smol":["google-antigravity/gemini-3.1-flash-lite","nvidia/deepseek-ai/deepseek-v4-flash"],"slow":["xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-pro"],"vision":["openai-codex/gpt-5.6-terra","xai-oauth/grok-4.6"],"plan":["xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-pro"],"commit":["openai-codex/gpt-5.6-luna"],"designer":["openai-codex/gpt-5.6-terra","xai-oauth/grok-4.6"],"task":["google-antigravity/gemini-3.7-flash","nvidia/deepseek-ai/deepseek-v4-flash"],"advisor":["openai-codex/gpt-5.6-terra"]}'
 
 omp config set retry.usageAwareFallback true
-omp config set retry.usageReservePolicy '"auto"'
+omp config set retry.usageReservePolicy auto
 ```
 
 ### Option B — project-scoped (only affects repos you drop this into)
