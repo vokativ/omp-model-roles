@@ -1,6 +1,6 @@
 # OMP model-role setup — import instructions
 
-**Snapshot: 2026-08-15 · v6.** Stale after ~4-6 weeks, or immediately if any subscription
+**Snapshot: 2026-08-16 · v7.** Stale after ~4-6 weeks, or immediately if any subscription
 changed — check `RESEARCH-PLAYBOOK.md`'s staleness check before importing this blind.
 
 `model-roles.yml` is a config **overlay**: `modelRoles`, `retry.fallbackChains`, and
@@ -31,7 +31,7 @@ Consequences baked into this file:
   `retry.usageAwareFallback: true` + `usageReservePolicy: "auto"`, OMP proactively hops to it
   before Gemini's daily lane hard-fails, so the scarce paid pool now sits almost idle as a
   safety net rather than absorbing every-turn volume directly.
-- `slow`/`plan` (max-thinking, expensive-per-call) remain on `openai-codex/gpt-5.6-sol` — the flagship Codex tier on the pool with headroom. Their fallback chain is `grok-4.6` then NVIDIA DeepSeek V4 Pro: direct Anthropic Opus was removed because it shares the already-exhausted Claude Pro five-hour window.
+- `slow`/`plan` (max-thinking, expensive-per-call) remain on `openai-codex/gpt-5.6-sol` — the flagship Codex tier on the abundant pool. Their fallback chain starts with `anthropic/claude-opus-5` to retain maximum reasoning and architecture depth during rare OpenAI transient outages (safe because Claude Pro is dedicated exclusively to this harness with 5-hour rolling resets), followed by `xai-oauth/grok-4.6` and NVIDIA DeepSeek V4 Pro.
 - `advisor` (would double per-turn cost the moment it's enabled) points at `google-antigravity/claude-sonnet-4-6` — free Claude access via Antigravity's separately-metered Anthropic-proxy lane, so turning advisor on doesn't touch the paid Anthropic pool at all.
 - `vision`/`designer` fallback to `gpt-5.6-terra` then `grok-4.6`, both image-capable and independent of the Google primary. This replaces the designer's direct Sonnet fallback, which cannot be relied on when the Claude Pro window is exhausted.
 - `commit` (once per commit — genuinely low frequency) is the one place `xai-oauth/grok-build` is used as primary, so the X login gets real use without meaningfully risking its small weekly pool. `grok-4.6` is the first non-OpenAI contingency for `slow`/`plan`, followed by NVIDIA; it cannot drain the pool through routine use.
@@ -68,7 +68,7 @@ Equivalent one-liners (no manual paste):
 ```bash
 omp config set modelRoles '{"default":"google-antigravity/gemini-3.7-flash","smol":"openai-codex/gpt-5.6-luna","slow":"openai-codex/gpt-5.6-sol","vision":"google-antigravity/gemini-3.7-flash","plan":"openai-codex/gpt-5.6-sol","commit":"xai-oauth/grok-build","designer":"google-antigravity/gemini-3.7-flash","task":"openai-codex/gpt-5.6-terra","advisor":"google-antigravity/claude-sonnet-4-6"}'
 
-omp config set retry.fallbackChains '{"default":["anthropic/claude-sonnet-5","openai-codex/gpt-5.6-terra","xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-pro"],"smol":["google-antigravity/gemini-3.1-flash-lite","nvidia/deepseek-ai/deepseek-v4-flash"],"slow":["xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-pro"],"vision":["openai-codex/gpt-5.6-terra","xai-oauth/grok-4.6"],"plan":["xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-pro"],"commit":["openai-codex/gpt-5.6-luna"],"designer":["openai-codex/gpt-5.6-terra","xai-oauth/grok-4.6"],"task":["google-antigravity/gemini-3.7-flash","nvidia/deepseek-ai/deepseek-v4-flash"],"advisor":["openai-codex/gpt-5.6-terra"]}'
+omp config set retry.fallbackChains '{"default":["anthropic/claude-sonnet-5","openai-codex/gpt-5.6-terra","xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-pro"],"smol":["google-antigravity/gemini-3.1-flash-lite","nvidia/deepseek-ai/deepseek-v4-flash"],"slow":["anthropic/claude-opus-5","xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-pro"],"vision":["openai-codex/gpt-5.6-terra","xai-oauth/grok-4.6"],"plan":["anthropic/claude-opus-5","xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-pro"],"commit":["openai-codex/gpt-5.6-luna"],"designer":["openai-codex/gpt-5.6-terra","xai-oauth/grok-4.6"],"task":["google-antigravity/gemini-3.7-flash","nvidia/deepseek-ai/deepseek-v4-flash"],"advisor":["openai-codex/gpt-5.6-terra"]}'
 
 omp config set retry.usageAwareFallback true
 omp config set retry.usageReservePolicy auto
