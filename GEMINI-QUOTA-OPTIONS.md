@@ -81,51 +81,30 @@ covered in the ready-to-paste snippet at the end.
 
 ### Options, compared
 
-| | Do nothing | Gemini API key (pay-as-you-go) | Google AI Pro ($19.99/mo) | Google AI Ultra ($99.99-199.99/mo) |
+| | Do nothing (Recommended) | OpenRouter (50% Promo) | Gemini API (Google AI Studio) | Google AI Pro ($19.99/mo) |
 |---|---|---|---|---|
-| Cost | $0 | $0 fixed, billed only on use | $19.99/mo flat | $99.99-199.99/mo flat |
-| What it buys | current Sonnet-5 fallback (already free, already works) | a same-model overflow tier under Antigravity, before touching Anthropic | 4x bigger *free* Antigravity quota + $10/mo Cloud credit (applicable to API billing) | 5x-20x bigger free quota + $100/mo Cloud credit + Antigravity's paid orchestration UI |
-| Setup | none | `ai.google.dev` → create key → min $10 Cloud Billing prepay → `omp login google` | upgrade in Google One | upgrade in Google One |
-| Right for you if | fine with Sonnet-5 taking over during rare overflow | want overflow to *stay* Gemini-flavored, okay paying cents-to-dollars per burnout | Antigravity's **own daily cap** (not the OMP fallback) is the actual bottleneck | you want the Antigravity IDE/Manager surface itself |
+| Cost | **$0** extra | **$0.375/1M in, $1.875/1M out** (pay-as-you-go) | $0.75/1M in, $3.75/1M out | $19.99/mo flat |
+| What it buys | Immediate Sonnet 5 / Terra fallback (already paid, 90%+ idle) | Same-model Gemini 3.7 Flash overflow at half direct Google cost | Direct Google Gemini overflow tier | 4x bigger *free* Antigravity quota + $10/mo Cloud credit |
+| Setup | None | Fund OpenRouter credits → `openrouter/google/gemini-3.7-flash` | `ai.google.dev` → GCP billing setup | Google One upgrade |
+| Billing risk | Zero | Zero (isolated prepaid balance) | Can collide with existing app GCP billing accounts | Fixed recurring subscription |
+| Right for you if | **Current state**: Antigravity is healthy, flat subscriptions absorb overflow | Antigravity runs dry daily AND you want same-weights overflow with zero billing hassle | Strict requirement for first-party Google endpoint | Antigravity IDE UI itself is needed |
 
-`gemini-3.7-flash` API pricing (introductory through 2026-12-31): **$0.75/1M input, $3.75/1M
-output tokens** (rises to $1.50/$7.50 in 2027). Order-of-magnitude sanity check, *not* measured
-from your actual token volume: a heavy day of ~50 tool-heavy turns at ~20K input + 2K output
-tokens each is roughly 1M input + 100K output tokens ≈ **$1.13** if every one of those turns ran
-on the paid API — and in practice the fallback only bills for the slice of traffic that happens
-while the free lane is actually exhausted, so real exposure is a fraction of that. Compare to
-$19.99/mo (≈$240/yr) for Google AI Pro regardless of whether the fallback ever triggers.
+### Price comparison: Google AI Studio vs OpenRouter
 
-### Recommendation
+Live rates for `gemini-3.7-flash` (checked 2026-08-16):
+- **Google AI Studio Direct**: $0.75 / 1M input, $3.75 / 1M output (standard context ≤128k).
+- **OpenRouter (Discounted)**: **$0.375 / 1M input, $1.875 / 1M output** (50% cheaper, 1M context).
 
-Get a `GEMINI_API_KEY` from [ai.google.dev](https://ai.google.dev), prepay the $10 minimum, and
-wire it in **inside** the existing chains — not as a bare provider wildcard, so Anthropic stays
-the safety net if the API key itself lapses:
+### Updated Recommendation: Do Not Buy API Keys Right Now
 
-```yaml
-retry:
-  fallbackChains:
-    default:
-      - google/gemini-3.7-flash        # pay-as-you-go Gemini, same model/character
-      - anthropic/claude-sonnet-5      # existing safety net, unchanged
-      - openai-codex/gpt-5.6-terra
-      - xai-oauth/grok-4.6
-      - nvidia/deepseek-ai/deepseek-v4-pro
-    vision:
-      - google/gemini-3.7-flash
-      - openai-codex/gpt-5.6-terra
-      - xai-oauth/grok-4.6
-    designer:
-      - google/gemini-3.7-flash
-      - openai-codex/gpt-5.6-terra
-      - xai-oauth/grok-4.6
-```
+1. **Antigravity daily Google lane is at ~4% capacity**: You are far from exhausting the free quota under your current solo/exploratory volume.
+2. **Your paid pools have 90%+ idle headroom**: If Antigravity ever exhausts, your fallback chain immediately routes to `anthropic/claude-sonnet-5` (4% 7d used) and `openai-codex/gpt-5.6-terra` (8% 7d used). These are already paid for by your monthly subscriptions — paying per token to OpenRouter or Google would be paying twice for overflow you already have for free.
+3. **If you ever need same-model overflow in the future**: Prefer OpenRouter (`openrouter/google/gemini-3.7-flash`). It is 50% cheaper than direct Google AI Studio and avoids touching or complicating existing Google Cloud billing accounts tied to your production apps.
 
-Not applied — needs your `GEMINI_API_KEY` and funded billing first, and it's a real dollar-cost
-decision that's yours to make.
-
-**Skip Google AI Pro/Ultra unless** the Antigravity in-app daily cap itself becomes a blocker
-*outside* of OMP too — that's what the subscription tiers actually raise.
+### When to review
+Re-evaluate during the monthly check-in (`omp usage --history --days 30`). Only consider adding OpenRouter if:
+- Antigravity's daily Google meter hits 100% regularly, **and**
+- You notice and dislike the model character switch when Sonnet 5 takes over.
 
 ## Part 2 — Monitoring usage over time, and across multiple machines
 
