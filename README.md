@@ -1,6 +1,6 @@
 # OMP model-role setup — import instructions
 
-**Snapshot: 2026-08-16 · v7.** Stale after ~4-6 weeks, or immediately if any subscription
+**Snapshot: 2026-08-21 · v8.** Stale after ~4-6 weeks, or immediately if any subscription
 changed — check `RESEARCH-PLAYBOOK.md`'s staleness check before importing this blind.
 
 `model-roles.yml` is a config **overlay**: `modelRoles`, `retry.fallbackChains`, and
@@ -31,16 +31,18 @@ Consequences baked into this file:
   `retry.usageAwareFallback: true` + `usageReservePolicy: "auto"`, OMP proactively hops to it
   before Gemini's daily lane hard-fails, so the scarce paid pool now sits almost idle as a
   safety net rather than absorbing every-turn volume directly.
-- `slow`/`plan` (max-thinking, expensive-per-call) remain on `openai-codex/gpt-5.6-sol` — the flagship Codex tier on the abundant pool. Their fallback chain starts with `anthropic/claude-opus-5` to retain maximum reasoning and architecture depth during rare OpenAI transient outages (safe because Claude Pro is dedicated exclusively to this harness with 5-hour rolling resets), followed by `xai-oauth/grok-4.6` and NVIDIA DeepSeek V4 Pro.
+- `slow`/`plan` (max-thinking, expensive-per-call) remain on `openai-codex/gpt-5.6-sol` — the flagship Codex tier on the abundant pool. Their fallback chain starts with `anthropic/claude-opus-5` to retain maximum reasoning depth during rare OpenAI transient outages, followed by `xai-oauth/grok-4.6` and NVIDIA DeepSeek V4 Pro.
+- `architect` (Strategy C — high-leverage, infrequent architectural design) is assigned to `anthropic/claude-opus-5`. This leverages Claude's renowned architectural taste, RFC/contract structuring, and system decomposition on the scarce Pro pool without generating heavy volume, with `openai-codex/gpt-5.6-sol` as its first fallback.
+- `review` & `security` (code review and vulnerability analysis) are assigned to `openai-codex/gpt-5.6-sol` — absorbing heavy diff analysis and static security sweeps on the abundant ChatGPT Pro pool, falling back to `claude-opus-5`.
+- `critical` (high-stakes pre-commit audits and destructive action gating) is assigned to `anthropic/claude-opus-5` with `gpt-5.6-sol` fallback, ensuring independent cross-provider verification before major cutovers.
 - `advisor` (would double per-turn cost the moment it's enabled) points at `google-antigravity/claude-sonnet-4-6` — free Claude access via Antigravity's separately-metered Anthropic-proxy lane, so turning advisor on doesn't touch the paid Anthropic pool at all.
 - `vision`/`designer` fallback to `gpt-5.6-terra` then `grok-4.6`, both image-capable and independent of the Google primary. This replaces the designer's direct Sonnet fallback, which cannot be relied on when the Claude Pro window is exhausted.
 - `commit` (once per commit — genuinely low frequency) is the one place `xai-oauth/grok-build` is used as primary, so the X login gets real use without meaningfully risking its small weekly pool. `grok-4.6` is the first non-OpenAI contingency for `slow`/`plan`, followed by NVIDIA; it cannot drain the pool through routine use.
 - Every fallback chain uses a *different provider* than its primary, so a single provider outage/quota exhaustion doesn't take out both tiers at once.
 - Deliberately **not** using `claude-fable-5`/`claude-mythos-5` (Anthropic's largest models) anywhere — on the Pro plan those bill through separate credits, i.e. the "buy more" trap.
-- `vision`/`designer`/`default` all run `gemini-3.7-flash` (GA Aug 13 2026, newest stable Flash tier); `gemini-3.6-flash` is still live but one generation behind. Note: `default`, `vision`, and `designer` now all primary on this exact model/meter — fine given its daily reset and 1M context, but a heavy day concentrates load on one Google-lane meter instead of spreading across providers; the Sonnet-5 fallback absorbs any overflow.
-- `retry.usageAwareFallback: true` + `retry.usageReservePolicy: "auto"` — when the active pool is nearly exhausted, OMP proactively switches to the configured fallback chain without waiting for a 429 and without prompting. Prevents the session from stopping cold on token exhaustion.
-- `smol`/`task` fallback chains: `smol` routes to `gemini-3.1-flash-lite` (the fast, lightweight Flash-Lite tier for background/bulk classification tasks), while `task` routes to `gemini-3.7-flash` (Google's flagship agent model on the free Antigravity Google lane, ensuring high tool-calling and reasoning quality for delegated subagent execution). Both fall back to `nvidia/deepseek-ai/deepseek-v4-flash` as an unmetered last resort.
-- `tiny` remains unset: OMP delegates its low-impact background work to `@smol` (Luna). No separate tiny-model allocation is justified by the current workload or catalog evidence.
+- `vision`/`designer`/`default` all run `gemini-3.7-flash` (GA Aug 13 2026, newest stable Flash tier); `gemini-3.6-flash` is still live but one generation behind. Note: `default`, `vision`, and `designer` all primary on this exact model/meter.
+- `tiny` is explicitly assigned to `openai-codex/gpt-5.6-luna` with fallback chain: `nvidia/meta/llama-3.1-8b-instruct` $\to$ `xai-oauth/grok-composer-2.5-fast` $\to$ `google-antigravity/gemini-3.1-flash-lite`. Background tasks (session titles, Mnemopi memory extraction, auto-thinking classifier, unexpected-stop detector) run on the abundant ChatGPT Pro pool (97% idle). If OpenAI experiences transient issues, it fails over immediately to NVIDIA's live NIM Llama 3.1 8B (sub-second latency, 100% unmetered and free) and xAI Grok Composer Fast, with Gemini 3.1 Flash-Lite as the final safety net — providing total protection for the Google Antigravity daily lane that `default`, `vision`, and `designer` rely on.
+- `task.agentModelOverrides` binds bundled subagents to their dedicated roles: `security-reviewer` $\to$ `@security`, `reviewer` $\to$ `@review`, `sonic` $\to$ `@fast_worker`, `task` $\to$ `@good_worker`.
 
 If the target machine's subscriptions differ from the table above, don't paste this file blind —
 re-derive the allocation from whatever pools that machine actually has (`omp usage` after logging in).
@@ -66,9 +68,11 @@ the rationale table, since the allocation assumes Pro-tier Anthropic/OpenAI, not
 
 Equivalent one-liners (no manual paste):
 ```bash
-omp config set modelRoles '{"default":"google-antigravity/gemini-3.7-flash","smol":"openai-codex/gpt-5.6-luna","slow":"openai-codex/gpt-5.6-sol","vision":"google-antigravity/gemini-3.7-flash","plan":"openai-codex/gpt-5.6-sol","commit":"xai-oauth/grok-build","designer":"google-antigravity/gemini-3.7-flash","task":"openai-codex/gpt-5.6-terra","advisor":"google-antigravity/claude-sonnet-4-6"}'
+omp config set modelRoles '{"default":"google-antigravity/gemini-3.7-flash","smol":"openai-codex/gpt-5.6-luna","slow":"openai-codex/gpt-5.6-sol","vision":"google-antigravity/gemini-3.7-flash","plan":"openai-codex/gpt-5.6-sol","commit":"xai-oauth/grok-build","designer":"google-antigravity/gemini-3.7-flash","task":"openai-codex/gpt-5.6-terra","advisor":"google-antigravity/claude-sonnet-4-6","tiny":"openai-codex/gpt-5.6-luna","architect":"anthropic/claude-opus-5","review":"openai-codex/gpt-5.6-sol","security":"openai-codex/gpt-5.6-sol","critical":"anthropic/claude-opus-5","fast_worker":"openai-codex/gpt-5.6-luna","good_worker":"openai-codex/gpt-5.6-terra"}'
 
-omp config set retry.fallbackChains '{"default":["anthropic/claude-sonnet-5","openai-codex/gpt-5.6-terra","xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-pro"],"smol":["google-antigravity/gemini-3.1-flash-lite","nvidia/deepseek-ai/deepseek-v4-flash"],"slow":["anthropic/claude-opus-5","xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-pro"],"vision":["openai-codex/gpt-5.6-terra","xai-oauth/grok-4.6"],"plan":["anthropic/claude-opus-5","xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-pro"],"commit":["openai-codex/gpt-5.6-luna"],"designer":["openai-codex/gpt-5.6-terra","xai-oauth/grok-4.6"],"task":["google-antigravity/gemini-3.7-flash","nvidia/deepseek-ai/deepseek-v4-flash"],"advisor":["openai-codex/gpt-5.6-terra"]}'
+omp config set task.agentModelOverrides '{"security-reviewer":"@security","reviewer":"@review","sonic":"@fast_worker","task":"@good_worker"}'
+
+omp config set retry.fallbackChains '{"default":["anthropic/claude-sonnet-5","openai-codex/gpt-5.6-terra","xai-oauth/grok-4.6","nvidia/meta/llama-3.1-8b-instruct"],"smol":["google-antigravity/gemini-3.1-flash-lite","nvidia/meta/llama-3.1-8b-instruct"],"slow":["anthropic/claude-opus-5","xai-oauth/grok-4.6","nvidia/meta/llama-3.1-8b-instruct"],"vision":["openai-codex/gpt-5.6-terra","xai-oauth/grok-4.6"],"plan":["anthropic/claude-opus-5","xai-oauth/grok-4.6","nvidia/meta/llama-3.1-8b-instruct"],"commit":["openai-codex/gpt-5.6-luna"],"designer":["openai-codex/gpt-5.6-terra","xai-oauth/grok-4.6"],"task":["google-antigravity/gemini-3.7-flash","nvidia/meta/llama-3.1-8b-instruct"],"advisor":["openai-codex/gpt-5.6-terra"],"tiny":["nvidia/meta/llama-3.1-8b-instruct","xai-oauth/grok-composer-2.5-fast","google-antigravity/gemini-3.1-flash-lite"],"architect":["openai-codex/gpt-5.6-sol","xai-oauth/grok-4.6","nvidia/meta/llama-3.1-8b-instruct"],"review":["anthropic/claude-opus-5","xai-oauth/grok-4.6","nvidia/meta/llama-3.1-8b-instruct"],"security":["anthropic/claude-opus-5","xai-oauth/grok-4.6","nvidia/meta/llama-3.1-8b-instruct"],"critical":["openai-codex/gpt-5.6-sol","xai-oauth/grok-4.6","nvidia/meta/llama-3.1-8b-instruct"],"fast_worker":["nvidia/meta/llama-3.1-8b-instruct","xai-oauth/grok-build","google-antigravity/gemini-3.1-flash-lite"],"good_worker":["google-antigravity/gemini-3.7-flash","nvidia/meta/llama-3.1-8b-instruct"]}'
 
 omp config set retry.usageAwareFallback true
 omp config set retry.usageReservePolicy auto
@@ -99,10 +103,10 @@ dotfiles repo propagates to every machine without any `omp config set`.
 ## Verify
 ```bash
 omp config get modelRoles --json
+omp config get task.agentModelOverrides --json
 omp config get retry.fallbackChains --json
 omp config get retry.usageAwareFallback --json
 omp config get retry.usageReservePolicy --json
 omp usage   # confirm which pools are actually getting hit
-```
 Then `/model` inside a session to confirm each role resolves to an available (authenticated)
 model rather than silently falling back.

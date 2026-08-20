@@ -1,24 +1,41 @@
-## OMP model-role export — quota-aware allocation
-## Generated: 2026-08-16 · Snapshot version: 7
+## OMP model-role export — comprehensive quota-aware allocation
+## Generated: 2026-08-21 · Snapshot version: 8
 ## Stale? See RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
 ##
 ## Assumes these logins exist on the target machine:
-##   - anthropic        (Claude Pro, $20/mo — the SCARCE pool, keep light)
-##   - openai-codex      (ChatGPT Pro, $100/mo, 5x quota — the ABUNDANT pool)
+##   - anthropic        (Claude Pro, $20/mo — the SCARCE pool, keep light, reserve for architect/critical)
+##   - openai-codex      (ChatGPT Pro, $100/mo, 5x quota — the ABUNDANT pool, heavy roles & tiny work)
 ##   - google-antigravity (free preview; also proxies Claude models at no cost to the Anthropic pool)
 ##   - xai-oauth         (X Premium $8/mo bundled SuperGrok credits — small, weekly reset, use sparingly)
 ##   - nvidia             (free NIM catalog — unmetered last-resort fallback)
 
 modelRoles:
+  # --- Core Built-in Roles ---
   default: google-antigravity/gemini-3.7-flash
   smol: openai-codex/gpt-5.6-luna
   slow: openai-codex/gpt-5.6-sol
-  vision: google-antigravity/gemini-3.7-flash
   plan: openai-codex/gpt-5.6-sol
-  commit: xai-oauth/grok-build
-  designer: google-antigravity/gemini-3.7-flash
   task: openai-codex/gpt-5.6-terra
+  designer: google-antigravity/gemini-3.7-flash
+  vision: google-antigravity/gemini-3.7-flash
+  commit: xai-oauth/grok-build
   advisor: google-antigravity/claude-sonnet-4-6
+  tiny: openai-codex/gpt-5.6-luna
+
+  # --- Workflow, Review & Architecture Roles (Strategy C) ---
+  architect: anthropic/claude-opus-5
+  review: openai-codex/gpt-5.6-sol
+  security: openai-codex/gpt-5.6-sol
+  critical: anthropic/claude-opus-5
+  fast_worker: openai-codex/gpt-5.6-luna
+  good_worker: openai-codex/gpt-5.6-terra
+
+task:
+  agentModelOverrides:
+    security-reviewer: "@security"
+    reviewer: "@review"
+    sonic: "@fast_worker"
+    task: "@good_worker"
 
 retry:
   fallbackChains:
@@ -26,30 +43,57 @@ retry:
       - anthropic/claude-sonnet-5
       - openai-codex/gpt-5.6-terra
       - xai-oauth/grok-4.6
-      - nvidia/deepseek-ai/deepseek-v4-pro
+      - nvidia/meta/llama-3.1-8b-instruct
     smol:
       - google-antigravity/gemini-3.1-flash-lite
-      - nvidia/deepseek-ai/deepseek-v4-flash
+      - nvidia/meta/llama-3.1-8b-instruct
     slow:
       - anthropic/claude-opus-5
       - xai-oauth/grok-4.6
-      - nvidia/deepseek-ai/deepseek-v4-pro
-    vision:
-      - openai-codex/gpt-5.6-terra
-      - xai-oauth/grok-4.6
+      - nvidia/meta/llama-3.1-8b-instruct
     plan:
       - anthropic/claude-opus-5
       - xai-oauth/grok-4.6
-      - nvidia/deepseek-ai/deepseek-v4-pro
-    commit:
-      - openai-codex/gpt-5.6-luna
+      - nvidia/meta/llama-3.1-8b-instruct
+    task:
+      - google-antigravity/gemini-3.7-flash
+      - nvidia/meta/llama-3.1-8b-instruct
     designer:
       - openai-codex/gpt-5.6-terra
       - xai-oauth/grok-4.6
-    task:
-      - google-antigravity/gemini-3.7-flash
-      - nvidia/deepseek-ai/deepseek-v4-flash
+    vision:
+      - openai-codex/gpt-5.6-terra
+      - xai-oauth/grok-4.6
+    commit:
+      - openai-codex/gpt-5.6-luna
     advisor:
       - openai-codex/gpt-5.6-terra
+    tiny:
+      - nvidia/meta/llama-3.1-8b-instruct
+      - xai-oauth/grok-composer-2.5-fast
+      - google-antigravity/gemini-3.1-flash-lite
+    architect:
+      - openai-codex/gpt-5.6-sol
+      - xai-oauth/grok-4.6
+      - nvidia/meta/llama-3.1-8b-instruct
+    review:
+      - anthropic/claude-opus-5
+      - xai-oauth/grok-4.6
+      - nvidia/meta/llama-3.1-8b-instruct
+    security:
+      - anthropic/claude-opus-5
+      - xai-oauth/grok-4.6
+      - nvidia/meta/llama-3.1-8b-instruct
+    critical:
+      - openai-codex/gpt-5.6-sol
+      - xai-oauth/grok-4.6
+      - nvidia/meta/llama-3.1-8b-instruct
+    fast_worker:
+      - nvidia/meta/llama-3.1-8b-instruct
+      - xai-oauth/grok-build
+      - google-antigravity/gemini-3.1-flash-lite
+    good_worker:
+      - google-antigravity/gemini-3.7-flash
+      - nvidia/meta/llama-3.1-8b-instruct
   usageAwareFallback: true
   usageReservePolicy: "auto"
