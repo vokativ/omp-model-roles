@@ -1,0 +1,22 @@
+## Companion overlay to model-roles.yml — merge into ~/.omp/agent/models.yml
+## (a DIFFERENT file than ~/.omp/agent/config.yml; see README.md's import steps).
+## Generated: 2026-08-22 · Snapshot version: 9
+##
+## Required by: retry.fallbackChains.vision's first entry
+## (openrouter/google/gemini-3.7-flash, see model-roles.yml).
+##
+## Why this exists: tested empirically 2026-08-22 (see README.md's "vision"/"designer"
+## rationale) — a raw OpenRouter call to this model at its default token budget spent
+## 70-80% of every response on invisible reasoning tokens before emitting any visible
+## answer, truncating output even at 2048 tokens. google-antigravity's native integration
+## doesn't hit this because it already uses a comparably large ceiling (66K max-out).
+## This override matches that ceiling so the OpenRouter fallback doesn't truncate.
+##
+## Without this file, retry.fallbackChains.vision's first entry will intermittently
+## return cut-off answers instead of failing over cleanly to the next fallback.
+
+providers:
+  openrouter:
+    modelOverrides:
+      google/gemini-3.7-flash:
+        maxTokens: 65536

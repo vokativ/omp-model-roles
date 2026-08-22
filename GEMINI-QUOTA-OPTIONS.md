@@ -4,6 +4,39 @@ Written 2026-08-15 in response to: "a lot of stuff is on Google Gemini now, shou
 subscription or use an API key, and how do we check back in a month across multiple machines to
 see if this allocation actually makes sense."
 
+---
+
+## Addendum — 2026-08-22: what actually happened
+
+Antigravity's Google lane did run dry (weekly meter hit 90% used, 10% remaining — the
+`usageReservePct: 10` reserve threshold), and `default`, `vision`, and `designer` all started
+silently falling back, exactly as this file predicted. The response deviated from the "Do Not
+Buy API Keys Right Now" recommendation above, in a targeted way, not a reversal of it:
+
+- **No blanket `google-antigravity/*` wildcard was added.** The pattern this file describes
+  (`google-antigravity/*` → `[google/*, google-vertex/*]`) was considered and rejected in favor
+  of scoping any change to individual roles, based on real A/B test evidence rather than the
+  generic "same weights, different pool" theory.
+- **`vision` got `openrouter/google/gemini-3.7-flash` as its first fallback** (OpenRouter, not
+  direct Google AI Studio or Vertex — no GCP billing setup needed) — but only after testing it
+  head-to-head against every other candidate on a real production image and confirming it won
+  on both speed and accuracy. See `README.md`'s rationale section for the actual numbers.
+- **`default` and `designer` got nothing added.** `default`'s existing free fallback
+  (`anthropic/claude-sonnet-5`) tested as good as Gemini for that role's typical workload, so
+  paying OpenRouter for it would have been pure waste. `designer` was restructured instead —
+  moved primary to `xai-oauth/grok-4.6` (already-paid, tested best) with Antigravity Gemini
+  demoted to its last-resort fallback — no OpenRouter involvement at all.
+- **The 50%-off OpenRouter promo mentioned below (Options table, "OpenRouter (50% Promo)") is
+  gone** — that pricing was time-boxed to Aug 27 2026. Current OpenRouter pricing for this model
+  is not discounted; the maxTokens override in `models-overlay.yml` matters more now than the
+  price row below suggests.
+
+Net effect: this file's underlying judgment call — don't add paid overflow speculatively,
+wait for real pressure and real evidence — held up. The original text below is kept for
+the reasoning trail; treat the price table and the "no meters have moved" framing as historical,
+not current.
+
+
 ## TL;DR
 
 - **Don't subscribe to anything yet.** Your current fallback chain already survives a Gemini

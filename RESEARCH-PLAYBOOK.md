@@ -77,5 +77,12 @@ match what you applied, and commit + push.
 ## Files in this repo
 
 - `model-roles.yml` — the current applied `modelRoles` + `retry.fallbackChains` overlay (importable via `PI_CONFIG_FILES` or manual merge into `config.yml`).
+- `models-overlay.yml` — companion `models.yml` overlay (per-model overrides like `maxTokens`).
+  Currently just the OpenRouter Gemini 3.7 Flash `maxTokens` fix that `vision`'s fallback chain
+  depends on — check whether any newly-added fallback model needs one of these before assuming
+  `model-roles.yml` alone is a complete import.
 - `README.md` — import instructions plus the rationale/subscription table that justified the current values.
 - `RESEARCH-PLAYBOOK.md` — this file.
+- `GEMINI-QUOTA-OPTIONS.md` — point-in-time investigation into Gemini/Antigravity quota burnout
+  options; superseded in part by the `vision`/`designer` decisions in this snapshot — see its own
+  addendum before treating its recommendation as current.

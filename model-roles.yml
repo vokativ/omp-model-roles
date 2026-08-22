@@ -1,5 +1,5 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-08-21 · Snapshot version: 8
+## Generated: 2026-08-22 · Snapshot version: 9
 ## Stale? See RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
 ##
 ## Assumes these logins exist on the target machine:
@@ -8,6 +8,8 @@
 ##   - google-antigravity (free preview; also proxies Claude models at no cost to the Anthropic pool)
 ##   - xai-oauth         (X Premium $8/mo bundled SuperGrok credits — small, weekly reset, use sparingly)
 ##   - nvidia             (free NIM catalog — unmetered last-resort fallback)
+##   - openrouter         (prepaid credit balance — used ONLY as vision's first fallback; see
+##                          models-overlay.yml for the required maxTokens override on that entry)
 
 modelRoles:
   # --- Core Built-in Roles ---
@@ -16,7 +18,7 @@ modelRoles:
   slow: openai-codex/gpt-5.6-sol
   plan: openai-codex/gpt-5.6-sol
   task: openai-codex/gpt-5.6-terra
-  designer: google-antigravity/gemini-3.7-flash
+  designer: xai-oauth/grok-4.6
   vision: google-antigravity/gemini-3.7-flash
   commit: xai-oauth/grok-build
   advisor: google-antigravity/claude-sonnet-4-6
@@ -60,8 +62,9 @@ retry:
       - nvidia/meta/llama-3.1-8b-instruct
     designer:
       - openai-codex/gpt-5.6-terra
-      - xai-oauth/grok-4.6
+      - google-antigravity/gemini-3.7-flash
     vision:
+      - openrouter/google/gemini-3.7-flash
       - openai-codex/gpt-5.6-terra
       - xai-oauth/grok-4.6
     commit:
