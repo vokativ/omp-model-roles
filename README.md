@@ -146,17 +146,20 @@ the rationale table, since the allocation assumes Pro-tier Anthropic/OpenAI, not
 ## Pick ONE of these on the target machine
 
 ### Option A — merge into the global config (affects every project on that machine)
-1. Open `~/.omp/agent/config.yml` (create it if missing).
+1. Run `omp config path`, then open `config.yml` in the printed agent directory (create it if
+   missing). This is platform-independent; the printed path is authoritative for profiles and
+   custom roots. Without either, the default is `~/.omp/agent/` on POSIX and
+   `%USERPROFILE%\.omp\agent\` on Windows.
 2. Copy in the `modelRoles:` and `retry:` blocks from `model-roles.yml` (the whole `retry:` map,
    including `fallbackChains`, `usageAwareFallback`, and `usageReservePolicy`).
    - If `modelRoles` or `retry` already exist there, replace them wholesale.
    - Leave every other key in that file untouched.
-3. Open `~/.omp/agent/models.yml` (create it if missing — **different file** than `config.yml`
-   above). Copy in `models-overlay.yml`'s `providers:` block. If `providers.openrouter` already
-   exists there, merge `modelOverrides` in rather than replacing the whole provider entry.
+3. In the same directory, open `models.yml` (create it if missing — **different file** than
+   `config.yml`). Copy in `models-overlay.yml`'s `providers:` block. If `providers.openrouter`
+   already exists there, merge `modelOverrides` in rather than replacing the whole provider entry.
 4. Restart any running `omp` session.
 
-Equivalent one-liners (no manual paste):
+Equivalent commands for the settings in `config.yml` (no manual paste):
 ```bash
 omp config set modelRoles '{"default":"google-antigravity/gemini-3.7-flash","smol":"openai-codex/gpt-5.6-luna","slow":"openai-codex/gpt-5.6-sol","vision":"google-antigravity/gemini-3.7-flash","plan":"openai-codex/gpt-5.6-sol","commit":"xai-oauth/grok-build","designer":"xai-oauth/grok-4.6","task":"openai-codex/gpt-5.6-terra","advisor":"google-antigravity/claude-sonnet-4-6","tiny":"openai-codex/gpt-5.6-luna","architect":"anthropic/claude-opus-5","review":"openai-codex/gpt-5.6-sol","security":"openai-codex/gpt-5.6-sol","critical":"anthropic/claude-opus-5","fast_worker":"openai-codex/gpt-5.6-luna","good_worker":"openai-codex/gpt-5.6-terra"}'
 
@@ -168,10 +171,11 @@ omp config set retry.usageAwareFallback true
 omp config set retry.usageReservePolicy auto
 ```
 
-Also merge `models-overlay.yml` into `~/.omp/agent/models.yml` (required for `vision`'s
-OpenRouter fallback — see rationale above):
+`models.yml` is a model-registry file, not an `omp config` settings file. OMP has no
+`omp config set`/`get` command that targets it: perform step 3 above to merge the companion
+overlay. In a fresh shell, confirm the effective OpenRouter entry with:
 ```bash
-omp config set providers.openrouter.modelOverrides '{"google/gemini-3.7-flash":{"maxTokens":65536}}' --file models.yml
+omp models find openrouter/google/gemini-3.7-flash
 ```
 
 
@@ -204,7 +208,7 @@ omp config get task.agentModelOverrides --json
 omp config get retry.fallbackChains --json
 omp config get retry.usageAwareFallback --json
 omp config get retry.usageReservePolicy --json
-omp config get providers.openrouter.modelOverrides --json --file models.yml
+omp models find openrouter/google/gemini-3.7-flash  # must show `google/gemini-3.7-flash` with 66K max-out
 omp usage   # confirm which pools are actually getting hit
 ```
 Then `/model` inside a session to confirm each role resolves to an available (authenticated)
