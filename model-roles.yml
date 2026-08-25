@@ -1,13 +1,21 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-08-22 · Snapshot version: 9
+## Generated: 2026-08-25 · Snapshot version: 10
 ## Stale? See RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
+##
+## v10 changes (all driven by a measured head-to-head, see README.md "2026-08-25 A/B"):
+##   - default's chain reordered: gpt-5.6-terra promoted to first fallback,
+##     claude-sonnet-5 demoted from first to third (its 5h pool peaked at 94% over 30d).
+##   - nvidia/meta/llama-3.1-8b-instruct REMOVED from all 12 chains. It has a 16K context
+##     window; a measured first turn in this harness is 15.5K-26.7K tokens, so that entry
+##     could never actually load. Replaced by nvidia/deepseek-ai/deepseek-v4-flash (1M ctx).
 ##
 ## Assumes these logins exist on the target machine:
 ##   - anthropic        (Claude Pro, $20/mo — the SCARCE pool, keep light, reserve for architect/critical)
 ##   - openai-codex      (ChatGPT Pro, $100/mo, 5x quota — the ABUNDANT pool, heavy roles & tiny work)
 ##   - google-antigravity (free preview; also proxies Claude models at no cost to the Anthropic pool)
 ##   - xai-oauth         (X Premium $8/mo bundled SuperGrok credits — small, weekly reset, use sparingly)
-##   - nvidia             (free NIM catalog — unmetered last-resort fallback)
+##   - nvidia             (free NIM catalog — unmetered last-resort fallback; use deepseek-v4-flash,
+##                          NOT the small llama models, which cannot hold this harness's system prompt)
 ##   - openrouter         (prepaid credit balance — used ONLY as vision's first fallback; see
 ##                          models-overlay.yml for the required maxTokens override on that entry)
 
@@ -42,24 +50,24 @@ task:
 retry:
   fallbackChains:
     default:
-      - anthropic/claude-sonnet-5
       - openai-codex/gpt-5.6-terra
+      - nvidia/deepseek-ai/deepseek-v4-flash
+      - anthropic/claude-sonnet-5
       - xai-oauth/grok-4.6
-      - nvidia/meta/llama-3.1-8b-instruct
     smol:
       - google-antigravity/gemini-3.1-flash-lite
-      - nvidia/meta/llama-3.1-8b-instruct
+      - nvidia/deepseek-ai/deepseek-v4-flash
     slow:
       - anthropic/claude-opus-5
       - xai-oauth/grok-4.6
-      - nvidia/meta/llama-3.1-8b-instruct
+      - nvidia/deepseek-ai/deepseek-v4-flash
     plan:
       - anthropic/claude-opus-5
       - xai-oauth/grok-4.6
-      - nvidia/meta/llama-3.1-8b-instruct
+      - nvidia/deepseek-ai/deepseek-v4-flash
     task:
       - google-antigravity/gemini-3.7-flash
-      - nvidia/meta/llama-3.1-8b-instruct
+      - nvidia/deepseek-ai/deepseek-v4-flash
     designer:
       - openai-codex/gpt-5.6-terra
       - google-antigravity/gemini-3.7-flash
@@ -72,31 +80,31 @@ retry:
     advisor:
       - openai-codex/gpt-5.6-terra
     tiny:
-      - nvidia/meta/llama-3.1-8b-instruct
+      - nvidia/deepseek-ai/deepseek-v4-flash
       - xai-oauth/grok-composer-2.5-fast
       - google-antigravity/gemini-3.1-flash-lite
     architect:
       - openai-codex/gpt-5.6-sol
       - xai-oauth/grok-4.6
-      - nvidia/meta/llama-3.1-8b-instruct
+      - nvidia/deepseek-ai/deepseek-v4-flash
     review:
       - anthropic/claude-opus-5
       - xai-oauth/grok-4.6
-      - nvidia/meta/llama-3.1-8b-instruct
+      - nvidia/deepseek-ai/deepseek-v4-flash
     security:
       - anthropic/claude-opus-5
       - xai-oauth/grok-4.6
-      - nvidia/meta/llama-3.1-8b-instruct
+      - nvidia/deepseek-ai/deepseek-v4-flash
     critical:
       - openai-codex/gpt-5.6-sol
       - xai-oauth/grok-4.6
-      - nvidia/meta/llama-3.1-8b-instruct
+      - nvidia/deepseek-ai/deepseek-v4-flash
     fast_worker:
-      - nvidia/meta/llama-3.1-8b-instruct
+      - nvidia/deepseek-ai/deepseek-v4-flash
       - xai-oauth/grok-build
       - google-antigravity/gemini-3.1-flash-lite
     good_worker:
       - google-antigravity/gemini-3.7-flash
-      - nvidia/meta/llama-3.1-8b-instruct
+      - nvidia/deepseek-ai/deepseek-v4-flash
   usageAwareFallback: true
   usageReservePolicy: "auto"

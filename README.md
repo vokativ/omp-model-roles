@@ -1,6 +1,6 @@
 # OMP model-role setup — import instructions
 
-**Snapshot: 2026-08-22 · v9.** Stale after ~4-6 weeks, or immediately if any subscription
+**Snapshot: 2026-08-25 · v10.** Stale after ~4-6 weeks, or immediately if any subscription
 changed — check `RESEARCH-PLAYBOOK.md`'s staleness check before importing this blind.
 
 `model-roles.yml` is a config **overlay**: `modelRoles`, `retry.fallbackChains`, and
@@ -17,22 +17,24 @@ subscription capacity, confirmed via `omp usage` on the source machine:
 
 | Login | Plan | Capacity signal | Treat as |
 |---|---|---|---|
-| `anthropic` | Claude Pro, $20/mo | Smallest pool (rolling 5h/7d windows) | **scarce** — kept off `default`'s primary path, used only as its fallback safety net |
+| `anthropic` | Claude Pro, $20/mo | Smallest pool; 5h window **peaked at 94% over 30d** (`omp usage --history`) | **scarce** — kept off `default`'s primary path AND off its first fallback; now `default`'s third tier, a genuine safety net |
 | `openai-codex` | ChatGPT Pro, $100/mo | 5x Plus quota | **abundant** — absorb the heavy/high-volume roles |
 | `google-antigravity` | free public preview | Separately meters Google/OpenAI/**Anthropic** usage — i.e. it's a free proxy that includes Claude models | **free pressure release** — use for anything that would otherwise double up on a paid pool |
 | `xai-oauth` | X Premium, $8/mo (bundled SuperGrok credits, *not* standalone SuperGrok) | Small, weekly-reset credit pool | **primary for `designer`** (tested best there, see below) + sparing fallback elsewhere |
-| `nvidia` | free NIM catalog | unmetered | **last-resort fallback**, quality is behind frontier |
+| `nvidia` | free NIM catalog | unmetered | **last-resort fallback** — use `deepseek-ai/deepseek-v4-flash` (1M ctx). The small `meta/llama-3.1-8b-instruct` is **unusable here**: 16K context vs a measured 15.5K-26.7K first turn |
 | `openrouter` | prepaid credit balance | Pay-per-token, no subscription tie-in | **narrowly scoped** — first fallback for `vision` only, added after a real A/B test (see below) |
 
 Consequences baked into this file:
 - `default` (highest-volume, fires every turn) was moved off the scarce Anthropic pool onto
   `google-antigravity/gemini-3.7-flash` — it rides Antigravity's independent, daily-resetting
   Google lane instead of competing with `slow`/`plan`/`advisor` for the Claude Pro 5h/7d window.
-  `anthropic/claude-sonnet-5` is now `default`'s first fallback instead of its primary: with
-  `retry.usageAwareFallback: true` + `usageReservePolicy: "auto"`, OMP proactively hops to it
-  before Gemini's daily lane hard-fails, so the scarce paid pool now sits almost idle as a
-  safety net rather than absorbing every-turn volume directly.
-- `slow`/`plan` (max-thinking, expensive-per-call) remain on `openai-codex/gpt-5.6-sol` — the flagship Codex tier on the abundant pool. Their fallback chain starts with `anthropic/claude-opus-5` to retain maximum reasoning depth during rare OpenAI transient outages, followed by `xai-oauth/grok-4.6` and NVIDIA DeepSeek V4 Pro.
+  `openai-codex/gpt-5.6-terra` is now `default`'s **first** fallback (promoted from second in v9),
+  with `nvidia/deepseek-ai/deepseek-v4-flash` second and `anthropic/claude-sonnet-5` demoted to
+  third. With `retry.usageAwareFallback: true` + `usageReservePolicy: "auto"`, OMP proactively
+  hops down this chain before Gemini's lane hard-fails — so every-turn volume lands on the
+  abundant ChatGPT Pro pool (7d peak **5%** over 30d) or a free unmetered pool, and the scarce
+  Anthropic pool is only reached if both are unavailable. See the 2026-08-25 A/B below.
+- `slow`/`plan` (max-thinking, expensive-per-call) remain on `openai-codex/gpt-5.6-sol` — the flagship Codex tier on the abundant pool. Their fallback chain starts with `anthropic/claude-opus-5` to retain maximum reasoning depth during rare OpenAI transient outages, followed by `xai-oauth/grok-4.6` and `nvidia/deepseek-ai/deepseek-v4-flash`.
 - `architect` (Strategy C — high-leverage, infrequent architectural design) is assigned to `anthropic/claude-opus-5`. This leverages Claude's renowned architectural taste, RFC/contract structuring, and system decomposition on the scarce Pro pool without generating heavy volume, with `openai-codex/gpt-5.6-sol` as its first fallback.
 - `review` & `security` (code review and vulnerability analysis) are assigned to `openai-codex/gpt-5.6-sol` — absorbing heavy diff analysis and static security sweeps on the abundant ChatGPT Pro pool, falling back to `claude-opus-5`.
 - `critical` (high-stakes pre-commit audits and destructive action gating) is assigned to `anthropic/claude-opus-5` with `gpt-5.6-sol` fallback, ensuring independent cross-provider verification before major cutovers.
@@ -59,8 +61,48 @@ Consequences baked into this file:
 - `default`/`vision` both primary on `gemini-3.7-flash` (GA Aug 13 2026, newest stable Flash
   tier) via `google-antigravity`; `gemini-3.6-flash` is still live but one generation behind.
   `designer` no longer shares that meter — see above.
-- `tiny` is explicitly assigned to `openai-codex/gpt-5.6-luna` with fallback chain: `nvidia/meta/llama-3.1-8b-instruct` $\to$ `xai-oauth/grok-composer-2.5-fast` $\to$ `google-antigravity/gemini-3.1-flash-lite`. Background tasks (session titles, Mnemopi memory extraction, auto-thinking classifier, unexpected-stop detector) run on the abundant ChatGPT Pro pool (97% idle). If OpenAI experiences transient issues, it fails over immediately to NVIDIA's live NIM Llama 3.1 8B (sub-second latency, 100% unmetered and free) and xAI Grok Composer Fast, with Gemini 3.1 Flash-Lite as the final safety net — providing total protection for the Google Antigravity daily lane that `default` and `vision` rely on.
+- `tiny` is explicitly assigned to `openai-codex/gpt-5.6-luna` with fallback chain: `nvidia/deepseek-ai/deepseek-v4-flash` $\to$ `xai-oauth/grok-composer-2.5-fast` $\to$ `google-antigravity/gemini-3.1-flash-lite`. Background tasks (session titles, Mnemopi memory extraction, auto-thinking classifier, unexpected-stop detector) run on the abundant ChatGPT Pro pool (97% idle). If OpenAI experiences transient issues, it fails over to NVIDIA's unmetered DeepSeek V4 Flash and xAI Grok Composer Fast, with Gemini 3.1 Flash-Lite as the final safety net — providing total protection for the Google Antigravity daily lane that `default` and `vision` rely on. **v10:** the previous first fallback, `nvidia/meta/llama-3.1-8b-instruct`, was removed here and in all 11 other chains — its 16K context cannot hold this harness's first turn (measured 15.5K-26.7K tokens), so it could never have served as a fallback at all.
 - `task.agentModelOverrides` binds bundled subagents to their dedicated roles: `security-reviewer` $\to$ `@security`, `reviewer` $\to$ `@review`, `sonic` $\to$ `@fast_worker`, `task` $\to$ `@good_worker`.
+
+### 2026-08-25 A/B — what `default`'s chain order is actually based on
+
+Five candidate models were run through an identical, objectively-graded harness rather than
+compared on vendor benchmarks. Fixture: an MV3 browser extension with two independent seeded
+root causes in two files (an async `sendResponse` channel closed by a missing `return true`,
+and a read-modify-write race in a `chrome.storage` wrapper). Deterministic 1/4 passing before
+the fix, 4/4 reachable. 3 trials per model, plus one research/prose task.
+
+| Model | Pass | Wall mean | σ | Tokens mean | Tail | Cost/task |
+|---|---|---|---|---|---|---|
+| `google-antigravity/gemini-3.7-flash` | 3/3 | **37.8s** | 6.2 | 265,038 | **1.09×** | $0.1553 |
+| `openai-codex/gpt-5.6-terra` | 3/3 | 63.2s | **0.8** | **248,632** | 1.16× | **$0.1337** |
+| `anthropic/claude-sonnet-5` | 3/3 | 60.0s | 13.6 | 331,651 | 1.89× | $0.1891 |
+| `nvidia/deepseek-ai/deepseek-v4-flash` | 3/3 | 46.5s | 8.1 | 352,096 | 1.70× | $0.1825 |
+| `xai-oauth/grok-4.6` | 3/3 | 74.8s | 11.7 | 227,327 | 1.28× | bundled |
+
+Findings that drove the v10 chain order:
+- **Correctness did not discriminate.** All five passed 3/3, left `test/` untouched, correctly
+  reported 2 root causes, and independently converged on the same fix (`return true` plus a
+  rejection-isolated promise queue). No model gamed the tests. For this workload class the
+  decision is therefore quota, latency and consistency — not capability.
+- **Gemini stays primary on merit**, not just because it's free: it was the fastest model tested
+  and had the tightest token spread. Its only problem is pool state (see below).
+- **Terra promoted to first fallback**: 17× tighter latency variance than Sonnet 5 (σ 0.8s vs
+  13.6s), lowest cost per task, on a pool whose 7d meter peaked at **5% over 30 days**.
+- **Sonnet 5 demoted to third**: worst token profile of the five (331K mean, 1.89× worst/best
+  tail) on the scarcest pool, whose 5h window peaked at **94% over 30 days**.
+- **DeepSeek V4 Flash earned a real chain slot**: 3/3 on a free unmetered pool, and in the
+  research task it independently found `omp usage --history` and cited "19 snapshots" — verified
+  exactly correct. It replaces the non-functional 16K llama entry everywhere.
+- **Grok 4.6 is viable but last**: full pool (0→1% after 4 tasks), yet the slowest model tested
+  and the highest tool churn (19 calls/task) — a real tax on a role that fires every turn.
+- On the research task all five detected that this repo's own quota claims were stale. Only
+  `gemini-3.7-flash` additionally spotted that `GEMINI-QUOTA-OPTIONS.md` **contradicts itself**
+  (its 2026-08-22 addendum records the 90% event that the 2026-08-15 body still denies).
+
+Caveat: one moderate two-file task does not probe long-horizon multi-file refactors, where
+DeepSWE v1.1 does separate the flagship tier (Claude Opus 5 74.0%, GPT-5.6 Sol 73.0%) from
+mid-tier models. That regime is already routed to `slow`/`plan`/`architect`/`critical`.
 
 If the target machine's subscriptions differ from the table above, don't paste this file blind —
 re-derive the allocation from whatever pools that machine actually has (`omp usage` after logging in).
@@ -94,7 +136,7 @@ omp config set modelRoles '{"default":"google-antigravity/gemini-3.7-flash","smo
 
 omp config set task.agentModelOverrides '{"security-reviewer":"@security","reviewer":"@review","sonic":"@fast_worker","task":"@good_worker"}'
 
-omp config set retry.fallbackChains '{"default":["anthropic/claude-sonnet-5","openai-codex/gpt-5.6-terra","xai-oauth/grok-4.6","nvidia/meta/llama-3.1-8b-instruct"],"smol":["google-antigravity/gemini-3.1-flash-lite","nvidia/meta/llama-3.1-8b-instruct"],"slow":["anthropic/claude-opus-5","xai-oauth/grok-4.6","nvidia/meta/llama-3.1-8b-instruct"],"vision":["openrouter/google/gemini-3.7-flash","openai-codex/gpt-5.6-terra","xai-oauth/grok-4.6"],"plan":["anthropic/claude-opus-5","xai-oauth/grok-4.6","nvidia/meta/llama-3.1-8b-instruct"],"commit":["openai-codex/gpt-5.6-luna"],"designer":["openai-codex/gpt-5.6-terra","google-antigravity/gemini-3.7-flash"],"task":["google-antigravity/gemini-3.7-flash","nvidia/meta/llama-3.1-8b-instruct"],"advisor":["openai-codex/gpt-5.6-terra"],"tiny":["nvidia/meta/llama-3.1-8b-instruct","xai-oauth/grok-composer-2.5-fast","google-antigravity/gemini-3.1-flash-lite"],"architect":["openai-codex/gpt-5.6-sol","xai-oauth/grok-4.6","nvidia/meta/llama-3.1-8b-instruct"],"review":["anthropic/claude-opus-5","xai-oauth/grok-4.6","nvidia/meta/llama-3.1-8b-instruct"],"security":["anthropic/claude-opus-5","xai-oauth/grok-4.6","nvidia/meta/llama-3.1-8b-instruct"],"critical":["openai-codex/gpt-5.6-sol","xai-oauth/grok-4.6","nvidia/meta/llama-3.1-8b-instruct"],"fast_worker":["nvidia/meta/llama-3.1-8b-instruct","xai-oauth/grok-build","google-antigravity/gemini-3.1-flash-lite"],"good_worker":["google-antigravity/gemini-3.7-flash","nvidia/meta/llama-3.1-8b-instruct"]}'
+omp config set retry.fallbackChains '{"default":["openai-codex/gpt-5.6-terra","nvidia/deepseek-ai/deepseek-v4-flash","anthropic/claude-sonnet-5","xai-oauth/grok-4.6"],"smol":["google-antigravity/gemini-3.1-flash-lite","nvidia/deepseek-ai/deepseek-v4-flash"],"slow":["anthropic/claude-opus-5","xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-flash"],"plan":["anthropic/claude-opus-5","xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-flash"],"task":["google-antigravity/gemini-3.7-flash","nvidia/deepseek-ai/deepseek-v4-flash"],"designer":["openai-codex/gpt-5.6-terra","google-antigravity/gemini-3.7-flash"],"vision":["openrouter/google/gemini-3.7-flash","openai-codex/gpt-5.6-terra","xai-oauth/grok-4.6"],"commit":["openai-codex/gpt-5.6-luna"],"advisor":["openai-codex/gpt-5.6-terra"],"tiny":["nvidia/deepseek-ai/deepseek-v4-flash","xai-oauth/grok-composer-2.5-fast","google-antigravity/gemini-3.1-flash-lite"],"architect":["openai-codex/gpt-5.6-sol","xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-flash"],"review":["anthropic/claude-opus-5","xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-flash"],"security":["anthropic/claude-opus-5","xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-flash"],"critical":["openai-codex/gpt-5.6-sol","xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-flash"],"fast_worker":["nvidia/deepseek-ai/deepseek-v4-flash","xai-oauth/grok-build","google-antigravity/gemini-3.1-flash-lite"],"good_worker":["google-antigravity/gemini-3.7-flash","nvidia/deepseek-ai/deepseek-v4-flash"]}'
 
 omp config set retry.usageAwareFallback true
 omp config set retry.usageReservePolicy auto

@@ -40,7 +40,11 @@ not current.
 ## TL;DR
 
 - **Don't subscribe to anything yet.** Your current fallback chain already survives a Gemini
-  burnout for free — it drops to `anthropic/claude-sonnet-5`, which sits at ~0-4% used.
+  burnout for free. *(Updated 2026-08-25, v10: it now drops to `openai-codex/gpt-5.6-terra`
+  first — 2% of its 7d pool used, 30d peak 5% — then the free unmetered
+  `nvidia/deepseek-ai/deepseek-v4-flash`, and only then `anthropic/claude-sonnet-5`, whose 5h
+  window peaked at 94% over 30d. The original text named Sonnet 5 as the first hop at "~0-4%
+  used"; both the order and that figure are superseded.)*
 - **If** you want overflow to land on *more Gemini* instead of switching model character mid-
   session, OMP's own maintainers document a specific pattern for exactly this: a
   `google-antigravity/*` provider-wildcard fallback to `google/*` (Gemini API, pay-as-you-go)
@@ -130,14 +134,35 @@ Live rates for `gemini-3.7-flash` (checked 2026-08-16):
 
 ### Updated Recommendation: Do Not Buy API Keys Right Now
 
-1. **Antigravity daily Google lane is at ~4% capacity**: You are far from exhausting the free quota under your current solo/exploratory volume.
-2. **Your paid pools have 90%+ idle headroom**: If Antigravity ever exhausts, your fallback chain immediately routes to `anthropic/claude-sonnet-5` (4% 7d used) and `openai-codex/gpt-5.6-terra` (8% 7d used). These are already paid for by your monthly subscriptions — paying per token to OpenRouter or Google would be paying twice for overflow you already have for free.
-3. **If you ever need same-model overflow in the future**: Prefer OpenRouter (`openrouter/google/gemini-3.7-flash`). It is 50% cheaper than direct Google AI Studio and avoids touching or complicating existing Google Cloud billing accounts tied to your production apps.
+> **SUPERSEDED 2026-08-25 (snapshot v10).** The three numbered claims below were written
+> 2026-08-15 and are now measurably wrong — the 2026-08-22 addendum at the top of this file
+> already recorded the event that contradicts them. Corrected figures from
+> `omp usage --history --days 30` on 2026-08-25:
+>
+> | Claim below | Actual on 2026-08-25 |
+> |---|---|
+> | Antigravity Google lane "~4% capacity" | **Weekly 90.0%**, flat across 19 consecutive snapshots; daily peak 70.4% |
+> | `claude-sonnet-5` "4% 7d used" | 7d **35%**, and the 5h window **peaked at 94%** over 30d |
+> | `gpt-5.6-terra` "8% 7d used" | 7d **2%**, 30d peak **5%** — the one claim that got *more* favourable |
+>
+> The bottom-line recommendation (**don't buy anything yet**) still holds, and v10 acts on the
+> corrected numbers instead: `default`'s chain now hops to `gpt-5.6-terra` first and
+> `nvidia/deepseek-ai/deepseek-v4-flash` second, reaching `claude-sonnet-5` only third. Note
+> also that at 90% the `usageReservePct: 10` threshold is already tripped, so `default` is
+> *already* falling back rather than being about to.
+
+1. ~~**Antigravity daily Google lane is at ~4% capacity**~~: superseded — see table above.
+2. ~~**Your paid pools have 90%+ idle headroom**~~: partly superseded — Codex still has deep
+   headroom (2% 7d, 30d peak 5%), but the Anthropic pool does *not* (5h peak 94% over 30d),
+   which is why v10 demotes `claude-sonnet-5` below both Terra and DeepSeek V4 Flash.
+3. **If you ever need same-model overflow in the future**: Prefer OpenRouter (`openrouter/google/gemini-3.7-flash`). It is 50% cheaper than direct Google AI Studio and avoids touching or complicating existing Google Cloud billing accounts tied to your production apps. *(Still current.)*
 
 ### When to review
 Re-evaluate during the monthly check-in (`omp usage --history --days 30`). Only consider adding OpenRouter if:
 - Antigravity's daily Google meter hits 100% regularly, **and**
-- You notice and dislike the model character switch when Sonnet 5 takes over.
+- You notice and dislike the model character switch when `gpt-5.6-terra` takes over (v10's first
+  fallback; measured in the 2026-08-25 A/B as the most latency-stable of five candidates, so a
+  character switch is now the main reason to care, not a performance one).
 
 ## Part 2 — Monitoring usage over time, and across multiple machines
 
@@ -160,9 +185,9 @@ What to actually watch for, next check-in:
   research burst — worth moving that role off it or adding the paid-API fallback.
 - **A meter that never exceeds ~20-30% even on your heaviest days** → over-provisioned; safe to
   point *more* volume at it (e.g., shift another role onto it) rather than leaving headroom idle.
-- **Anthropic's peak staying low** (currently 0-4%) confirms the "reserve it as fallback only"
-  strategy from this morning's swap is working as intended — it's absorbing overflow, not
-  routine traffic.
+- **Anthropic's peak staying low** was the v9 assumption; as of 2026-08-25 it is **not** holding
+  — the 5h window peaked at **94%** over 30 days, which is what motivated demoting
+  `claude-sonnet-5` to `default`'s third fallback tier in v10. Watch this meter specifically.
 
 ### Across multiple machines: the quota numbers are already combined — attribution is the only gap
 
