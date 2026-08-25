@@ -1,5 +1,8 @@
 # Gemini/Antigravity quota — burnout options, and how to monitor usage over time
 
+*In `research/`. Bare filenames such as `model-roles.yml` and `README.md` refer to the repo root,
+one level up.*
+
 Written 2026-08-15 in response to: "a lot of stuff is on Google Gemini now, should I upgrade a
 subscription or use an API key, and how do we check back in a month across multiple machines to
 see if this allocation actually makes sense."

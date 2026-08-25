@@ -1,6 +1,6 @@
 ## OMP model-role export — comprehensive quota-aware allocation
 ## Generated: 2026-08-25 · Snapshot version: 10
-## Stale? See RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
+## Stale? See research/RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
 ##
 ## v10 changes (all driven by a measured head-to-head, see README.md "2026-08-25 A/B"):
 ##   - default's chain reordered: gpt-5.6-terra promoted to first fallback,

@@ -1,5 +1,8 @@
 # Re-running the model-role allocation
 
+*In `research/`. Bare filenames such as `model-roles.yml` and `README.md` refer to the repo root,
+one level up; the file map at the bottom gives explicit paths.*
+
 This repo holds a **snapshot**, not a fixed answer. Subscriptions change, model lineups
 change, workload mix changes — re-derive the allocation instead of copying `model-roles.yml`
 blind once any of those have moved.
@@ -22,8 +25,8 @@ line. Before importing this config on a machine, or before treating it as curren
 ## One-shot prompt (paste into a fresh OMP session on any machine)
 
 ```
-Read RESEARCH-PLAYBOOK.md from https://github.com/vokativ/omp-model-roles (or the local
-clone). Follow its methodology: inspect my current OMP model-role config and `omp usage`,
+Read research/RESEARCH-PLAYBOOK.md from https://github.com/vokativ/omp-model-roles (or the
+local clone). Follow its methodology: inspect my current OMP model-role config and `omp usage`,
 ask me the subscription checklist questions in that file, research current model/plan
 capacity online, then propose and apply an updated quota-aware modelRoles +
 retry.fallbackChains allocation. Update model-roles.yml and README.md in that repo to
@@ -76,12 +79,19 @@ match what you applied, and commit + push.
 
 ## Files in this repo
 
-- `model-roles.yml` — the current applied `modelRoles` + `retry.fallbackChains` overlay (importable via `PI_CONFIG_FILES` or manual merge into `config.yml`).
-- `models-overlay.yml` — companion `models.yml` overlay (per-model overrides like `maxTokens`).
+Repo root holds only the importable config plus the README; everything explaining *why* lives
+in `research/` (this folder).
+
+Root — the importable config:
+- `../model-roles.yml` — the current applied `modelRoles` + `retry.fallbackChains` overlay (importable via `PI_CONFIG_FILES` or manual merge into `config.yml`).
+- `../models-overlay.yml` — companion `models.yml` overlay (per-model overrides like `maxTokens`).
   Currently just the OpenRouter Gemini 3.7 Flash `maxTokens` fix that `vision`'s fallback chain
   depends on — check whether any newly-added fallback model needs one of these before assuming
   `model-roles.yml` alone is a complete import.
-- `README.md` — import instructions plus the rationale/subscription table that justified the current values.
+- `../README.md` — import instructions, the repo-layout map, plus the rationale/subscription table
+  that justified the current values, including the locally measured 2026-08-25 A/B.
+
+`research/` — methodology and point-in-time investigations:
 - `RESEARCH-PLAYBOOK.md` — this file.
 - `GEMINI-QUOTA-OPTIONS.md` — point-in-time investigation into Gemini/Antigravity quota burnout
   options; superseded in part by the `vision`/`designer` decisions in this snapshot — see its own
@@ -91,3 +101,6 @@ match what you applied, and commit + push.
   role; the Contributor tier's discount is paid for with permission to train on submitted prompts
   and completions, and a plain API key is excluded from `usageAwareFallback`. Read it before
   re-litigating "should we add the cheap Meta model somewhere".
+
+Adding a new investigation? Put it in `research/`, register it in this list, and link it from
+`../README.md`'s rationale section so it is discoverable from the entry point.

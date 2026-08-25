@@ -1,14 +1,32 @@
 # OMP model-role setup — import instructions
 
 **Snapshot: 2026-08-25 · v10.** Stale after ~4-6 weeks, or immediately if any subscription
-changed — check `RESEARCH-PLAYBOOK.md`'s staleness check before importing this blind.
+changed — check `research/RESEARCH-PLAYBOOK.md`'s staleness check before importing this blind.
 
 `model-roles.yml` is a config **overlay**: `modelRoles`, `retry.fallbackChains`, and
 `retry.usageAwareFallback`/`retry.usageReservePolicy`. No API keys. Safe to copy anywhere,
 commit to a repo, or paste into an existing config.
 
-Subscriptions or workload change? Don't hand-edit this file — see `RESEARCH-PLAYBOOK.md`
-in this repo for the methodology and the questions to re-run before updating it.
+Subscriptions or workload change? Don't hand-edit this file — see
+`research/RESEARCH-PLAYBOOK.md` for the methodology and the questions to re-run before updating it.
+
+## Repo layout
+
+The repo root holds only what you actually import. Everything explaining *why* lives in
+`research/`, so you can ignore it unless you're re-deriving the allocation.
+
+```
+model-roles.yml       <- the config overlay: modelRoles + retry.fallbackChains   (import this)
+models-overlay.yml    <- companion models.yml overlay: per-model maxTokens fixes (import this too)
+README.md             <- you are here: import steps + the rationale for the current values
+research/
+  RESEARCH-PLAYBOOK.md      <- how to re-derive the allocation from scratch; staleness check
+  GEMINI-QUOTA-OPTIONS.md   <- 2026-08-15 investigation: Gemini/Antigravity quota burnout options
+  META-MUSE-EVALUATION.md   <- 2026-08-25 evaluation: the `meta` provider, and why it wasn't adopted
+```
+
+Just importing the config? You need the two `.yml` files and the import steps below — nothing in
+`research/`.
 
 ## Design rationale (why these specific models, not just "the best ones")
 
@@ -65,7 +83,7 @@ Consequences baked into this file:
   is excluded from `retry.usageAwareFallback`, so it can neither be hopped-off-of proactively nor
   relieve a metered pool. It also places behind `gpt-5.6-terra` on Meta's own published DeepSWE
   chart. Full evaluation, including the one role it *could* plausibly fit (`review`, Standard tier,
-  non-blocking): `META-MUSE-EVALUATION.md`.
+  non-blocking): `research/META-MUSE-EVALUATION.md`.
 - `default`/`vision` both primary on `gemini-3.7-flash` (GA Aug 13 2026, newest stable Flash
   tier) via `google-antigravity`; `gemini-3.6-flash` is still live but one generation behind.
   `designer` no longer shares that meter — see above.
@@ -105,7 +123,7 @@ Findings that drove the v10 chain order:
 - **Grok 4.6 is viable but last**: full pool (0→1% after 4 tasks), yet the slowest model tested
   and the highest tool churn (19 calls/task) — a real tax on a role that fires every turn.
 - On the research task all five detected that this repo's own quota claims were stale. Only
-  `gemini-3.7-flash` additionally spotted that `GEMINI-QUOTA-OPTIONS.md` **contradicts itself**
+  `gemini-3.7-flash` additionally spotted that `research/GEMINI-QUOTA-OPTIONS.md` **contradicts itself**
   (its 2026-08-22 addendum records the 90% event that the 2026-08-15 body still denies).
 
 Caveat: one moderate two-file task does not probe long-horizon multi-file refactors, where

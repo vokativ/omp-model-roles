@@ -1,5 +1,8 @@
 # Meta Muse Spark — role-fit evaluation
 
+*In `research/`. Bare filenames such as `model-roles.yml` and `README.md` refer to the repo root,
+one level up.*
+
 Written 2026-08-25 in response to: "we just added the Meta models API to this harness. Should we
 think about their Muse 1.2 Contributor model for orchestration, or are there other roles where it
 might fit? We'd have to pay for it so I'm wary of putting it in a heavy role, but I heard it's fast
@@ -7,7 +10,7 @@ at reviewing multiple PRs from Theo (T3)."
 
 Research-only evaluation — **the model was deliberately not benchmarked in this harness.** Every
 capability statement below is therefore public evidence or vendor evidence, not a local
-measurement. Contrast with README.md's "2026-08-25 A/B", which *is* locally measured.
+measurement. Contrast with `README.md`'s "2026-08-25 A/B", which *is* locally measured.
 
 ---
 
@@ -75,7 +78,7 @@ cannot justify adoption — only a capability or capacity argument could, and ne
    with its own agent product: Muse Spark 1.2 + Muse Code **59.3%**, GPT-5.6 Terra + Codex
    **64.8%**, Claude Opus 5 + Claude Code **65.0%**. Terminal-Bench 2.1: Muse **82.9%** vs Opus 5
    **86.7%**, Terra **81.8%**.
-   - *Reconciling with README.md's A/B section*, which cites DeepSWE v1.1 as Opus 5 74.0% / Sol
+   - *Reconciling with `README.md`'s A/B section*, which cites DeepSWE v1.1 as Opus 5 74.0% / Sol
      73.0%: those come from DataCurve's **official leaderboard**, which standardises every model
      onto the common `mini-swe-agent` harness. Meta's chart instead pairs each model with its
      vendor's own agent. Both figures are real; they are different configurations and must not be
@@ -155,5 +158,5 @@ grade every finding `high`/`medium`/`low`/`unverifiable` with a source URL, and 
 told that a documented "no source found" was a successful outcome. 49 findings were returned. The
 five load-bearing claims were then re-attacked by 3 independent refutation-seeking skeptics each.
 Local specs and prices were cross-checked against `omp models meta --json`; the cost model reuses
-the token profile measured in README.md's 2026-08-25 A/B. No model call was made to any `meta`
+the token profile measured in `README.md`'s 2026-08-25 A/B. No model call was made to any `meta`
 model at any point.
