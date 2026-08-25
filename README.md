@@ -58,6 +58,14 @@ Consequences baked into this file:
 - `commit` (once per commit — genuinely low frequency) is the one place `xai-oauth/grok-build` is used as primary, so the X login gets real use without meaningfully risking its small weekly pool. `grok-4.6` is the first non-OpenAI contingency for `slow`/`plan`, followed by NVIDIA; it cannot drain the pool through routine use.
 - Every fallback chain uses a *different provider* than its primary, so a single provider outage/quota exhaustion doesn't take out both tiers at once.
 - Deliberately **not** using `claude-fable-5`/`claude-mythos-5` (Anthropic's largest models) anywhere — on the Pro plan those bill through separate credits, i.e. the "buy more" trap.
+- Deliberately **not** using the `meta` provider (`muse-spark-1.2`, `muse-spark-1.2-contributor`)
+  in any role, despite Contributor being ~31× cheaper per task than `gpt-5.6-terra`'s list price.
+  Two structural reasons: the Contributor discount is paid for with permission for Meta to train
+  on submitted prompts and completions (disqualifying for proprietary source), and a plain API key
+  is excluded from `retry.usageAwareFallback`, so it can neither be hopped-off-of proactively nor
+  relieve a metered pool. It also places behind `gpt-5.6-terra` on Meta's own published DeepSWE
+  chart. Full evaluation, including the one role it *could* plausibly fit (`review`, Standard tier,
+  non-blocking): `META-MUSE-EVALUATION.md`.
 - `default`/`vision` both primary on `gemini-3.7-flash` (GA Aug 13 2026, newest stable Flash
   tier) via `google-antigravity`; `gemini-3.6-flash` is still live but one generation behind.
   `designer` no longer shares that meter — see above.

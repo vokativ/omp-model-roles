@@ -86,3 +86,8 @@ match what you applied, and commit + push.
 - `GEMINI-QUOTA-OPTIONS.md` — point-in-time investigation into Gemini/Antigravity quota burnout
   options; superseded in part by the `vision`/`designer` decisions in this snapshot — see its own
   addendum before treating its recommendation as current.
+- `META-MUSE-EVALUATION.md` — point-in-time evaluation of the `meta` provider (Muse Spark 1.2 /
+  1.2-contributor), 2026-08-25. Research-only, no local benchmark. Conclusion: not adopted in any
+  role; the Contributor tier's discount is paid for with permission to train on submitted prompts
+  and completions, and a plain API key is excluded from `usageAwareFallback`. Read it before
+  re-litigating "should we add the cheap Meta model somewhere".
