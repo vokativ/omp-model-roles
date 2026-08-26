@@ -1,6 +1,11 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-08-25 · Snapshot version: 10
+## Generated: 2026-08-26 · Snapshot version: 11
 ## Stale? See research/RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
+##
+## v11: usageReservePct tightened 10 -> 5 (applied directly via `omp config set`, not yet
+## recorded here until now). Effect: `usageAwareFallback` now only treats a pool as
+## near-exhausted at <5% remaining instead of <10%, so roles ride their primary pool
+## further into its window before `usageReservePolicy: auto` switches them off it.
 ##
 ## v10 changes (all driven by a measured head-to-head, see README.md "2026-08-25 A/B"):
 ##   - default's chain reordered: gpt-5.6-terra promoted to first fallback,
@@ -107,4 +112,5 @@ retry:
       - google-antigravity/gemini-3.7-flash
       - nvidia/deepseek-ai/deepseek-v4-flash
   usageAwareFallback: true
+  usageReservePct: 5
   usageReservePolicy: "auto"
