@@ -69,7 +69,7 @@ Two corrections made to the `slow` model's own suggestions before applying:
 
 ## Verified by live dispatch — 2026-08-26
 
-Four real dispatches, not inference:
+Five real dispatches, not inference:
 
 | Dispatch | Agent | Result |
 |---|---|---|
@@ -77,6 +77,7 @@ Four real dispatches, not inference:
 | `CritSmoke` | critical | resolved `anthropic/claude-opus-5`, `bash` executed `git log` successfully |
 | `ArchVerify` | architect | confirmed `thinking: high` in effect; produced a real structural critique |
 | `CritVerify` | critical | returned a schema-conformant `verdict`/`findings`/`conditions`/`unverified` object |
+| `CriticalIndependence` | critical | same-model Opus producer/reviewer correctly returned `SAME-MODEL` + `GO-WITH-CONDITIONS` |
 
 Frontmatter parsing is confirmed sound by inference from `CritSmoke`: `bash` worked, so
 `tools: [read, grep, glob, bash]` parsed as a real YAML **array**. Had the YAML parser failed and
@@ -114,33 +115,62 @@ the chance of an accident, but they do not enforce anything. If real containment
 to come from the harness — MCP server gating, `task.isolation.mode` (currently `none`), or approval
 prompts — not from frontmatter or prompt wording.
 
-## Open defect: the independence property `critical` claims does not hold
+## Critical's intended use and independence guard — resolved in instructions
 
-Found by `CritVerify` auditing its own enabling commit, with evidence. **Not yet fixed** — it
-requires a role-allocation decision, not an agent-file change:
+Evidence from current wiring and history:
 
-- `modelRoles.critical` and `modelRoles.architect` are the **same model**
-  (`anthropic/claude-opus-5`), so `critical` auditing an `architect` design is same-provider *and*
-  same-model — no independence at all.
-- `fallbackChains.critical[0]` is `openai-codex/gpt-5.6-sol`, which is also
-  `modelRoles.review`/`security`/`slow`/`plan`. On failover the gate collapses onto the same model
-  as the reviewer/planner whose work it is meant to independently check. Since the file header
-  designates `anthropic` "the SCARCE pool, keep light", that failover is the *expected* path.
+- **No automatic trigger exists.** `critical` runs only when a caller explicitly dispatches
+  `task(agent: "critical", ...)` or manually selects `/model @critical`. Retry/usage-aware fallback
+  changes the model only *after* invocation; it never causes an invocation. Current `cycleOrder`
+  includes `architect`, not `critical` — an earlier README claim that both were present was stale.
+- Real, non-test usage found in `parent-help-android`: two adversarial Tier-1 **implementation**
+  reviews (`CriticalReviewer.md`, `CriticalReviewer2.md`). The omp-model-roles history is test-only
+  (`CritSmoke`, `CritVerify`, and the provenance guard below).
+- Therefore `critical` is primarily a final implementation/operational gate for work produced by
+  `default` (Gemini), `task` (Terra), `slow`/`plan`/`review`/`security` (Sol), or `designer`
+  (Grok) — not an automatic peer reviewer for `architect`.
 
-README describes `critical` as "ensuring independent cross-provider verification before major
-cutovers". As configured, that holds when gating work from `default`/`task` (Gemini/Terra) but
-**not** when gating `architect` output, and not after failover.
+This supports keeping `modelRoles.critical: anthropic/claude-opus-5`: it provides a different
+provider/model from all likely producers above. Moving it to Sol would improve only the architect
+pairing while losing independence against four Sol-backed roles. The exception remains real:
+`modelRoles.critical` and `modelRoles.architect` are the same Opus 5 model, and critical's Sol
+fallback is not independent from Sol-produced work.
 
-Separately, `ArchVerify` found the related structural issue: six roles (`slow`, `plan`, `review`,
-`security`, `architect`, `critical`) resolve across primary + first-fallback to a two-element set
-`{gpt-5.6-sol, claude-opus-5}`, and all six then drop to `xai-oauth/grok-4.6` — the smallest pool
-and the slowest model in the 2026-08-25 A/B. Its recommendation: insert
-`google-antigravity/claude-sonnet-4-6` as a third depth lane ahead of `grok-4.6` — free, on
-Antigravity's separately-metered Anthropic-proxy lane already proven by `advisor`, and it preserves
-Claude-class depth without touching the 94%-peak paid pool.
+v15 hardens `agents/critical.md` instead of reallocating the role:
 
-Both left as proposals rather than applied: they re-allocate quota across six roles whose current
-ordering is backed by measured A/B data, which is a cost decision for the operator.
+- output schema now requires `provenance`:
+  `producerRole`, `producerModel`, `reviewerModel`, and `independence`;
+- caller must supply producer role/model; missing data becomes literal `unknown` +
+  `independence: UNKNOWN`;
+- matching concrete producer/reviewer models becomes `SAME-MODEL`;
+- `SAME-MODEL` or `UNKNOWN` may never return unconditional `GO`;
+- when reviewing architect/Opus output, get a different-model architecture critique (normally the
+  Sol-backed bundled `reviewer`) before treating the gate as independent;
+- if critical falls back to Sol while reviewing `slow`, `plan`, `review`, or `security`, the same
+  guard applies.
+
+Live test `CriticalIndependence` supplied producer `architect` /
+`anthropic/claude-opus-5`; the critical agent itself resolved to Opus 5 and correctly returned:
+
+```json
+{
+  "verdict": "GO-WITH-CONDITIONS",
+  "provenance": {
+    "producerRole": "architect",
+    "producerModel": "anthropic/claude-opus-5",
+    "reviewerModel": "anthropic/claude-opus-5",
+    "independence": "SAME-MODEL"
+  },
+  "conditions": ["Obtain review from a different concrete model before treating the gate as independent."]
+}
+```
+
+The broader depth-tier concentration found by `ArchVerify` remains a separate, unapplied proposal:
+six roles (`slow`, `plan`, `review`, `security`, `architect`, `critical`) resolve across primary +
+first-fallback to `{gpt-5.6-sol, claude-opus-5}`, then all six drop to
+`xai-oauth/grok-4.6`. Its cost-neutral resilience proposal is to insert
+`google-antigravity/claude-sonnet-4-6` ahead of Grok. This is not required for critical's intended
+implementation-gate use and would alter A/B-backed fallback ordering, so v15 does not apply it.
 
 ## Remaining unverified
 

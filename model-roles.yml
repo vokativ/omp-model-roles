@@ -1,6 +1,15 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-08-26 · Snapshot version: 14
+## Generated: 2026-08-26 · Snapshot version: 15
 ## Stale? See research/RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
+##
+## v15: kept `critical` on Opus 5 after wiring/history review showed it is an explicit final
+## implementation/operational gate, not an automatic architect reviewer. Opus is independent
+## from likely producers (Gemini default, Terra task, Sol depth/review, Grok designer); moving
+## it to Sol would weaken four common pairings to fix one architect pairing. Hardened
+## agents/critical.md instead: required producer/reviewer provenance + independence enum, and
+## forbid unconditional GO for SAME-MODEL/UNKNOWN. Live same-model test (architect Opus ->
+## critical Opus) returned SAME-MODEL + GO-WITH-CONDITIONS as required. Also corrected stale
+## docs: current cycleOrder contains architect but not critical; no automatic trigger exists.
 ##
 ## v14: hardened + TESTED the v13 agent definitions (4 live dispatches, both agents resolved to
 ## anthropic/claude-opus-5). Added `thinking: high` to both and an `output:` JSON-schema to

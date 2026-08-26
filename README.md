@@ -1,6 +1,6 @@
 # OMP model-role setup — import instructions
 
-**Snapshot: 2026-08-26 · v14.** Stale after ~4-6 weeks, or immediately if any subscription
+**Snapshot: 2026-08-26 · v15.** Stale after ~4-6 weeks, or immediately if any subscription
 changed — check `research/RESEARCH-PLAYBOOK.md`'s staleness check before importing this blind.
 
 `model-roles.yml` is a config **overlay**: `modelRoles`, `retry.fallbackChains`, and
@@ -57,7 +57,7 @@ Consequences baked into this file:
 - `slow`/`plan` (max-thinking, expensive-per-call) remain on `openai-codex/gpt-5.6-sol` — the flagship Codex tier on the abundant pool. Their fallback chain starts with `anthropic/claude-opus-5` to retain maximum reasoning depth during rare OpenAI transient outages, followed by `xai-oauth/grok-4.6` and `nvidia/deepseek-ai/deepseek-v4-flash`.
 - `architect` (Strategy C — high-leverage, infrequent architectural design) is assigned to `anthropic/claude-opus-5`. This leverages Claude's renowned architectural taste, RFC/contract structuring, and system decomposition on the scarce Pro pool without generating heavy volume, with `openai-codex/gpt-5.6-sol` as its first fallback.
 - `review` & `security` (code review and vulnerability analysis) are assigned to `openai-codex/gpt-5.6-sol` — absorbing heavy diff analysis and static security sweeps on the abundant ChatGPT Pro pool, falling back to `claude-opus-5`.
-- `critical` (high-stakes pre-commit audits and destructive action gating) is assigned to `anthropic/claude-opus-5` with `gpt-5.6-sol` fallback, ensuring independent cross-provider verification before major cutovers.
+- `critical` is an **explicit, manually-dispatched final implementation/operational gate**, not an automatic architect reviewer. It remains on `anthropic/claude-opus-5` because that provides independent-provider review against the likely producers: Gemini `default`, Terra `task`, Sol `slow`/`plan`/`review`/`security`, and Grok `designer`. Observed real use matches this: two adversarial implementation reviews in `parent-help-android`; no automatic trigger exists. Its Sol fallback preserves depth, but is not independent from Sol-produced work. The agent now requires producer role/model provenance, reports `INDEPENDENT` / `SAME-MODEL` / `UNKNOWN`, and forbids unconditional `GO` for the latter two. `architect` is the known same-model exception (both primary Opus 5): use the Sol-backed `reviewer` as an additional independent architecture critique before treating that gate as independent.
 - `advisor` (would double per-turn cost the moment it's enabled) points at `google-antigravity/claude-sonnet-4-6` — free Claude access via Antigravity's separately-metered Anthropic-proxy lane, so turning advisor on doesn't touch the paid Anthropic pool at all.
 - `vision` primaries on `google-antigravity/gemini-3.7-flash`, but its **first fallback is
   `openrouter/google/gemini-3.7-flash`** — same weights, different (billed) pool, added 2026-08-22
@@ -92,24 +92,24 @@ Consequences baked into this file:
 - `tiny` is explicitly assigned to `openai-codex/gpt-5.6-luna` with fallback chain: `nvidia/deepseek-ai/deepseek-v4-flash` $\to$ `xai-oauth/grok-composer-2.5-fast` $\to$ `google-antigravity/gemini-3.1-flash-lite`. Background tasks (session titles, Mnemopi memory extraction, auto-thinking classifier, unexpected-stop detector) run on the abundant ChatGPT Pro pool (97% idle). If OpenAI experiences transient issues, it fails over to NVIDIA's unmetered DeepSeek V4 Flash and xAI Grok Composer Fast, with Gemini 3.1 Flash-Lite as the final safety net — providing total protection for the Google Antigravity daily lane that `default` and `vision` rely on. **v10:** the previous first fallback, `nvidia/meta/llama-3.1-8b-instruct`, was removed here and in all 11 other chains — its 16K context cannot hold this harness's first turn (measured 15.5K-26.7K tokens), so it could never have served as a fallback at all.
 - `task.agentModelOverrides` binds bundled subagents to their dedicated roles: `security-reviewer` $\to$ `@security`, `reviewer` $\to$ `@review`, `sonic` $\to$ `@fast_worker`, `task` $\to$ `@good_worker`.
 - `architect` and `critical` existed only as `modelRoles`/`fallbackChains` entries through v12 —
-  reachable by manually switching the whole session (`/model @architect` or Ctrl+P, since both are
-  in `cycleOrder`) but **not dispatchable as subagents**: `task.agentModelOverrides` can only bind a
-  role onto an *existing* bundled agent name (`reviewer`, `security-reviewer`, `sonic`, `task`), and
-  no bundled agent is named `architect` or `critical`. `agents/architect.md` and `agents/critical.md`
-  fix this via OMP's documented "role-backed custom agent" pattern (`docs/task-agent-discovery.md`):
-  a markdown file with `model: "@architect"`/`model: "@critical"` in frontmatter becomes a real
-  `task(agent: "architect", ...)` / `task(agent: "critical", ...)` target. **v14: verified by four
-  live dispatches**, both resolving to their configured `anthropic/claude-opus-5` — plus `thinking:
-  high` on both (deepest level every model in their fallback chains supports; `xhigh` would break on
-  `deepseek-v4-flash`) and an `output:` JSON-schema on `critical` so its GO / NO-GO /
-  GO-WITH-CONDITIONS verdict is machine-checkable rather than prose. `architect` gets
-  `read`/`grep`/`glob`; `critical` adds `bash`, scoped in-prompt to non-destructive inspection.
-  **These are advisory, not sandboxed:** the `tools:` allowlist bounds built-in tools only — `hub`
-  is auto-added, and MCP tools are injected regardless of it, so a dispatched agent can reach
-  arbitrary code execution. This was demonstrated, not theorised. Neither agent auto-invokes;
-  installing them makes them dispatchable, not automatically triggered before a commit or cutover.
-  Full test evidence, the containment analysis, and two open defects found by the agents auditing
-  their own enabling commit: `research/ARCHITECT-CRITICAL-AGENTS.md`.
+  but **not as dispatchable subagents**: `task.agentModelOverrides` can only bind a role onto an
+  *existing* bundled agent name (`reviewer`, `security-reviewer`, `sonic`, `task`), and no bundled
+  agent is named `architect` or `critical`. `agents/architect.md` and `agents/critical.md` fix this
+  via OMP's documented role-backed custom-agent pattern. Manual whole-session selection remains
+  available with `/model @architect` or `/model @critical`; current `cycleOrder` includes
+  `architect` but **not** `critical` (the earlier claim that both were there was stale).
+  `task(agent: "architect", ...)` / `task(agent: "critical", ...)` are verified by five live
+  dispatches, both resolving to configured `anthropic/claude-opus-5`. Both set `thinking: high`
+  (deepest level every model in their fallback chains supports; `xhigh` would break on
+  `deepseek-v4-flash`). `critical` adds a machine-checkable GO / NO-GO / GO-WITH-CONDITIONS schema
+  with required producer/reviewer provenance and independence status; a same-model Opus-vs-Opus
+  smoke test correctly returned `SAME-MODEL` + `GO-WITH-CONDITIONS`, never unconditional `GO`.
+  `architect` gets `read`/`grep`/`glob`; `critical` adds `bash`, scoped in-prompt to
+  non-destructive inspection. **These are advisory, not sandboxed:** `tools:` bounds built-in
+  tools only — `hub` is auto-added, and MCP tools are injected regardless, so a dispatched agent
+  can reach arbitrary code execution. This was demonstrated, not theorised. Neither auto-invokes;
+  installing them makes them dispatchable, not automatically triggered. Full evidence:
+  `research/ARCHITECT-CRITICAL-AGENTS.md`.
 
 ### 2026-08-25 A/B — what `default`'s chain order is actually based on
 
