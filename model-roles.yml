@@ -1,6 +1,16 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-08-26 · Snapshot version: 13
+## Generated: 2026-08-26 · Snapshot version: 14
 ## Stale? See research/RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
+##
+## v14: hardened + TESTED the v13 agent definitions (4 live dispatches, both agents resolved to
+## anthropic/claude-opus-5). Added `thinking: high` to both and an `output:` JSON-schema to
+## critical (machine-checkable GO/NO-GO verdict). Fixed repo-vs-installed drift: v13 shipped
+## agents/*.md WITHOUT the hardening, so following the README would have downgraded a live
+## install. NOTE: the agents' `tools:` allowlist is NOT a sandbox - MCP tools are injected
+## regardless of it. Two open defects found by the agents auditing their own commit (critical
+## and architect share a model; critical's first fallback collides with review/security/slow/
+## plan) are documented but NOT fixed - they need a quota decision.
+## See research/ARCHITECT-CRITICAL-AGENTS.md.
 ##
 ## v13: architect/critical were modelRoles-only through v12 - no bundled agent name existed to
 ## bind them to via task.agentModelOverrides, so they were unreachable except by manually

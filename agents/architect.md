@@ -5,6 +5,7 @@ description: >-
   structuring, system decomposition, interface design, migrations, and major
   technical trade-offs. Produces design recommendations and does not implement.
 model: "@architect"
+thinking: high
 tools: [read, grep, glob]
 spawns: []
 ---

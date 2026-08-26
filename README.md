@@ -1,6 +1,6 @@
 # OMP model-role setup — import instructions
 
-**Snapshot: 2026-08-26 · v13.** Stale after ~4-6 weeks, or immediately if any subscription
+**Snapshot: 2026-08-26 · v14.** Stale after ~4-6 weeks, or immediately if any subscription
 changed — check `research/RESEARCH-PLAYBOOK.md`'s staleness check before importing this blind.
 
 `model-roles.yml` is a config **overlay**: `modelRoles`, `retry.fallbackChains`, and
@@ -98,13 +98,18 @@ Consequences baked into this file:
   no bundled agent is named `architect` or `critical`. `agents/architect.md` and `agents/critical.md`
   fix this via OMP's documented "role-backed custom agent" pattern (`docs/task-agent-discovery.md`):
   a markdown file with `model: "@architect"`/`model: "@critical"` in frontmatter becomes a real
-  `task(agent: "architect", ...)` / `task(agent: "critical", ...)` target. Reviewed with the `slow`
-  role model before adding (see `research/ARCHITECT-CRITICAL-AGENTS.md`): both are leaf agents
-  (`spawns: []`, no `write`/`edit`/`task`) — `architect` gets `read`/`grep`/`glob` for RFC-style
-  design analysis; `critical` additionally gets `bash` scoped in its prompt to non-destructive
-  inspection (`git status`/`diff`/`show`), never the gated action itself. Neither one auto-invokes —
-  installing the files makes them dispatchable, it doesn't wire them into any automatic trigger
-  before a commit or cutover; that decision stays with whoever's driving the session.
+  `task(agent: "architect", ...)` / `task(agent: "critical", ...)` target. **v14: verified by four
+  live dispatches**, both resolving to their configured `anthropic/claude-opus-5` — plus `thinking:
+  high` on both (deepest level every model in their fallback chains supports; `xhigh` would break on
+  `deepseek-v4-flash`) and an `output:` JSON-schema on `critical` so its GO / NO-GO /
+  GO-WITH-CONDITIONS verdict is machine-checkable rather than prose. `architect` gets
+  `read`/`grep`/`glob`; `critical` adds `bash`, scoped in-prompt to non-destructive inspection.
+  **These are advisory, not sandboxed:** the `tools:` allowlist bounds built-in tools only — `hub`
+  is auto-added, and MCP tools are injected regardless of it, so a dispatched agent can reach
+  arbitrary code execution. This was demonstrated, not theorised. Neither agent auto-invokes;
+  installing them makes them dispatchable, not automatically triggered before a commit or cutover.
+  Full test evidence, the containment analysis, and two open defects found by the agents auditing
+  their own enabling commit: `research/ARCHITECT-CRITICAL-AGENTS.md`.
 
 ### 2026-08-25 A/B — what `default`'s chain order is actually based on
 
