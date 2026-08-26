@@ -164,13 +164,18 @@ Live test `CriticalIndependence` supplied producer `architect` /
   "conditions": ["Obtain review from a different concrete model before treating the gate as independent."]
 }
 ```
+## v16: depth-tier third lane applied
 
-The broader depth-tier concentration found by `ArchVerify` remains a separate, unapplied proposal:
-six roles (`slow`, `plan`, `review`, `security`, `architect`, `critical`) resolve across primary +
-first-fallback to `{gpt-5.6-sol, claude-opus-5}`, then all six drop to
-`xai-oauth/grok-4.6`. Its cost-neutral resilience proposal is to insert
-`google-antigravity/claude-sonnet-4-6` ahead of Grok. This is not required for critical's intended
-implementation-gate use and would alter A/B-backed fallback ordering, so v15 does not apply it.
+The broader depth-tier concentration found by `ArchVerify` is now fixed. Six roles (`slow`,
+`plan`, `review`, `security`, `architect`, `critical`) previously resolved across primary + first
+fallback to `{gpt-5.6-sol, claude-opus-5}`, then all dropped directly to
+`xai-oauth/grok-4.6` — the smallest pool and the slowest model in the 2026-08-25 A/B.
+
+`google-antigravity/claude-sonnet-4-6` is now inserted after each chain's existing Sol/Opus
+flagship pair and before Grok. This preserves every A/B-backed primary and first-fallback,
+adds a third provider/meter, uses the cost-neutral Antigravity Anthropic lane already proven by
+`advisor`, and keeps Claude-class depth before the small X weekly pool. Live
+`retry.fallbackChains` was updated at the same time.
 
 ## Remaining unverified
 

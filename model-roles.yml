@@ -1,6 +1,12 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-08-26 · Snapshot version: 15
+## Generated: 2026-08-26 · Snapshot version: 16
 ## Stale? See research/RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
+##
+## v16: expanded the depth tier from two models/meters to three. Added the cost-neutral
+## google-antigravity/claude-sonnet-4-6 lane to slow/plan/review/security/architect/critical
+## after each chain's existing Sol/Opus flagship pair and before Grok. Preserves all A/B-backed
+## primaries and first fallbacks, keeps Claude-class depth through a separately-metered free
+## lane, and avoids dropping all six roles directly onto the smallest/slowest X pool.
 ##
 ## v15: kept `critical` on Opus 5 after wiring/history review showed it is an explicit final
 ## implementation/operational gate, not an automatic architect reviewer. Opus is independent
@@ -90,10 +96,12 @@ retry:
       - nvidia/deepseek-ai/deepseek-v4-flash
     slow:
       - anthropic/claude-opus-5
+      - google-antigravity/claude-sonnet-4-6
       - xai-oauth/grok-4.6
       - nvidia/deepseek-ai/deepseek-v4-flash
     plan:
       - anthropic/claude-opus-5
+      - google-antigravity/claude-sonnet-4-6
       - xai-oauth/grok-4.6
       - nvidia/deepseek-ai/deepseek-v4-flash
     task:
@@ -116,18 +124,22 @@ retry:
       - google-antigravity/gemini-3.1-flash-lite
     architect:
       - openai-codex/gpt-5.6-sol
+      - google-antigravity/claude-sonnet-4-6
       - xai-oauth/grok-4.6
       - nvidia/deepseek-ai/deepseek-v4-flash
     review:
       - anthropic/claude-opus-5
+      - google-antigravity/claude-sonnet-4-6
       - xai-oauth/grok-4.6
       - nvidia/deepseek-ai/deepseek-v4-flash
     security:
       - anthropic/claude-opus-5
+      - google-antigravity/claude-sonnet-4-6
       - xai-oauth/grok-4.6
       - nvidia/deepseek-ai/deepseek-v4-flash
     critical:
       - openai-codex/gpt-5.6-sol
+      - google-antigravity/claude-sonnet-4-6
       - xai-oauth/grok-4.6
       - nvidia/deepseek-ai/deepseek-v4-flash
     fast_worker:
