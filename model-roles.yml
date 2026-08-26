@@ -1,6 +1,12 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-08-26 · Snapshot version: 12
+## Generated: 2026-08-26 · Snapshot version: 13
 ## Stale? See research/RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
+##
+## v13: architect/critical were modelRoles-only through v12 - no bundled agent name existed to
+## bind them to via task.agentModelOverrides, so they were unreachable except by manually
+## switching the whole session (/model @architect, Ctrl+P). Added agents/architect.md and
+## agents/critical.md (role-backed custom agent definitions) so both are now real task(agent=
+## "architect"|"critical", ...) dispatch targets. See research/ARCHITECT-CRITICAL-AGENTS.md.
 ##
 ## v12: reverted v11's usageReservePct override. That 10 -> 5 change was a temporary
 ## experiment for one morning session, never meant to persist; this machine and this repo

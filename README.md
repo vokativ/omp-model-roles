@@ -1,6 +1,6 @@
 # OMP model-role setup — import instructions
 
-**Snapshot: 2026-08-26 · v12.** Stale after ~4-6 weeks, or immediately if any subscription
+**Snapshot: 2026-08-26 · v13.** Stale after ~4-6 weeks, or immediately if any subscription
 changed — check `research/RESEARCH-PLAYBOOK.md`'s staleness check before importing this blind.
 
 `model-roles.yml` is a config **overlay**: `modelRoles`, `retry.fallbackChains`, and
@@ -18,15 +18,17 @@ The repo root holds only what you actually import. Everything explaining *why* l
 ```
 model-roles.yml       <- the config overlay: modelRoles + retry.fallbackChains   (import this)
 models-overlay.yml    <- companion models.yml overlay: per-model maxTokens fixes (import this too)
+agents/               <- role-backed custom agent definitions for architect + critical (import this too)
 README.md             <- you are here: import steps + the rationale for the current values
 research/
-  RESEARCH-PLAYBOOK.md      <- how to re-derive the allocation from scratch; staleness check
-  GEMINI-QUOTA-OPTIONS.md   <- 2026-08-15 investigation: Gemini/Antigravity quota burnout options
-  META-MUSE-EVALUATION.md   <- 2026-08-25 evaluation: the `meta` provider, and why it wasn't adopted
+  RESEARCH-PLAYBOOK.md            <- how to re-derive the allocation from scratch; staleness check
+  GEMINI-QUOTA-OPTIONS.md         <- 2026-08-15 investigation: Gemini/Antigravity quota burnout options
+  META-MUSE-EVALUATION.md         <- 2026-08-25 evaluation: the `meta` provider, and why it wasn't adopted
+  ARCHITECT-CRITICAL-AGENTS.md    <- 2026-08-26: wiring architect/critical into real subagent dispatch
 ```
 
-Just importing the config? You need the two `.yml` files and the import steps below — nothing in
-`research/`.
+Just importing the config? You need the two `.yml` files, `agents/`, and the import steps below —
+nothing in `research/`.
 
 ## Design rationale (why these specific models, not just "the best ones")
 
@@ -89,6 +91,20 @@ Consequences baked into this file:
   `designer` no longer shares that meter — see above.
 - `tiny` is explicitly assigned to `openai-codex/gpt-5.6-luna` with fallback chain: `nvidia/deepseek-ai/deepseek-v4-flash` $\to$ `xai-oauth/grok-composer-2.5-fast` $\to$ `google-antigravity/gemini-3.1-flash-lite`. Background tasks (session titles, Mnemopi memory extraction, auto-thinking classifier, unexpected-stop detector) run on the abundant ChatGPT Pro pool (97% idle). If OpenAI experiences transient issues, it fails over to NVIDIA's unmetered DeepSeek V4 Flash and xAI Grok Composer Fast, with Gemini 3.1 Flash-Lite as the final safety net — providing total protection for the Google Antigravity daily lane that `default` and `vision` rely on. **v10:** the previous first fallback, `nvidia/meta/llama-3.1-8b-instruct`, was removed here and in all 11 other chains — its 16K context cannot hold this harness's first turn (measured 15.5K-26.7K tokens), so it could never have served as a fallback at all.
 - `task.agentModelOverrides` binds bundled subagents to their dedicated roles: `security-reviewer` $\to$ `@security`, `reviewer` $\to$ `@review`, `sonic` $\to$ `@fast_worker`, `task` $\to$ `@good_worker`.
+- `architect` and `critical` existed only as `modelRoles`/`fallbackChains` entries through v12 —
+  reachable by manually switching the whole session (`/model @architect` or Ctrl+P, since both are
+  in `cycleOrder`) but **not dispatchable as subagents**: `task.agentModelOverrides` can only bind a
+  role onto an *existing* bundled agent name (`reviewer`, `security-reviewer`, `sonic`, `task`), and
+  no bundled agent is named `architect` or `critical`. `agents/architect.md` and `agents/critical.md`
+  fix this via OMP's documented "role-backed custom agent" pattern (`docs/task-agent-discovery.md`):
+  a markdown file with `model: "@architect"`/`model: "@critical"` in frontmatter becomes a real
+  `task(agent: "architect", ...)` / `task(agent: "critical", ...)` target. Reviewed with the `slow`
+  role model before adding (see `research/ARCHITECT-CRITICAL-AGENTS.md`): both are leaf agents
+  (`spawns: []`, no `write`/`edit`/`task`) — `architect` gets `read`/`grep`/`glob` for RFC-style
+  design analysis; `critical` additionally gets `bash` scoped in its prompt to non-destructive
+  inspection (`git status`/`diff`/`show`), never the gated action itself. Neither one auto-invokes —
+  installing the files makes them dispatchable, it doesn't wire them into any automatic trigger
+  before a commit or cutover; that decision stays with whoever's driving the session.
 
 ### 2026-08-25 A/B — what `default`'s chain order is actually based on
 
@@ -157,7 +173,10 @@ the rationale table, since the allocation assumes Pro-tier Anthropic/OpenAI, not
 3. In the same directory, open `models.yml` (create it if missing — **different file** than
    `config.yml`). Copy in `models-overlay.yml`'s `providers:` block. If `providers.openrouter`
    already exists there, merge `modelOverrides` in rather than replacing the whole provider entry.
-4. Restart any running `omp` session.
+4. Copy this repo's `agents/architect.md` and `agents/critical.md` into `~/.omp/agent/agents/`
+   (create the directory if missing) so `architect`/`critical` become dispatchable via
+   `task(agent: "architect"|"critical", ...)`, not just reachable through `/model`.
+5. Restart any running `omp` session.
 
 Equivalent commands for the settings in `config.yml` (no manual paste):
 ```bash
@@ -191,6 +210,10 @@ git add .omp/config.yml && git commit -m "omp: shared model roles"
 Project config wins over global config for these keys (values fully replace, not merge,
 per-key — see the settings precedence doc if the repo already sets `modelRoles`/`retry`).
 
+`agents/architect.md` and `agents/critical.md` need the same treatment as `models.yml`: they're
+files under `.omp/agents/`, not `omp config` keys, so copy them into `<repo>/.omp/agents/` for a
+project-scoped install, or `~/.omp/agent/agents/` for the global one from Option A step 4.
+
 ### Option C — overlay file, loaded automatically, never merged by hand
 Keep `model-roles.yml` in a synced dotfiles repo and point OMP at it permanently:
 ```bash
@@ -212,4 +235,7 @@ omp models find openrouter/google/gemini-3.7-flash  # must show `google/gemini-3
 omp usage   # confirm which pools are actually getting hit
 ```
 Then `/model` inside a session to confirm each role resolves to an available (authenticated)
-model rather than silently falling back.
+model rather than silently falling back. There's no CLI list command for custom agents; confirm
+`architect`/`critical` dispatch by actually running `task(agent: "architect", task: "...")` once —
+"Unknown agent" means `agents/*.md` didn't land in a discovered directory (`~/.omp/agent/agents/`
+or `<project>/.omp/agents/`) or `task.disabledAgents` blocks the name.
