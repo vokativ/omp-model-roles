@@ -1,10 +1,10 @@
 # OMP model-role setup — import instructions
 
-**Snapshot: 2026-08-26 · v11.** Stale after ~4-6 weeks, or immediately if any subscription
+**Snapshot: 2026-08-26 · v12.** Stale after ~4-6 weeks, or immediately if any subscription
 changed — check `research/RESEARCH-PLAYBOOK.md`'s staleness check before importing this blind.
 
 `model-roles.yml` is a config **overlay**: `modelRoles`, `retry.fallbackChains`, and
-`retry.usageAwareFallback`/`retry.usageReservePct`/`retry.usageReservePolicy`. No API keys. Safe to copy anywhere,
+`retry.usageAwareFallback`/`retry.usageReservePolicy`. No API keys. Safe to copy anywhere,
 commit to a repo, or paste into an existing config.
 
 Subscriptions or workload change? Don't hand-edit this file — see
@@ -151,7 +151,7 @@ the rationale table, since the allocation assumes Pro-tier Anthropic/OpenAI, not
    custom roots. Without either, the default is `~/.omp/agent/` on POSIX and
    `%USERPROFILE%\.omp\agent\` on Windows.
 2. Copy in the `modelRoles:` and `retry:` blocks from `model-roles.yml` (the whole `retry:` map,
-   including `fallbackChains`, `usageAwareFallback`, `usageReservePct`, and `usageReservePolicy`).
+   including `fallbackChains`, `usageAwareFallback`, and `usageReservePolicy`).
    - If `modelRoles` or `retry` already exist there, replace them wholesale.
    - Leave every other key in that file untouched.
 3. In the same directory, open `models.yml` (create it if missing — **different file** than
@@ -168,7 +168,6 @@ omp config set task.agentModelOverrides '{"security-reviewer":"@security","revie
 omp config set retry.fallbackChains '{"default":["openai-codex/gpt-5.6-terra","nvidia/deepseek-ai/deepseek-v4-flash","anthropic/claude-sonnet-5","xai-oauth/grok-4.6"],"smol":["google-antigravity/gemini-3.1-flash-lite","nvidia/deepseek-ai/deepseek-v4-flash"],"slow":["anthropic/claude-opus-5","xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-flash"],"plan":["anthropic/claude-opus-5","xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-flash"],"task":["google-antigravity/gemini-3.7-flash","nvidia/deepseek-ai/deepseek-v4-flash"],"designer":["openai-codex/gpt-5.6-terra","google-antigravity/gemini-3.7-flash"],"vision":["openrouter/google/gemini-3.7-flash","openai-codex/gpt-5.6-terra","xai-oauth/grok-4.6"],"commit":["openai-codex/gpt-5.6-luna"],"advisor":["openai-codex/gpt-5.6-terra"],"tiny":["nvidia/deepseek-ai/deepseek-v4-flash","xai-oauth/grok-composer-2.5-fast","google-antigravity/gemini-3.1-flash-lite"],"architect":["openai-codex/gpt-5.6-sol","xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-flash"],"review":["anthropic/claude-opus-5","xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-flash"],"security":["anthropic/claude-opus-5","xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-flash"],"critical":["openai-codex/gpt-5.6-sol","xai-oauth/grok-4.6","nvidia/deepseek-ai/deepseek-v4-flash"],"fast_worker":["nvidia/deepseek-ai/deepseek-v4-flash","xai-oauth/grok-build","google-antigravity/gemini-3.1-flash-lite"],"good_worker":["google-antigravity/gemini-3.7-flash","nvidia/deepseek-ai/deepseek-v4-flash"]}'
 
 omp config set retry.usageAwareFallback true
-omp config set retry.usageReservePct 5
 omp config set retry.usageReservePolicy auto
 ```
 
@@ -208,7 +207,6 @@ omp config get modelRoles --json
 omp config get task.agentModelOverrides --json
 omp config get retry.fallbackChains --json
 omp config get retry.usageAwareFallback --json
-omp config get retry.usageReservePct --json
 omp config get retry.usageReservePolicy --json
 omp models find openrouter/google/gemini-3.7-flash  # must show `google/gemini-3.7-flash` with 66K max-out
 omp usage   # confirm which pools are actually getting hit
