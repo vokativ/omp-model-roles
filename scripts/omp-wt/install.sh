@@ -8,26 +8,35 @@ set -eo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE_FILE="${SCRIPT_DIR}/omp-wt.sh"
 
-# Determine target bin directory
-if [ -n "$PREFIX" ] && [ -d "$PREFIX/bin" ]; then
+# Install into a user-owned directory. Never require sudo.
+if [ -n "${PREFIX:-}" ] && [ -d "$PREFIX/bin" ]; then
     # Termux on Android / Meta Quest
     TARGET_DIR="$PREFIX/bin"
-elif [ -d "$HOME/.local/bin" ]; then
-    TARGET_DIR="$HOME/.local/bin"
 else
-    TARGET_DIR="/usr/local/bin"
+    TARGET_DIR="$HOME/.local/bin"
 fi
 
-mkdir -p "$TARGET_DIR" 2>/dev/null || sudo mkdir -p "$TARGET_DIR"
+mkdir -p "$TARGET_DIR"
 TARGET_FILE="${TARGET_DIR}/omp-wt"
 
 echo "Installing omp-wt to ${TARGET_FILE}..."
-if [ -w "$TARGET_DIR" ]; then
-    cp "$SOURCE_FILE" "$TARGET_FILE"
-    chmod +x "$TARGET_FILE"
-else
-    sudo cp "$SOURCE_FILE" "$TARGET_FILE"
-    sudo chmod +x "$TARGET_FILE"
+cp "$SOURCE_FILE" "$TARGET_FILE"
+chmod +x "$TARGET_FILE"
+
+# macOS uses Zsh by default. Bash is common on Linux. Add PATH once when needed.
+case "$(basename "${SHELL:-}")" in
+    zsh) SHELL_CONFIG="$HOME/.zshrc" ;;
+    bash) SHELL_CONFIG="$HOME/.bashrc" ;;
+    *) SHELL_CONFIG="" ;;
+esac
+
+if [[ ":$PATH:" != *":$TARGET_DIR:"* ]] && [ -n "$SHELL_CONFIG" ]; then
+    PATH_LINE='export PATH="$HOME/.local/bin:$PATH"'
+    if ! grep -qxF "$PATH_LINE" "$SHELL_CONFIG" 2>/dev/null; then
+        printf '\n# User-installed commands\n%s\n' "$PATH_LINE" >> "$SHELL_CONFIG"
+        echo "Added ~/.local/bin to PATH in ${SHELL_CONFIG}."
+        echo "Open a new terminal, or run: source \"${SHELL_CONFIG}\""
+    fi
 fi
 
 echo "✓ Successfully installed omp-wt!"

@@ -39,6 +39,10 @@ Run the included installer:
 ```bash
 ./scripts/omp-wt/install.sh
 ```
+
+The installer uses your user-owned `~/.local/bin` (or Termux’s `$PREFIX/bin`), so it never needs administrator or `sudo` permission. On macOS, if needed, it adds `~/.local/bin` to `~/.zshrc` once; open a new terminal afterward.
+
+macOS uses Zsh by default, but `omp-wt` has a Bash shebang and runs correctly from a Zsh terminal. Your normal shell remains Zsh.
 *Or copy manually:*
 ```bash
 cp scripts/omp-wt/omp-wt.sh ~/.local/bin/omp-wt
