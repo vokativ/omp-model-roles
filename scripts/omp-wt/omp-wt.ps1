@@ -38,7 +38,9 @@ param(
     [switch]$Sibling,
     [switch]$Nested,
     [Alias("y")]
-    [switch]$Yes
+    [switch]$Yes,
+
+    [string[]]$OmpArgs
 )
 
 function Show-IntroGuide {
@@ -105,7 +107,7 @@ function Show-HelpMessage {
 omp-wt - Launch OMP in an isolated Git Worktree
 
 USAGE:
-    omp-wt                      Interactive wizard (prompts for name & base)
+    omp-wt                      Interactive wizard (prompts for a name)
     omp-wt <name>               Create/open worktree <name> and launch OMP
     omp-wt <name> <base-ref>    Create worktree <name> starting from <base-ref>
 
@@ -113,6 +115,7 @@ COMMANDS:
     omp-wt -List, ls            List all active worktrees with status & age
     omp-wt -Remove <name>, rm   Delete a worktree and clean up git references
     omp-wt -Prune               Clean up stale worktree metadata
+    omp-wt path <name>          Print the absolute worktree path
     omp-wt -Guide, intro        Show beginner visual guide to worktrees
     omp-wt -Help                Show this help screen
 
@@ -121,6 +124,8 @@ OPTIONS:
     -NoCopyEnv                  Skip copying local configuration files
     -Sibling                    Create worktree as a sibling directory (..\<repo>-<name>)
     -Nested                     Create worktree inside project (.worktrees\<name>) [Default]
+    -Yes, -y                    Skip new-worktree confirmation
+    -OmpArgs @('--model','smol') Pass arguments to OMP
 
 EXAMPLES:
     omp-wt                      # Interactive mode
@@ -192,13 +197,33 @@ function Get-DefaultBranch {
     return "HEAD"
 }
 
+function Get-WorktreePath ($worktreeName) {
+    $isSiblingMode = if ($Nested) { $false } elseif ($Sibling) { $true } else { $env:OMP_WT_MODE -eq "sibling" }
+    if ($isSiblingMode) {
+        return Join-Path (Split-Path -Parent $mainRepoRoot) "$repoName-$worktreeName"
+    }
+    return Join-Path $mainRepoRoot ".worktrees\$worktreeName"
+}
+
 
 # Subcommand aliases
 if ($Name -eq "list" -or $Name -eq "ls") { $List = $true; $Name = $null }
 if ($Name -eq "prune") { $Prune = $true; $Name = $null }
 if ($Name -eq "rm" -or $Name -eq "remove" -or $Name -eq "delete") {
+    if (-not $BaseRef) {
+        Write-Error "Usage: omp-wt -Remove <name> or omp-wt rm <name>"
+        exit 1
+    }
     $Remove = $BaseRef
     $Name = $null
+}
+if ($Name -eq "path") {
+    if (-not $BaseRef) {
+        Write-Error "Usage: omp-wt path <name>"
+        exit 1
+    }
+    Get-WorktreePath $BaseRef
+    exit 0
 }
 if ($Name -eq "new" -or $Name -eq "create" -or $Name -eq "add") {
     $Name = $BaseRef
@@ -211,7 +236,7 @@ if ($Name) {
     if ($typo) {
         Write-Host "Error: Unknown command '$Name'. Did you mean 'omp-wt $typo'?" -ForegroundColor Red
         Write-Host "Run 'omp-wt -Help' for usage, or 'omp-wt -Guide' for an introduction." -ForegroundColor DarkGray
-        return
+        exit 1
     }
 }
 # List worktrees
@@ -246,8 +271,8 @@ if ($List) {
         $dirtyCount = $dirtyFiles.Count
 
         Write-Host "  • $displayName " -NoNewline -ForegroundColor White
-        Write-Host $badge -NoNewline -ForegroundColor $badgeColor
-        Write-Host " (branch: $($branch ?? 'HEAD'))" -ForegroundColor Cyan
+        $displayBranch = if ($branch) { $branch } else { "HEAD" }
+        Write-Host " (branch: $displayBranch)" -ForegroundColor Cyan
         
         if ($dirtyCount -eq 0) {
             Write-Host "    Status: " -NoNewline
@@ -358,19 +383,24 @@ if (-not $Name) {
     while (-not $Name) {
         $Name = Read-Host "Enter worktree/branch name (e.g. fix-auth, test-speed)"
         if ($Name) { $Name = $Name.Trim() }
-    }
 
-    if (-not $BaseRef) { $BaseRef = Get-DefaultBranch }
+        $inputTypo = Get-CommandTypo $Name
+        if ($Name -in "guide", "intro", "explain" -or $inputTypo -in "guide", "intro") {
+            Show-IntroGuide
+            $Name = $null
+        } elseif ($Name -eq "help" -or $inputTypo -eq "help") {
+            Show-HelpMessage
+            $Name = $null
+        } elseif ($Name -in "list", "ls" -or $inputTypo -eq "list") {
+            git worktree list
+            $Name = $null
+        }
+    }
 }
 
 # Resolve Worktree Path
-$isSibling = $Sibling -or ($env:OMP_WT_MODE -eq "sibling")
-if ($isSibling) {
-    $parentDir = Split-Path -Parent $mainRepoRoot
-    $wtPath = Join-Path $parentDir "$repoName-$Name"
-} else {
-    $wtPath = Join-Path $mainRepoRoot ".worktrees\$Name"
-}
+$isSibling = if ($Nested) { $false } elseif ($Sibling) { $true } else { $env:OMP_WT_MODE -eq "sibling" }
+$wtPath = Get-WorktreePath $Name
 
 # Auto-exclude .worktrees if nested
 if (-not $isSibling) {
@@ -401,6 +431,7 @@ if (Test-Path $wtPath) {
     if ($branchExists) {
         Write-Host "  Branch '$Name' already exists, checking it out..." -ForegroundColor DarkGray
         git worktree add $wtPath $Name
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     } else {
         $defaultBranch = Get-DefaultBranch
         $currentBranch = (git branch --show-current 2>$null).Trim()
@@ -415,8 +446,10 @@ if (Test-Path $wtPath) {
                 $baseChoice = Read-Host "Select base [1/2, or 'n' to cancel]"
                 switch ($baseChoice) {
                     "2" { $BaseRef = $currentBranch }
-                    { $_ -in "n", "q", "abort" } { Write-Host "Aborted." -ForegroundColor DarkGray; return }
-                    default { $BaseRef = $defaultBranch }
+                    { $_ -in "n", "q", "abort", "cancel" } { Write-Host "Aborted." -ForegroundColor DarkGray; return }
+                    "" { $BaseRef = $defaultBranch }
+                    "1" { $BaseRef = $defaultBranch }
+                    default { $BaseRef = $baseChoice }
                 }
                 $autoConfirmed = $true
             } else {
@@ -433,13 +466,14 @@ if (Test-Path $wtPath) {
         }
         Write-Host "  Creating new branch '$Name' from $BaseRef..." -ForegroundColor DarkGray
         git worktree add -b $Name $wtPath $BaseRef
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
     Write-Host "✓ Worktree ready!`n" -ForegroundColor Green
 
     # Untracked config detection (Android, iOS, Web, Python)
     $patterns = @(
         ".env", ".env.local", ".env.development", ".env.development.local",
-        ".env.production", ".env.production.local", ".env.test",
+        ".env.production", ".env.production.local", ".env.test", ".env.staging",
         ".npmrc", ".yarnrc", ".yarnrc.yml",
         "local.properties", "android\local.properties",
         "*.keystore", "*.jks", "android\*.keystore", "android\*.jks",
@@ -496,7 +530,7 @@ if (Test-Path $wtPath) {
 Write-Host "Launching OMP in: $wtPath`n" -ForegroundColor Green
 Push-Location $wtPath
 try {
-    omp
+    omp $OmpArgs
 } finally {
     Pop-Location
 }

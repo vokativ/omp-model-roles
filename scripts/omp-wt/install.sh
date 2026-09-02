@@ -30,11 +30,11 @@ case "$(basename "${SHELL:-}")" in
     *) SHELL_CONFIG="" ;;
 esac
 
-if [[ ":$PATH:" != *":$TARGET_DIR:"* ]] && [ -n "$SHELL_CONFIG" ]; then
-    PATH_LINE='export PATH="$HOME/.local/bin:$PATH"'
+if [ -n "$SHELL_CONFIG" ]; then
+    PATH_LINE="export PATH=\"${TARGET_DIR}:\$PATH\""
     if ! grep -qxF "$PATH_LINE" "$SHELL_CONFIG" 2>/dev/null; then
         printf '\n# User-installed commands\n%s\n' "$PATH_LINE" >> "$SHELL_CONFIG"
-        echo "Added ~/.local/bin to PATH in ${SHELL_CONFIG}."
+        echo "Added ${TARGET_DIR} to PATH in ${SHELL_CONFIG}."
         echo "Open a new terminal, or run: source \"${SHELL_CONFIG}\""
     fi
 fi

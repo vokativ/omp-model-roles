@@ -86,7 +86,7 @@ show_help() {
 ${BOLD}omp-wt${RESET} - Launch OMP in an isolated Git Worktree
 
 ${BOLD}USAGE:${RESET}
-    ${CYAN}omp-wt${RESET}                      Interactive wizard (prompts for name & base)
+    ${CYAN}omp-wt${RESET}                      Interactive wizard (prompts for name)
     ${CYAN}omp-wt <name>${RESET}               Create/open worktree <name> and launch OMP
     ${CYAN}omp-wt <name> <base-ref>${RESET}    Create worktree <name> starting from <base-ref>
     ${CYAN}omp-wt <name> -- [args...]${RESET}  Pass extra flags to OMP (e.g. --model smol)
@@ -104,6 +104,7 @@ ${BOLD}OPTIONS & FLAGS:${RESET}
     ${YELLOW}--no-copy-env${RESET}               Skip copying local configuration files
     ${YELLOW}--sibling${RESET}                   Create worktree as a sibling directory (../<repo>-<name>)
     ${YELLOW}--nested${RESET}                    Create worktree inside project (.worktrees/<name>) [Default]
+    ${YELLOW}-y, --yes${RESET}                   Skip new-worktree confirmation
 
 ${BOLD}ENVIRONMENT VARIABLES:${RESET}
     ${DIM}OMP_WT_MODE${RESET}                 "nested" (default) or "sibling"
