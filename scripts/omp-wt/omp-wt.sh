@@ -588,12 +588,6 @@ fi
 WT_NAME="$(echo "$WT_NAME" | sed 's|^/||; s|/$||')"
 WT_PATH="$(get_worktree_path "$WT_NAME")"
 
-# If BASE_REF wasn't passed as a CLI arg, default to the repo's primary branch (main/master)
-if [ -z "$BASE_REF" ]; then
-    BASE_REF="$(get_default_branch)"
-fi
-
-
 # Ensure .worktrees/ is excluded if nested
 ensure_exclude
 
@@ -610,8 +604,39 @@ else
         echo -e "${DIM}  Branch '${WT_NAME}' already exists, checking it out...${RESET}"
         git worktree add "$WT_PATH" "$WT_NAME"
     else
-        BASE_REF="${BASE_REF:-HEAD}"
-        # Confirmation if creating a brand new branch & worktree
+        DEFAULT_BRANCH="$(get_default_branch)"
+        CURRENT_BRANCH="$(git branch --show-current 2>/dev/null || echo "HEAD")"
+
+        # If BASE_REF wasn't passed as a CLI arg, determine the base branch
+        if [ -z "$BASE_REF" ]; then
+            if [ "$AUTO_CONFIRM" != "yes" ] && [ -n "$CURRENT_BRANCH" ] && [ "$CURRENT_BRANCH" != "$DEFAULT_BRANCH" ]; then
+                echo -e "${BOLD}Base branch for '${CYAN}${WT_NAME}${RESET}${BOLD}':${RESET}"
+                echo -e "  [1] ${GREEN}${DEFAULT_BRANCH}${RESET} (clean repository default) ${DIM}[Default]${RESET}"
+                echo -e "  [2] ${YELLOW}${CURRENT_BRANCH}${RESET} (your current branch)"
+                echo -ne "${BOLD}Select base [1/2, or 'n' to cancel]: ${RESET}"
+                read -r BASE_CHOICE
+                case "$BASE_CHOICE" in
+                    2)
+                        BASE_REF="$CURRENT_BRANCH"
+                        ;;
+                    ""|1)
+                        BASE_REF="$DEFAULT_BRANCH"
+                        ;;
+                    [Nn]|[Qq]|abort|cancel)
+                        echo -e "${DIM}Aborted.${RESET}"
+                        exit 0
+                        ;;
+                    *)
+                        BASE_REF="$BASE_CHOICE"
+                        ;;
+                esac
+                AUTO_CONFIRM="yes"
+            else
+                BASE_REF="$DEFAULT_BRANCH"
+            fi
+        fi
+
+        # Confirmation if on default branch and not already confirmed
         if [ "$AUTO_CONFIRM" != "yes" ]; then
             echo -ne "${BOLD}Create new worktree and branch '${CYAN}${WT_NAME}${RESET}${BOLD}' from ${YELLOW}${BASE_REF}${RESET}${BOLD}? [Y/n]: ${RESET}"
             read -r CONFIRM_CREATE

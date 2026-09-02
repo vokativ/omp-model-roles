@@ -401,8 +401,29 @@ if (Test-Path $wtPath) {
         Write-Host "  Branch '$Name' already exists, checking it out..." -ForegroundColor DarkGray
         git worktree add $wtPath $Name
     } else {
-        if (-not $BaseRef) { $BaseRef = "HEAD" }
-        if (-not $Yes) {
+        $defaultBranch = Get-DefaultBranch
+        $currentBranch = (git branch --show-current 2>$null).Trim()
+        if (-not $currentBranch) { $currentBranch = "HEAD" }
+
+        $autoConfirmed = $false
+        if (-not $BaseRef) {
+            if (-not $Yes -and $currentBranch -and $currentBranch -ne $defaultBranch) {
+                Write-Host "Base branch for '$Name':" -ForegroundColor White
+                Write-Host "  [1] $defaultBranch (clean repository default) [Default]" -ForegroundColor Green
+                Write-Host "  [2] $currentBranch (your current branch)" -ForegroundColor Yellow
+                $baseChoice = Read-Host "Select base [1/2, or 'n' to cancel]"
+                switch ($baseChoice) {
+                    "2" { $BaseRef = $currentBranch }
+                    { $_ -in "n", "q", "abort" } { Write-Host "Aborted." -ForegroundColor DarkGray; return }
+                    default { $BaseRef = $defaultBranch }
+                }
+                $autoConfirmed = $true
+            } else {
+                $BaseRef = $defaultBranch
+            }
+        }
+
+        if (-not $Yes -and -not $autoConfirmed) {
             $confirm = Read-Host "Create new worktree and branch '$Name' from $BaseRef? [Y/n]"
             if ($confirm -and $confirm -notmatch "^[yY]$") {
                 Write-Host "Aborted." -ForegroundColor DarkGray
