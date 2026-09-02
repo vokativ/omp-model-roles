@@ -1,6 +1,21 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-08-26 · Snapshot version: 16
+## Generated: 2026-09-02 · Snapshot version: 17
 ## Stale? See research/RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
+##
+## v17: replaced dead nvidia/deepseek-ai/deepseek-v4-flash (HTTP 410 EOL 2026-08-07) and upgraded
+## fallback resilience across all chains.
+##   - default primary retained on google-antigravity/gemini-3.7-flash (user preferred every-turn model),
+##     falling back to gpt-5.6-terra -> openrouter/z-ai/glm-5.3-flash -> nvidia/minimaxai/minimax-m3.
+##   - openrouter/z-ai/glm-5.3-flash added as the subscription-independent capability tier in 8 chains
+##     (#1 on Tau2-Bench Airline/Agentic at 58.2, 1.31M context, 131K output, multimodal, $0.075/$0.25).
+##   - nvidia/minimaxai/minimax-m3 added as the unmetered $0 floor in 8 chains (1M context, 16K max-out).
+##     Deliberately excluded from depth roles (slow/plan/architect/review/security/critical) and vision.
+##   - vision primary remains google-antigravity/gemini-3.7-flash, with openrouter/google/gemini-3.7-flash
+##     (2026-08-22 A/B winner) as first fallback, followed by gpt-5.6-terra and grok-4.6.
+##   - critical first fallback switched to openrouter/z-ai/glm-5.3-flash, closing the v14 defect
+##     where Sol collided with slow/plan/review/security producers.
+##   - demoted NVIDIA to last fallback in tiny and fast_worker (measured queue on NIM).
+##   - dropped claude-sonnet-5 from default's chain (Anthropic 5h window reserved for Opus).
 ##
 ## v16: expanded the depth tier from two models/meters to three. Added the cost-neutral
 ## google-antigravity/claude-sonnet-4-6 lane to slow/plan/review/security/architect/critical
@@ -33,28 +48,13 @@
 ## agents/critical.md (role-backed custom agent definitions) so both are now real task(agent=
 ## "architect"|"critical", ...) dispatch targets. See research/ARCHITECT-CRITICAL-AGENTS.md.
 ##
-## v12: reverted v11's usageReservePct override. That 10 -> 5 change was a temporary
-## experiment for one morning session, never meant to persist; this machine and this repo
-## both go back to the schema default (10, unset) rather than declaring `usageReservePct: 10`
-## explicitly, consistent with this file only stating retry.usage* keys that deviate from
-## default.
-##
-## v10 changes (all driven by a measured head-to-head, see README.md "2026-08-25 A/B"):
-##   - default's chain reordered: gpt-5.6-terra promoted to first fallback,
-##     claude-sonnet-5 demoted from first to third (its 5h pool peaked at 94% over 30d).
-##   - nvidia/meta/llama-3.1-8b-instruct REMOVED from all 12 chains. It has a 16K context
-##     window; a measured first turn in this harness is 15.5K-26.7K tokens, so that entry
-##     could never actually load. Replaced by nvidia/deepseek-ai/deepseek-v4-flash (1M ctx).
-##
 ## Assumes these logins exist on the target machine:
 ##   - anthropic        (Claude Pro, $20/mo — the SCARCE pool, keep light, reserve for architect/critical)
 ##   - openai-codex      (ChatGPT Pro, $100/mo, 5x quota — the ABUNDANT pool, heavy roles & tiny work)
-##   - google-antigravity (free preview; also proxies Claude models at no cost to the Anthropic pool)
+##   - google-antigravity (free preview; Google lane weekly metered, Anthropic proxy lane separately metered)
 ##   - xai-oauth         (X Premium $8/mo bundled SuperGrok credits — small, weekly reset, use sparingly)
-##   - nvidia             (free NIM catalog — unmetered last-resort fallback; use deepseek-v4-flash,
-##                          NOT the small llama models, which cannot hold this harness's system prompt)
-##   - openrouter         (prepaid credit balance — used ONLY as vision's first fallback; see
-##                          models-overlay.yml for the required maxTokens override on that entry)
+##   - nvidia             (free NIM catalog — unmetered $0 floor; use minimaxai/minimax-m3, 1M ctx, 16K out)
+##   - openrouter         (prepaid credit balance — high-capability tier & vision fallback)
 
 modelRoles:
   # --- Core Built-in Roles ---
@@ -88,66 +88,70 @@ retry:
   fallbackChains:
     default:
       - openai-codex/gpt-5.6-terra
-      - nvidia/deepseek-ai/deepseek-v4-flash
-      - anthropic/claude-sonnet-5
-      - xai-oauth/grok-4.6
+      - openrouter/z-ai/glm-5.3-flash
+      - nvidia/minimaxai/minimax-m3
     smol:
       - google-antigravity/gemini-3.1-flash-lite
-      - nvidia/deepseek-ai/deepseek-v4-flash
+      - nvidia/minimaxai/minimax-m3
     slow:
       - anthropic/claude-opus-5
       - google-antigravity/claude-sonnet-4-6
       - xai-oauth/grok-4.6
-      - nvidia/deepseek-ai/deepseek-v4-flash
+      - openrouter/z-ai/glm-5.3-flash
     plan:
       - anthropic/claude-opus-5
       - google-antigravity/claude-sonnet-4-6
       - xai-oauth/grok-4.6
-      - nvidia/deepseek-ai/deepseek-v4-flash
+      - openrouter/z-ai/glm-5.3-flash
     task:
       - google-antigravity/gemini-3.7-flash
-      - nvidia/deepseek-ai/deepseek-v4-flash
+      - openrouter/z-ai/glm-5.3-flash
+      - nvidia/minimaxai/minimax-m3
     designer:
       - openai-codex/gpt-5.6-terra
       - google-antigravity/gemini-3.7-flash
+      - openrouter/z-ai/glm-5.3-flash
     vision:
       - openrouter/google/gemini-3.7-flash
       - openai-codex/gpt-5.6-terra
       - xai-oauth/grok-4.6
     commit:
       - openai-codex/gpt-5.6-luna
+      - nvidia/minimaxai/minimax-m3
     advisor:
       - openai-codex/gpt-5.6-terra
+      - nvidia/minimaxai/minimax-m3
     tiny:
-      - nvidia/deepseek-ai/deepseek-v4-flash
       - xai-oauth/grok-composer-2.5-fast
       - google-antigravity/gemini-3.1-flash-lite
+      - nvidia/minimaxai/minimax-m3
     architect:
       - openai-codex/gpt-5.6-sol
       - google-antigravity/claude-sonnet-4-6
       - xai-oauth/grok-4.6
-      - nvidia/deepseek-ai/deepseek-v4-flash
+      - openrouter/z-ai/glm-5.3-flash
     review:
       - anthropic/claude-opus-5
       - google-antigravity/claude-sonnet-4-6
       - xai-oauth/grok-4.6
-      - nvidia/deepseek-ai/deepseek-v4-flash
+      - openrouter/z-ai/glm-5.3-flash
     security:
       - anthropic/claude-opus-5
       - google-antigravity/claude-sonnet-4-6
       - xai-oauth/grok-4.6
-      - nvidia/deepseek-ai/deepseek-v4-flash
+      - openrouter/z-ai/glm-5.3-flash
     critical:
-      - openai-codex/gpt-5.6-sol
+      - openrouter/z-ai/glm-5.3-flash
       - google-antigravity/claude-sonnet-4-6
+      - openai-codex/gpt-5.6-sol
       - xai-oauth/grok-4.6
-      - nvidia/deepseek-ai/deepseek-v4-flash
     fast_worker:
-      - nvidia/deepseek-ai/deepseek-v4-flash
       - xai-oauth/grok-build
       - google-antigravity/gemini-3.1-flash-lite
+      - nvidia/minimaxai/minimax-m3
     good_worker:
       - google-antigravity/gemini-3.7-flash
-      - nvidia/deepseek-ai/deepseek-v4-flash
+      - openrouter/z-ai/glm-5.3-flash
+      - nvidia/minimaxai/minimax-m3
   usageAwareFallback: true
   usageReservePolicy: "auto"
