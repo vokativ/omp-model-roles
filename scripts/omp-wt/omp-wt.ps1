@@ -36,7 +36,9 @@ param(
     [switch]$CopyEnv,
     [switch]$NoCopyEnv,
     [switch]$Sibling,
-    [switch]$Nested
+    [switch]$Nested,
+    [Alias("y")]
+    [switch]$Yes
 )
 
 function Show-IntroGuide {
@@ -163,6 +165,22 @@ if ($commonGitDir -and (Split-Path -Leaf $commonGitDir) -eq ".git") {
 
 $repoName = Split-Path -Leaf $mainRepoRoot
 
+function Get-CommandTypo ($inputStr) {
+    if (-not $inputStr) { return $null }
+    $clean = $inputStr.TrimStart('-', '/').ToLower()
+    switch ($clean) {
+        { $_ -in 'intor','itnro','inrto','intr','introo','introd','into','inro' } { return 'intro' }
+        { $_ -in 'gudie','gide','guied','gude','giude','guid','giud','guie' } { return 'guide' }
+        { $_ -in 'explian','explan','expln','exlpain','xplain' } { return 'explain' }
+        { $_ -in 'lsit','listt','lis','lists','lit','lst','sl' } { return 'list' }
+        { $_ -in 'purne','prun','pruen','pune','prunne','pruner' } { return 'prune' }
+        { $_ -in 'remov','remvoe','rmv','del','delet','dlete','delt','remoev' } { return 'remove' }
+        { $_ -in 'hepl','hlp','hlep','halp','hellp','hep','hel' } { return 'help' }
+        { $_ -in 'pth','paht','ptah' } { return 'path' }
+        default { return $null }
+    }
+}
+
 # Subcommand aliases
 if ($Name -eq "list" -or $Name -eq "ls") { $List = $true; $Name = $null }
 if ($Name -eq "prune") { $Prune = $true; $Name = $null }
@@ -170,7 +188,20 @@ if ($Name -eq "rm" -or $Name -eq "remove" -or $Name -eq "delete") {
     $Remove = $BaseRef
     $Name = $null
 }
+if ($Name -eq "new" -or $Name -eq "create" -or $Name -eq "add") {
+    $Name = $BaseRef
+    $BaseRef = $null
+}
 
+# Check for mistyped commands
+if ($Name) {
+    $typo = Get-CommandTypo $Name
+    if ($typo) {
+        Write-Host "Error: Unknown command '$Name'. Did you mean 'omp-wt $typo'?" -ForegroundColor Red
+        Write-Host "Run 'omp-wt -Help' for usage, or 'omp-wt -Guide' for an introduction." -ForegroundColor DarkGray
+        return
+    }
+}
 # List worktrees
 if ($List) {
     Write-Host "`nGit Worktrees for " -NoNewline -ForegroundColor Cyan
@@ -361,6 +392,13 @@ if (Test-Path $wtPath) {
         git worktree add $wtPath $Name
     } else {
         if (-not $BaseRef) { $BaseRef = "HEAD" }
+        if (-not $Yes) {
+            $confirm = Read-Host "Create new worktree and branch '$Name' from $BaseRef? [Y/n]"
+            if ($confirm -and $confirm -notmatch "^[yY]$") {
+                Write-Host "Aborted." -ForegroundColor DarkGray
+                return
+            }
+        }
         Write-Host "  Creating new branch '$Name' from $BaseRef..." -ForegroundColor DarkGray
         git worktree add -b $Name $wtPath $BaseRef
     }

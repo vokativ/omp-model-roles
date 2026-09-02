@@ -317,6 +317,74 @@ handle_untracked_configs() {
     fi
 }
 
+# Levenshtein distance calculation for typo detection
+levenshtein() {
+    local s1="$1" s2="$2"
+    local len1=${#s1} len2=${#s2}
+    local diff=$(( len1 > len2 ? len1 - len2 : len2 - len1 ))
+    if [ "$diff" -gt 2 ]; then
+        echo 99
+        return
+    fi
+    declare -A d
+    for ((i=0; i<=len1; i++)); do d[$i,0]=$i; done
+    for ((j=0; j<=len2; j++)); do d[0,$j]=$j; done
+    for ((i=1; i<=len1; i++)); do
+        local c1="${s1:i-1:1}"
+        for ((j=1; j<=len2; j++)); do
+            local c2="${s2:j-1:1}"
+            local cost=1
+            [ "$c1" = "$c2" ] && cost=0
+            local del=$(( d[$((i-1)),$j] + 1 ))
+            local ins=$(( d[$i,$((j-1))] + 1 ))
+            local sub=$(( d[$((i-1)),$((j-1))] + cost ))
+            local min=$del
+            [ "$ins" -lt "$min" ] && min=$ins
+            [ "$sub" -lt "$min" ] && min=$sub
+            d[$i,$j]=$min
+        done
+    done
+    echo "${d[$len1,$len2]}"
+}
+
+suggest_command_typo() {
+    local input="$1"
+    local clean="${input#--}"
+    clean="${clean#-}"
+    clean="$(echo "$clean" | tr '[:upper:]' '[:lower:]')"
+
+    # Common mistypes table
+    case "$clean" in
+        intor|itnro|inrto|intr|introo|introd|into|inro) echo "intro"; return ;;
+        gudie|gide|guied|gude|giude|guid|giud|guie) echo "guide"; return ;;
+        explian|explan|expln|exlpain|xplain) echo "explain"; return ;;
+        lsit|listt|lis|lists|lit|lst|sl|lits) echo "list"; return ;;
+        purne|prun|pruen|pune|prunne|pruner|pru) echo "prune"; return ;;
+        remov|remvoe|rmv|del|delet|dlete|delt|remoev) echo "remove"; return ;;
+        hepl|hlp|hlep|halp|hellp|hep|hel) echo "help"; return ;;
+        pth|paht|ptah) echo "path"; return ;;
+    esac
+
+    # Fuzzy match with length-sensitive threshold
+    local commands=("intro" "guide" "explain" "help" "list" "prune" "remove" "delete" "path")
+    local best_match=""
+    local min_dist=99
+    local len=${#clean}
+    local max_allowed=2
+    if [ "$len" -le 4 ]; then
+        max_allowed=1
+    fi
+
+    for cmd in "${commands[@]}"; do
+        local dist=$(levenshtein "$clean" "$cmd")
+        if [ "$dist" -le "$max_allowed" ] && [ "$dist" -lt "$min_dist" ]; then
+            min_dist=$dist
+            best_match="$cmd"
+        fi
+    done
+    echo "$best_match"
+}
+
 # Subcommands
 case "${1:-}" in
     -h|--help|help)
@@ -392,10 +460,21 @@ case "${1:-}" in
         ;;
 esac
 
+# Check if $1 is a mistyped command
+if [ -n "${1:-}" ]; then
+    TYPO_SUGGESTION="$(suggest_command_typo "$1")"
+    if [ -n "$TYPO_SUGGESTION" ]; then
+        echo -e "${RED}Error:${RESET} Unknown command '${1}'. Did you mean '${CYAN}omp-wt ${TYPO_SUGGESTION}${RESET}'?" >&2
+        echo -e "${DIM}Run 'omp-wt --help' for usage, or 'omp-wt guide' for an introduction.${RESET}" >&2
+        exit 1
+    fi
+fi
+
 # Collect arguments
 WT_NAME=""
 BASE_REF=""
 AUTO_COPY_ENV="prompt"
+AUTO_CONFIRM="no"
 EXTRA_OMP_ARGS=()
 
 while [[ $# -gt 0 ]]; do
@@ -420,6 +499,24 @@ while [[ $# -gt 0 ]]; do
         --no-copy-env)
             AUTO_COPY_ENV="no"
             shift
+            ;;
+        -y|--yes)
+            AUTO_CONFIRM="yes"
+            shift
+            ;;
+        new|create|add)
+            # Optional explicit verb (e.g. omp-wt new my-feat)
+            shift
+            ;;
+        -*|--*)
+            FLAG_SUGGESTION="$(suggest_command_typo "$1")"
+            if [ -n "$FLAG_SUGGESTION" ]; then
+                echo -e "${RED}Error:${RESET} Unrecognized option '${1}'. Did you mean '${CYAN}omp-wt ${FLAG_SUGGESTION}${RESET}'?" >&2
+            else
+                echo -e "${RED}Error:${RESET} Unrecognized option '${1}'." >&2
+            fi
+            echo -e "${DIM}Run 'omp-wt --help' to see valid options.${RESET}" >&2
+            exit 1
             ;;
         *)
             if [ -z "$WT_NAME" ]; then
@@ -453,6 +550,19 @@ if [ -z "$WT_NAME" ]; then
         echo -ne "${BOLD}Enter worktree/branch name (e.g. fix-auth, test-speed): ${RESET}"
         read -r WT_NAME
         WT_NAME="$(echo "$WT_NAME" | tr -d '[:space:]')"
+
+        INTERACTIVE_TYPO="$(suggest_command_typo "$WT_NAME")"
+        if [ "$WT_NAME" = "guide" ] || [ "$WT_NAME" = "intro" ] || [ "$WT_NAME" = "explain" ] || [ "$INTERACTIVE_TYPO" = "intro" ] || [ "$INTERACTIVE_TYPO" = "guide" ]; then
+            echo -e "\n${YELLOW}Note:${RESET} '${WT_NAME}' detected. Showing guide...\n"
+            show_intro_guide
+            WT_NAME=""
+        elif [ "$WT_NAME" = "help" ] || [ "$INTERACTIVE_TYPO" = "help" ]; then
+            show_help
+            WT_NAME=""
+        elif [ "$WT_NAME" = "list" ] || [ "$WT_NAME" = "ls" ] || [ "$INTERACTIVE_TYPO" = "list" ]; then
+            list_worktrees
+            WT_NAME=""
+        fi
     done
 
     echo -ne "${BOLD}Base branch/commit [${YELLOW}${CURRENT_BRANCH}${RESET}${BOLD}]: ${RESET}"
@@ -485,6 +595,15 @@ else
         git worktree add "$WT_PATH" "$WT_NAME"
     else
         BASE_REF="${BASE_REF:-HEAD}"
+        # Confirmation if creating a brand new branch & worktree
+        if [ "$AUTO_CONFIRM" != "yes" ]; then
+            echo -ne "${BOLD}Create new worktree and branch '${CYAN}${WT_NAME}${RESET}${BOLD}' from ${YELLOW}${BASE_REF}${RESET}${BOLD}? [Y/n]: ${RESET}"
+            read -r CONFIRM_CREATE
+            if [[ -n "$CONFIRM_CREATE" && ! "$CONFIRM_CREATE" =~ ^[Yy]$ ]]; then
+                echo -e "${DIM}Aborted.${RESET}"
+                exit 0
+            fi
+        fi
         echo -e "${DIM}  Creating new branch '${WT_NAME}' from ${BASE_REF}...${RESET}"
         git worktree add -b "$WT_NAME" "$WT_PATH" "$BASE_REF"
     fi
