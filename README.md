@@ -19,6 +19,7 @@ The repo root holds only what you actually import. Everything explaining *why* l
 model-roles.yml       <- the config overlay: modelRoles + retry.fallbackChains   (import this)
 models-overlay.yml    <- companion models.yml overlay: per-model maxTokens fixes (import this too)
 agents/               <- role-backed custom agent definitions for architect + critical (import this too)
+scripts/omp-wt/       <- cross-platform Git Worktree helper (Linux, macOS, Quest, Windows)
 README.md             <- you are here: import steps + the rationale for the current values
 research/
   RESEARCH-PLAYBOOK.md            <- how to re-derive the allocation from scratch; staleness check
@@ -90,3 +91,33 @@ omp models find nvidia/minimaxai/minimax-m3
 omp models find openrouter/z-ai/glm-5.3-flash
 omp usage
 ```
+
+## Git Worktree Helper (`omp-wt`)
+
+A beginner-friendly cross-platform helper to run multiple parallel OMP sessions or investigations on the same codebase without branch-switching collisions or file conflicts.
+
+### Key Features
+- **Parallel Isolation:** Creates isolated worktrees (`.worktrees/<name>`) so OMP agents can edit, build, and test without touching your main workspace.
+- **Untracked Config & Secret Detection:** Automatically detects and offers to copy local configuration files ignored by Git (`.env`, Android `local.properties` / keystores / `google-services.json`, iOS `GoogleService-Info.plist`, `.npmrc`).
+- **Human-Parsable Listing (`omp-wt list`):** Shows clean status, relative activity age, commit messages, and a cheat sheet of next actions (`merge`, `rm`).
+- **Built-in Guide (`omp-wt guide`):** Terminal-friendly visual introduction explaining how worktrees work.
+
+### Installation
+- **Linux, macOS, Meta Quest (Termux):**
+  ```bash
+  ./scripts/omp-wt/install.sh
+  ```
+- **Windows (PowerShell):**
+  ```powershell
+  .\scripts\omp-wt\install.ps1
+  ```
+
+### Quick Cheat Sheet
+```bash
+omp-wt                      # Interactive setup wizard
+omp-wt investigate-auth     # Create worktree and start OMP
+omp-wt list                 # See all active worktrees and status
+omp-wt rm investigate-auth  # Delete worktree and its branch when done
+omp-wt guide                # Read the visual beginner's guide
+```
+Full documentation and stack-specific tips: see [`scripts/omp-wt/README.md`](scripts/omp-wt/README.md).
