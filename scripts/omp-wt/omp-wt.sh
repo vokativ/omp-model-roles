@@ -8,15 +8,15 @@ set -eo pipefail
 
 # Visual styling
 if [ -t 1 ]; then
-    BOLD="\033[1m"
-    GREEN="\033[32m"
-    YELLOW="\033[33m"
-    CYAN="\033[36m"
-    BLUE="\033[34m"
-    MAGENTA="\033[35m"
-    DIM="\033[2m"
-    RED="\033[31m"
-    RESET="\033[0m"
+    BOLD=$'\e[1m'
+    GREEN=$'\e[32m'
+    YELLOW=$'\e[33m'
+    CYAN=$'\e[36m'
+    BLUE=$'\e[34m'
+    MAGENTA=$'\e[35m'
+    DIM=$'\e[2m'
+    RED=$'\e[31m'
+    RESET=$'\e[0m'
 else
     BOLD="" GREEN="" YELLOW="" CYAN="" BLUE="" MAGENTA="" DIM="" RED="" RESET=""
 fi
@@ -53,19 +53,24 @@ ${BOLD}2. WHY USE IT WITH OMP?${RESET}
    • ${GREEN}Fast & lightweight:${RESET} Creating a worktree takes 0.1 seconds because it uses
      the local Git database already on your computer (no re-cloning).
 
-${BOLD}3. THE 3-STEP WORKFLOW:${RESET}
-   ${CYAN}Step 1: Start an investigation${RESET}
+${BOLD}3. WORKFLOW: STARTING, RETURNING, & MERGING:${RESET}
+   ${CYAN}• Start a new investigation:${RESET}
      $ omp-wt investigate-auth
-     (Creates .worktrees/investigate-auth, sets up the branch, and starts OMP)
+     (Creates .worktrees/investigate-auth, sets up branch, copies configs, starts OMP)
 
-   ${CYAN}Step 2: Let OMP work${RESET}
-     (OMP makes edits and commits inside the worktree)
+   ${CYAN}• Re-enter an EXISTING worktree with OMP (from project root):${RESET}
+     $ omp-wt investigate-auth
+     ${DIM}If the worktree already exists, omp-wt detects it and opens OMP right inside it!${RESET}
+     ${DIM}Or just run 'omp-wt' with no arguments to see your worktree list and select it.${RESET}
 
-   ${CYAN}Step 3: Decide what to keep${RESET}
-     • If you like the result: Merge it into your main branch!
-       $ git merge investigate-auth
-     • If you want to discard or clean up when finished:
-       $ omp-wt rm investigate-auth
+   ${CYAN}• Just open a shell/terminal in that worktree (without OMP):${RESET}
+     $ cd .worktrees/investigate-auth
+
+   ${CYAN}• Merge completed work into your main branch:${RESET}
+     $ git merge investigate-auth
+
+   ${CYAN}• Clean up when finished:${RESET}
+     $ omp-wt rm investigate-auth
 
 ${BOLD}4. IMPORTANT THINGS TO KNOW:${RESET}
    • ${YELLOW}One branch per worktree:${RESET} Git will not let two worktrees checkout the same

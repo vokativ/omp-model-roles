@@ -102,7 +102,20 @@ Next Actions:
   git merge <branch>     Merge changes into your current branch
 ```
 
-### 4. What to Do When OMP Finishes
+### 4. Returning to an Existing Worktree
+If you previously created a worktree and want to jump back in from your project root:
+- **With OMP:** Simply run `omp-wt <name>`:
+  ```bash
+  omp-wt auth-spike
+  ```
+  `omp-wt` detects that `.worktrees/auth-spike` already exists, skips branch creation, and immediately opens OMP right inside it.
+- **From the interactive menu:** Run `omp-wt` with no arguments to see the list of active worktrees and type the name.
+- **Without OMP (plain shell):**
+  ```bash
+  cd .worktrees/auth-spike
+  ```
+
+### 5. What to Do When OMP Finishes
 
 #### Option A: Keep the changes (Merge)
 From your main repository folder:
@@ -116,7 +129,6 @@ When you are done with an experiment or have finished merging:
 omp-wt rm auth-spike
 ```
 *(This safely removes the `.worktrees/auth-spike` folder and asks if you also want to delete the branch.)*
-
 ---
 
 ## Local Config & Stack-Specific Guidance

@@ -71,20 +71,24 @@ function Show-IntroGuide {
    • Fast & lightweight: Creating a worktree takes 0.1 seconds because it uses
      the local Git database already on your computer (no re-cloning).
 
-3. THE 3-STEP WORKFLOW:
-   Step 1: Start an investigation
+3. WORKFLOW: STARTING, RETURNING, & MERGING:
+   • Start a new investigation:
      > omp-wt investigate-auth
-     (Creates .worktrees\investigate-auth, sets up the branch, and starts OMP)
+     (Creates .worktrees\investigate-auth, sets up branch, copies configs, starts OMP)
 
-   Step 2: Let OMP work
-     (OMP makes edits and commits inside the worktree)
+   • Re-enter an EXISTING worktree with OMP (from project root):
+     > omp-wt investigate-auth
+     (If it already exists, omp-wt detects it and opens OMP right inside it!)
+     (Or run 'omp-wt' with no arguments to see your worktree list and select it)
 
-   Step 3: Decide what to keep
-     • If you like the result: Merge it into your main branch!
-       > git merge investigate-auth
-     • If you want to discard or clean up when finished:
-       > omp-wt -Remove investigate-auth
+   • Just open a terminal in that worktree (without OMP):
+     > cd .worktrees\investigate-auth
 
+   • Merge completed work into your main branch:
+     > git merge investigate-auth
+
+   • Clean up when finished:
+     > omp-wt -Remove investigate-auth
 4. IMPORTANT THINGS TO KNOW:
    • One branch per worktree: Git will not let two worktrees checkout the same
      branch at the same time. This prevents conflicting changes.
