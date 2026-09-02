@@ -361,6 +361,7 @@ if (-not $Name) {
     }
 
     if (-not $BaseRef) { $BaseRef = Get-DefaultBranch }
+}
 
 # Resolve Worktree Path
 $isSibling = $Sibling -or ($env:OMP_WT_MODE -eq "sibling")

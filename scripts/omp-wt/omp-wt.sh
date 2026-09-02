@@ -344,25 +344,31 @@ levenshtein() {
         echo 99
         return
     fi
-    declare -A d
-    for ((i=0; i<=len1; i++)); do d[$i,0]=$i; done
-    for ((j=0; j<=len2; j++)); do d[0,$j]=$j; done
+    local prev=()
+    local curr=()
+    for ((j=0; j<=len2; j++)); do
+        prev[j]=$j
+    done
     for ((i=1; i<=len1; i++)); do
+        curr[0]=$i
         local c1="${s1:i-1:1}"
         for ((j=1; j<=len2; j++)); do
             local c2="${s2:j-1:1}"
             local cost=1
             [ "$c1" = "$c2" ] && cost=0
-            local del=$(( d[$((i-1)),$j] + 1 ))
-            local ins=$(( d[$i,$((j-1))] + 1 ))
-            local sub=$(( d[$((i-1)),$((j-1))] + cost ))
+            local del=$(( prev[j] + 1 ))
+            local ins=$(( curr[j-1] + 1 ))
+            local sub=$(( prev[j-1] + cost ))
             local min=$del
             [ "$ins" -lt "$min" ] && min=$ins
             [ "$sub" -lt "$min" ] && min=$sub
-            d[$i,$j]=$min
+            curr[j]=$min
+        done
+        for ((j=0; j<=len2; j++)); do
+            prev[j]=${curr[j]}
         done
     done
-    echo "${d[$len1,$len2]}"
+    echo "${prev[len2]}"
 }
 
 suggest_command_typo() {
