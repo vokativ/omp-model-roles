@@ -564,19 +564,17 @@ if [ -z "$WT_NAME" ]; then
             WT_NAME=""
         fi
     done
-
-    echo -ne "${BOLD}Base branch/commit [${YELLOW}${CURRENT_BRANCH}${RESET}${BOLD}]: ${RESET}"
-    read -r USER_BASE_REF
-    if [ -n "$USER_BASE_REF" ]; then
-        BASE_REF="$USER_BASE_REF"
-    else
-        BASE_REF="$CURRENT_BRANCH"
-    fi
 fi
 
 # Clean / sanitize worktree name
 WT_NAME="$(echo "$WT_NAME" | sed 's|^/||; s|/$||')"
 WT_PATH="$(get_worktree_path "$WT_NAME")"
+
+# If BASE_REF wasn't passed as a CLI arg, default to CURRENT_BRANCH or HEAD
+if [ -z "$BASE_REF" ]; then
+    BASE_REF="$(git branch --show-current 2>/dev/null || echo "HEAD")"
+fi
+
 
 # Ensure .worktrees/ is excluded if nested
 ensure_exclude

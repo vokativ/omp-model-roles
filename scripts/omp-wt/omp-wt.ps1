@@ -348,8 +348,7 @@ if (-not $Name) {
         if ($Name) { $Name = $Name.Trim() }
     }
 
-    $userBase = Read-Host "Base branch/commit [$currBranch]"
-    if ($userBase) { $BaseRef = $userBase.Trim() } else { $BaseRef = $currBranch }
+    if (-not $BaseRef) { $BaseRef = $currBranch }
 }
 
 # Resolve Worktree Path
