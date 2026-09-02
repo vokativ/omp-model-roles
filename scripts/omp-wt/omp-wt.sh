@@ -107,6 +107,7 @@ ${BOLD}OPTIONS & FLAGS:${RESET}
 
 ${BOLD}ENVIRONMENT VARIABLES:${RESET}
     ${DIM}OMP_WT_MODE${RESET}                 "nested" (default) or "sibling"
+
     ${DIM}OMP_BIN${RESET}                     Path to omp binary (default: auto-detected in PATH)
 
 ${BOLD}EXAMPLES:${RESET}
@@ -117,6 +118,23 @@ ${BOLD}EXAMPLES:${RESET}
     omp-wt rm fix-login         # Clean up when done
     omp-wt guide                # Read the beginner's guide
 EOF
+}
+
+# Identify the repository's primary default branch (main, master, etc.)
+get_default_branch() {
+    local remote_head
+    remote_head="$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null || true)"
+    if [ -n "$remote_head" ]; then
+        echo "${remote_head##*/}"
+        return
+    fi
+    for b in main master trunk development dev; do
+        if git show-ref --verify --quiet "refs/heads/$b"; then
+            echo "$b"
+            return
+        fi
+    done
+    git branch --show-current 2>/dev/null || echo "HEAD"
 }
 
 # Verify Git repository
@@ -570,9 +588,9 @@ fi
 WT_NAME="$(echo "$WT_NAME" | sed 's|^/||; s|/$||')"
 WT_PATH="$(get_worktree_path "$WT_NAME")"
 
-# If BASE_REF wasn't passed as a CLI arg, default to CURRENT_BRANCH or HEAD
+# If BASE_REF wasn't passed as a CLI arg, default to the repo's primary branch (main/master)
 if [ -z "$BASE_REF" ]; then
-    BASE_REF="$(git branch --show-current 2>/dev/null || echo "HEAD")"
+    BASE_REF="$(get_default_branch)"
 fi
 
 

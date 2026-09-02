@@ -180,6 +180,18 @@ function Get-CommandTypo ($inputStr) {
         default { return $null }
     }
 }
+function Get-DefaultBranch {
+    $remoteHead = (git symbolic-ref refs/remotes/origin/HEAD 2>$null)
+    if ($remoteHead) { return ($remoteHead -split '/')[-1].Trim() }
+    foreach ($b in @('main', 'master', 'trunk', 'development', 'dev')) {
+        git show-ref --verify --quiet "refs/heads/$b"
+        if ($LASTEXITCODE -eq 0) { return $b }
+    }
+    $curr = (git branch --show-current 2>$null).Trim()
+    if ($curr) { return $curr }
+    return "HEAD"
+}
+
 
 # Subcommand aliases
 if ($Name -eq "list" -or $Name -eq "ls") { $List = $true; $Name = $null }
@@ -348,8 +360,7 @@ if (-not $Name) {
         if ($Name) { $Name = $Name.Trim() }
     }
 
-    if (-not $BaseRef) { $BaseRef = $currBranch }
-}
+    if (-not $BaseRef) { $BaseRef = Get-DefaultBranch }
 
 # Resolve Worktree Path
 $isSibling = $Sibling -or ($env:OMP_WT_MODE -eq "sibling")
