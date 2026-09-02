@@ -55,6 +55,33 @@ Consequences baked into this file:
 - `slow`/`plan` remain on `openai-codex/gpt-5.6-sol` falling back to `anthropic/claude-opus-5` $\to$ `google-antigravity/claude-sonnet-4-6` $\to$ `xai-oauth/grok-4.6` $\to$ `openrouter/z-ai/glm-5.3-flash`.
 - `advisor` points at `google-antigravity/claude-sonnet-4-6` — free Claude access via Antigravity's untouched Anthropic-proxy lane.
 
+### Optional: GPT-5.6 long context
+
+`openai-codex` GPT-5.6 models support a 1M-token context window, but OMP's default
+`extendedContext: false` caps them at 272K to avoid premium long-context consumption.
+This is intentionally an owner decision, not a default for every authenticated OpenAI login:
+
+- **Enable it** when the account owner confirms a ChatGPT Pro-or-higher plan (roughly $100/month)
+  and has comfortable Codex quota. It does not pre-allocate 1M tokens; it only permits a session
+  to grow beyond 272K when it actually needs to.
+- **Leave it off** for Plus/basic/unknown plans or when preserving Codex quota matters more than
+  unusually large repository or conversation context.
+- Above 272K, OMP's Terra catalog marks input and cache usage at 2x, output at 1.5x, and cache
+  writes at 2x. For an `openai-codex` subscription this is expected to consume the plan's usage
+  allowance faster; it is not an instruction to add an API key or override `models.yml`.
+
+Ask the owner before changing the setting. After approval:
+
+```bash
+omp config set extendedContext true
+omp config get extendedContext --json
+omp models find gpt-5.6-terra --json
+```
+
+The final command must report `openai-codex/gpt-5.6-terra` with
+`contextWindow: 1000000`. Start a new OMP session after changing the setting. Do not set
+`contextWindow` or `maxTokens` manually in `models.yml`; those do not expand a provider limit.
+
 ## Prerequisite: auth
 
 The mapping references six providers: `anthropic`, `openai-codex`, `google-antigravity`,
