@@ -23,17 +23,41 @@ echo "Installing omp-wt to ${TARGET_FILE}..."
 cp "$SOURCE_FILE" "$TARGET_FILE"
 chmod +x "$TARGET_FILE"
 
-# macOS uses Zsh by default. Bash is common on Linux. Add PATH once when needed.
-case "$(basename "${SHELL:-}")" in
-    zsh) SHELL_CONFIG="$HOME/.zshrc" ;;
-    bash) SHELL_CONFIG="$HOME/.bashrc" ;;
-    *) SHELL_CONFIG="" ;;
+# Detect shell startup file (macOS uses Zsh by default; Bash login shells read .bash_profile)
+DETECTED_SHELL="$(basename "${SHELL:-}")"
+if [ -z "$DETECTED_SHELL" ] && [ "$(uname -s)" = "Darwin" ]; then
+    DETECTED_SHELL="zsh"
+fi
+
+case "$DETECTED_SHELL" in
+    zsh)
+        SHELL_CONFIG="${ZDOTDIR:-$HOME}/.zshrc"
+        ;;
+    bash)
+        if [ "$(uname -s)" = "Darwin" ]; then
+            if [ -f "$HOME/.bash_profile" ]; then
+                SHELL_CONFIG="$HOME/.bash_profile"
+            else
+                SHELL_CONFIG="$HOME/.profile"
+            fi
+        else
+            SHELL_CONFIG="$HOME/.bashrc"
+        fi
+        ;;
+    *)
+        if [ "$(uname -s)" = "Darwin" ]; then
+            SHELL_CONFIG="${ZDOTDIR:-$HOME}/.zshrc"
+        else
+            SHELL_CONFIG="$HOME/.profile"
+        fi
+        ;;
 esac
 
-if [ -n "$SHELL_CONFIG" ]; then
+# Add to PATH if not already present
+if [[ ":$PATH:" != *":${TARGET_DIR}:"* ]] && [ -n "$SHELL_CONFIG" ]; then
     PATH_LINE="export PATH=\"${TARGET_DIR}:\$PATH\""
-    if ! grep -qxF "$PATH_LINE" "$SHELL_CONFIG" 2>/dev/null; then
-        printf '\n# User-installed commands\n%s\n' "$PATH_LINE" >> "$SHELL_CONFIG"
+    if ! grep -qF "$TARGET_DIR" "$SHELL_CONFIG" 2>/dev/null; then
+        printf '\n# omp-wt PATH\n%s\n' "$PATH_LINE" >> "$SHELL_CONFIG"
         echo "Added ${TARGET_DIR} to PATH in ${SHELL_CONFIG}."
         echo "Open a new terminal, or run: source \"${SHELL_CONFIG}\""
     fi

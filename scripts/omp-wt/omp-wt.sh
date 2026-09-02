@@ -126,8 +126,11 @@ get_default_branch() {
     local remote_head
     remote_head="$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null || true)"
     if [ -n "$remote_head" ]; then
-        echo "${remote_head##*/}"
-        return
+        local short_ref="${remote_head#refs/remotes/origin/}"
+        if [ -n "$short_ref" ]; then
+            echo "$short_ref"
+            return
+        fi
     fi
     for b in main master trunk development dev; do
         if git show-ref --verify --quiet "refs/heads/$b"; then
@@ -135,7 +138,13 @@ get_default_branch() {
             return
         fi
     done
-    git branch --show-current 2>/dev/null || echo "HEAD"
+    local cur
+    cur="$(git branch --show-current 2>/dev/null || true)"
+    if [ -n "$cur" ]; then
+        echo "$cur"
+    else
+        echo "HEAD"
+    fi
 }
 
 # Verify Git repository
@@ -159,10 +168,18 @@ fi
 REPO_NAME="$(basename "$MAIN_REPO_ROOT")"
 
 # Ensure OMP binary is found
-OMP_EXEC="${OMP_BIN:-$(which omp 2>/dev/null || echo "")}"
-if [ -z "$OMP_EXEC" ]; then
-    if [ -x "$HOME/.local/bin/omp" ]; then
-        OMP_EXEC="$HOME/.local/bin/omp"
+if [ -n "${OMP_BIN:-}" ]; then
+    OMP_EXEC="$OMP_BIN"
+else
+    OMP_EXEC="$(command -v omp 2>/dev/null || type -P omp 2>/dev/null || echo "")"
+    if [ -z "$OMP_EXEC" ] || [ ! -x "$OMP_EXEC" ]; then
+        if [ -x "$HOME/.local/bin/omp" ]; then
+            OMP_EXEC="$HOME/.local/bin/omp"
+        elif [ -x "/opt/homebrew/bin/omp" ]; then
+            OMP_EXEC="/opt/homebrew/bin/omp"
+        elif [ -x "/usr/local/bin/omp" ]; then
+            OMP_EXEC="/usr/local/bin/omp"
+        fi
     fi
 fi
 
@@ -203,7 +220,11 @@ print_wt_item() {
         name="main"
         tag="${MAGENTA}[main root]${RESET}"
     else
-        name="$(basename "$path")"
+        if [[ "$path" == "${main_root}/.worktrees/"* ]]; then
+            name="${path#"${main_root}/.worktrees/"}"
+        else
+            name="$(basename "$path")"
+        fi
         tag="${BLUE}[worktree]${RESET}"
     fi
     
@@ -212,10 +233,17 @@ print_wt_item() {
     local time_ago="${last_info%%|*}"
     local commit_msg="${last_info#*|}"
     
-    local dirty_count
-    dirty_count="$(git -C "$path" status --porcelain 2>/dev/null | wc -l || echo 0)"
+    local dirty_count=0
+    local raw_dirty
+    if raw_dirty="$(git -C "$path" status --porcelain 2>/dev/null | wc -l)"; then
+        dirty_count="$(echo "$raw_dirty" | tr -d '[:space:]')"
+    fi
+    dirty_count="${dirty_count:-0}"
+
     local status_badge
-    if [ "$dirty_count" -eq 0 ]; then
+    if [ ! -d "$path" ]; then
+        status_badge="${RED}✗ directory missing (stale)${RESET}"
+    elif [ "$dirty_count" -eq 0 ]; then
         status_badge="${GREEN}✓ clean${RESET}"
     else
         status_badge="${YELLOW}● $dirty_count uncommitted file(s)${RESET}"
@@ -289,6 +317,10 @@ handle_untracked_configs() {
         for f in "$MAIN_REPO_ROOT"/$pat; do
             if [ -f "$f" ]; then
                 local rel="${f#$MAIN_REPO_ROOT/}"
+                # Exclude files already tracked by Git in main repo
+                if git -C "$MAIN_REPO_ROOT" ls-files --error-unmatch -- "$rel" >/dev/null 2>&1; then
+                    continue
+                fi
                 # Check if it's already in destination
                 if [ ! -f "$target_wt/$rel" ]; then
                     found_configs+=("$rel")
@@ -297,7 +329,6 @@ handle_untracked_configs() {
         done
     done
     shopt -u nullglob
-
     if [ ${#found_configs[@]} -eq 0 ]; then
         return 0
     fi
@@ -315,18 +346,21 @@ handle_untracked_configs() {
         do_copy="n"
     else
         echo -ne "${BOLD}Copy these files to the new worktree? [Y/n]: ${RESET}"
-        read -r CONFIRM_COPY
+        read -r CONFIRM_COPY || true
         if [[ -z "$CONFIRM_COPY" || "$CONFIRM_COPY" =~ ^[Yy]$ ]]; then
             do_copy="y"
         fi
     fi
 
     if [ "$do_copy" = "y" ]; then
+        local copied_count=0
         for cf in "${found_configs[@]}"; do
             mkdir -p "$(dirname "$target_wt/$cf")"
-            cp "$MAIN_REPO_ROOT/$cf" "$target_wt/$cf"
+            if cp -p "$MAIN_REPO_ROOT/$cf" "$target_wt/$cf" 2>/dev/null; then
+                copied_count=$((copied_count + 1))
+            fi
         done
-        echo -e "${GREEN}✓ Copied ${#found_configs[@]} config file(s) to worktree.${RESET}\n"
+        echo -e "${GREEN}✓ Copied ${copied_count} config file(s) to worktree.${RESET}\n"
     else
         echo -e "${DIM}Skipped copying. If needed, copy manually with:${RESET}"
         for cf in "${found_configs[@]}"; do
@@ -437,40 +471,87 @@ case "${1:-}" in
         fi
         TARGET_NAME="$2"
         TARGET_PATH="$(get_worktree_path "$TARGET_NAME")"
-        
-        if [ ! -d "$TARGET_PATH" ]; then
-            MATCH="$(git worktree list --porcelain | grep "^worktree " | cut -d' ' -f2- | grep -E "(^|/)${TARGET_NAME}$" | head -n 1 || true)"
-            if [ -n "$MATCH" ]; then
-                TARGET_PATH="$MATCH"
+
+        # Search for registered worktree matching path, relative name, or branch
+        FOUND_PATH=""
+        FOUND_BRANCH=""
+        CURRENT_WT=""
+        CURRENT_BR=""
+
+        while IFS= read -r line || [ -n "$line" ]; do
+            if [[ "$line" =~ ^worktree\ (.*) ]]; then
+                CURRENT_WT="${BASH_REMATCH[1]}"
+                CURRENT_BR=""
+            elif [[ "$line" =~ ^branch\ refs/heads/(.*) ]]; then
+                CURRENT_BR="${BASH_REMATCH[1]}"
+                if [ "$CURRENT_WT" = "$TARGET_PATH" ] || \
+                   [ "$CURRENT_WT" = "$MAIN_REPO_ROOT/.worktrees/$TARGET_NAME" ] || \
+                   [ "$(basename "$CURRENT_WT")" = "$TARGET_NAME" ] || \
+                   [ "$CURRENT_BR" = "$TARGET_NAME" ]; then
+                    FOUND_PATH="$CURRENT_WT"
+                    FOUND_BRANCH="$CURRENT_BR"
+                    break
+                fi
+            elif [[ "$line" == "detached" ]]; then
+                if [ "$CURRENT_WT" = "$TARGET_PATH" ] || \
+                   [ "$CURRENT_WT" = "$MAIN_REPO_ROOT/.worktrees/$TARGET_NAME" ] || \
+                   [ "$(basename "$CURRENT_WT")" = "$TARGET_NAME" ]; then
+                    FOUND_PATH="$CURRENT_WT"
+                    FOUND_BRANCH=""
+                    break
+                fi
             fi
+        done < <(git worktree list --porcelain)
+
+        if [ -n "$FOUND_PATH" ]; then
+            TARGET_PATH="$FOUND_PATH"
         fi
 
-        if [ ! -d "$TARGET_PATH" ]; then
+        if [ ! -d "$TARGET_PATH" ] && [ -z "$FOUND_PATH" ]; then
             echo -e "${RED}Error:${RESET} Worktree '${TARGET_NAME}' not found at ${TARGET_PATH}." >&2
             exit 1
         fi
 
+        if [ "$TARGET_PATH" = "$MAIN_REPO_ROOT" ]; then
+            echo -e "${RED}Error:${RESET} Cannot remove the main repository root." >&2
+            exit 1
+        fi
+
         echo -e "${YELLOW}Removing worktree:${RESET} ${TARGET_PATH}"
-        if git worktree remove "$TARGET_PATH" 2>/dev/null; then
+        remove_err=""
+        if remove_err="$(git worktree remove "$TARGET_PATH" 2>&1)"; then
             echo -e "${GREEN}✓ Worktree directory removed.${RESET}"
         else
-            echo -e "${YELLOW}Standard remove failed (uncommitted files or lock). Force remove? [y/N]${RESET} "
-            read -r CONFIRM
+            echo -e "${YELLOW}Standard remove failed:${RESET} ${remove_err}"
+            echo -ne "${BOLD}Force remove? [y/N]${RESET} "
+            read -r CONFIRM || true
             if [[ "$CONFIRM" =~ ^[Yy]$ ]]; then
-                git worktree remove --force "$TARGET_PATH"
-                echo -e "${GREEN}✓ Worktree force-removed.${RESET}"
+                if ! git worktree remove --force "$TARGET_PATH" 2>/dev/null; then
+                    if git worktree remove --force --force "$TARGET_PATH" 2>/dev/null; then
+                        echo -e "${GREEN}✓ Worktree force-removed (unlocked).${RESET}"
+                    else
+                        echo -e "${RED}Error:${RESET} Failed to force-remove worktree. Try 'git worktree unlock \"$TARGET_PATH\"'." >&2
+                        exit 1
+                    fi
+                else
+                    echo -e "${GREEN}✓ Worktree force-removed.${RESET}"
+                fi
             else
                 echo -e "${DIM}Aborted.${RESET}"
                 exit 1
             fi
         fi
 
-        if git show-ref --verify --quiet "refs/heads/${TARGET_NAME}"; then
-            echo -ne "${YELLOW}Delete branch '${TARGET_NAME}' too? [y/N]${RESET} "
-            read -r DEL_BRANCH
+        branch_to_delete="${FOUND_BRANCH:-$TARGET_NAME}"
+        if [ -n "$branch_to_delete" ] && git show-ref --verify --quiet "refs/heads/${branch_to_delete}"; then
+            echo -ne "${YELLOW}Delete branch '${branch_to_delete}' too? [y/N]${RESET} "
+            read -r DEL_BRANCH || true
             if [[ "$DEL_BRANCH" =~ ^[Yy]$ ]]; then
-                git branch -D "$TARGET_NAME" 2>/dev/null || true
-                echo -e "${GREEN}✓ Branch '${TARGET_NAME}' deleted.${RESET}"
+                if git branch -D "$branch_to_delete" 2>/dev/null; then
+                    echo -e "${GREEN}✓ Branch '${branch_to_delete}' deleted.${RESET}"
+                else
+                    echo -e "${RED}Warning:${RESET} Could not delete branch '${branch_to_delete}'."
+                fi
             fi
         fi
         exit 0
@@ -565,7 +646,7 @@ if [ -z "$WT_NAME" ]; then
     echo -e "${DIM}Current branch:${RESET} ${YELLOW}${CURRENT_BRANCH}${RESET}"
     echo -e "${DIM}(Type 'omp-wt guide' anytime for an introduction to worktrees)${RESET}\n"
     
-    ACTIVE_COUNT="$(git worktree list | wc -l)"
+    ACTIVE_COUNT="$(git worktree list | wc -l | tr -d '[:space:]')"
     if [ "$ACTIVE_COUNT" -gt 1 ]; then
         echo -e "${BOLD}Active worktrees:${RESET}"
         list_worktrees
@@ -573,7 +654,7 @@ if [ -z "$WT_NAME" ]; then
 
     while [ -z "$WT_NAME" ]; do
         echo -ne "${BOLD}Enter worktree/branch name (e.g. fix-auth, test-speed): ${RESET}"
-        read -r WT_NAME
+        read -r WT_NAME || true
         WT_NAME="$(echo "$WT_NAME" | tr -d '[:space:]')"
 
         INTERACTIVE_TYPO="$(suggest_command_typo "$WT_NAME")"
@@ -593,14 +674,47 @@ fi
 
 # Clean / sanitize worktree name
 WT_NAME="$(echo "$WT_NAME" | sed 's|^/||; s|/$||')"
+if ! git check-ref-format --branch "$WT_NAME" >/dev/null 2>&1; then
+    echo -e "${RED}Error:${RESET} Invalid branch/worktree name '${WT_NAME}'." >&2
+    exit 1
+fi
 WT_PATH="$(get_worktree_path "$WT_NAME")"
 
-# Ensure .worktrees/ is excluded if nested
-ensure_exclude
+# Ensure .worktrees/ is excluded only if nested
+if [ "${OMP_WT_MODE:-nested}" != "sibling" ]; then
+    ensure_exclude
+fi
 
-# Check if worktree directory already exists
-if [ -d "$WT_PATH" ]; then
-    echo -e "${CYAN}→ Opening existing worktree:${RESET} ${WT_PATH}"
+# Check if worktree is registered in Git
+IS_REGISTERED=0
+if git worktree list --porcelain | grep -qxF "worktree ${WT_PATH}"; then
+    IS_REGISTERED=1
+fi
+
+if [ "$IS_REGISTERED" -eq 1 ]; then
+    if [ -d "$WT_PATH" ]; then
+        echo -e "${CYAN}→ Opening existing worktree:${RESET} ${WT_PATH}"
+    else
+        echo -e "${YELLOW}Warning:${RESET} Worktree is registered in Git but missing from disk at ${WT_PATH}."
+        echo -e "Run '${CYAN}omp-wt prune${RESET}' or '${CYAN}omp-wt rm ${WT_NAME}${RESET}' to clean up stale metadata."
+        exit 1
+    fi
+elif [ -d "$WT_PATH" ]; then
+    if git -C "$WT_PATH" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        WT_COMMON="$(git -C "$WT_PATH" rev-parse --git-common-dir 2>/dev/null || true)"
+        if [[ "$WT_COMMON" != /* ]]; then
+            WT_COMMON="$(cd "$WT_PATH/$WT_COMMON" 2>/dev/null && pwd || echo "")"
+        fi
+        if [ "$WT_COMMON" = "$COMMON_GIT_DIR" ]; then
+            echo -e "${CYAN}→ Opening existing worktree:${RESET} ${WT_PATH}"
+            IS_REGISTERED=1
+        fi
+    fi
+    if [ "$IS_REGISTERED" -eq 0 ]; then
+        echo -e "${RED}Error:${RESET} Directory '${WT_PATH}' already exists but is not a registered worktree of this repository." >&2
+        echo -e "Please remove or rename the existing directory first." >&2
+        exit 1
+    fi
 else
     echo -e "${CYAN}→ Creating worktree:${RESET} ${BOLD}${WT_NAME}${RESET}"
     echo -e "${DIM}  Location:${RESET} ${WT_PATH}"
@@ -609,10 +723,16 @@ else
 
     if git show-ref --verify --quiet "refs/heads/${WT_NAME}"; then
         echo -e "${DIM}  Branch '${WT_NAME}' already exists, checking it out...${RESET}"
-        git worktree add "$WT_PATH" "$WT_NAME"
+        if ! git worktree add "$WT_PATH" "$WT_NAME"; then
+            echo -e "${RED}Error:${RESET} Failed to checkout existing branch '${WT_NAME}' in worktree." >&2
+            exit 1
+        fi
     else
         DEFAULT_BRANCH="$(get_default_branch)"
-        CURRENT_BRANCH="$(git branch --show-current 2>/dev/null || echo "HEAD")"
+        CURRENT_BRANCH="$(git branch --show-current 2>/dev/null || true)"
+        if [ -z "$CURRENT_BRANCH" ]; then
+            CURRENT_BRANCH="HEAD"
+        fi
 
         # If BASE_REF wasn't passed as a CLI arg, determine the base branch
         if [ -z "$BASE_REF" ]; then
@@ -621,7 +741,7 @@ else
                 echo -e "  [1] ${GREEN}${DEFAULT_BRANCH}${RESET} (clean repository default) ${DIM}[Default]${RESET}"
                 echo -e "  [2] ${YELLOW}${CURRENT_BRANCH}${RESET} (your current branch)"
                 echo -ne "${BOLD}Select base [1/2, or 'n' to cancel]: ${RESET}"
-                read -r BASE_CHOICE
+                read -r BASE_CHOICE || true
                 case "$BASE_CHOICE" in
                     2)
                         BASE_REF="$CURRENT_BRANCH"
@@ -646,14 +766,17 @@ else
         # Confirmation if on default branch and not already confirmed
         if [ "$AUTO_CONFIRM" != "yes" ]; then
             echo -ne "${BOLD}Create new worktree and branch '${CYAN}${WT_NAME}${RESET}${BOLD}' from ${YELLOW}${BASE_REF}${RESET}${BOLD}? [Y/n]: ${RESET}"
-            read -r CONFIRM_CREATE
+            read -r CONFIRM_CREATE || true
             if [[ -n "$CONFIRM_CREATE" && ! "$CONFIRM_CREATE" =~ ^[Yy]$ ]]; then
                 echo -e "${DIM}Aborted.${RESET}"
                 exit 0
             fi
         fi
         echo -e "${DIM}  Creating new branch '${WT_NAME}' from ${BASE_REF}...${RESET}"
-        git worktree add -b "$WT_NAME" "$WT_PATH" "$BASE_REF"
+        if ! git worktree add -b "$WT_NAME" "$WT_PATH" "$BASE_REF"; then
+            echo -e "${RED}Error:${RESET} Failed to create worktree." >&2
+            exit 1
+        fi
     fi
     echo -e "${GREEN}✓ Worktree ready!${RESET}\n"
 
@@ -662,13 +785,13 @@ else
 fi
 
 # Launch OMP in the worktree directory
-if [ -z "$OMP_EXEC" ]; then
-    echo -e "${YELLOW}Warning:${RESET} 'omp' command not found in PATH or ~/.local/bin/omp."
+if [ -z "$OMP_EXEC" ] || [ ! -x "$OMP_EXEC" ]; then
+    echo -e "${YELLOW}Warning:${RESET} 'omp' command not found or not executable in PATH or ~/.local/bin/omp."
     echo -e "Entering directory: ${WT_PATH}"
     cd "$WT_PATH"
     exec "${SHELL:-/bin/bash}"
 else
     echo -e "${GREEN}Launching OMP in:${RESET} ${WT_PATH}\n"
     cd "$WT_PATH"
-    "$OMP_EXEC" "${EXTRA_OMP_ARGS[@]}"
+    exec "$OMP_EXEC" "${EXTRA_OMP_ARGS[@]}"
 fi

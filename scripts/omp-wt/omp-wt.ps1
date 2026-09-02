@@ -187,7 +187,7 @@ function Get-CommandTypo ($inputStr) {
 }
 function Get-DefaultBranch {
     $remoteHead = (git symbolic-ref refs/remotes/origin/HEAD 2>$null)
-    if ($remoteHead) { return ($remoteHead -split '/')[-1].Trim() }
+    if ($remoteHead) { return ($remoteHead -replace '^refs/remotes/origin/', '').Trim() }
     foreach ($b in @('main', 'master', 'trunk', 'development', 'dev')) {
         git show-ref --verify --quiet "refs/heads/$b"
         if ($LASTEXITCODE -eq 0) { return $b }

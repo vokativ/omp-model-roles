@@ -40,9 +40,10 @@ Run the included installer:
 ./scripts/omp-wt/install.sh
 ```
 
-The installer uses your user-owned `~/.local/bin` (or Termux’s `$PREFIX/bin`), so it never needs administrator or `sudo` permission. On macOS, if needed, it adds `~/.local/bin` to `~/.zshrc` once; open a new terminal afterward.
+The installer uses your user-owned `~/.local/bin` (or Termux’s `$PREFIX/bin`), so it never needs administrator or `sudo` permission. On macOS, it detects your login shell (`~/.zshrc` or `~/.bash_profile`) and configures PATH once if needed; open a new terminal afterward.
 
-macOS uses Zsh by default, but `omp-wt` has a Bash shebang and runs correctly from a Zsh terminal. Your normal shell remains Zsh.
+macOS uses Zsh by default, while `omp-wt` uses Bash and runs seamlessly from your interactive Zsh shell. When launching OMP, `omp-wt` replaces itself via `exec`, ensuring full terminal control, signal propagation (Ctrl+C, SIGWINCH resize), and zero wrapper memory overhead.
+
 *Or copy manually:*
 ```bash
 cp scripts/omp-wt/omp-wt.sh ~/.local/bin/omp-wt
@@ -75,13 +76,18 @@ omp-wt
 # Create worktree and start OMP immediately
 omp-wt auth-spike
 
+# Supports slash-containing branch names (e.g. feature/auth-spike)
+omp-wt feature/auth-spike
+
 # Create worktree branching off a specific base (e.g. main)
 omp-wt perf-fix main
+
+# Create worktree outside the repo as a sibling directory (../<repo>-<name>)
+omp-wt --sibling perf-fix
 
 # Pass custom flags directly to OMP
 omp-wt bug-check -- --model smol
 ```
-
 ### 3. See Active Worktrees & Status
 ```bash
 omp-wt list
