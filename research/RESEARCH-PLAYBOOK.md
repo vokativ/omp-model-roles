@@ -101,6 +101,8 @@ Root — the importable config:
   role; the Contributor tier's discount is paid for with permission to train on submitted prompts
   and completions, and a plain API key is excluded from `usageAwareFallback`. Read it before
   re-litigating "should we add the cheap Meta model somewhere".
+- `ARCHITECT-CRITICAL-AGENTS.md` — 2026-08-26: wiring architect/critical into real subagent dispatch.
+- `FABLE-EVALUATION.md` — 2026-09-03: evaluation of Claude Fable 5 / 5.1 for architect and critical roles, token economics on $20/mo Anthropic Pro, Google Antigravity Claude 4.6 fallbacks, and multi-agent debate (Architect vs Slow).
 
 Adding a new investigation? Put it in `research/`, register it in this list, and link it from
 `../README.md`'s rationale section so it is discoverable from the entry point.

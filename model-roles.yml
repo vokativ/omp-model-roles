@@ -1,6 +1,12 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-09-02 · Snapshot version: 17
+## Generated: 2026-09-03 · Snapshot version: 18
 ## Stale? See research/RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
+##
+## v18: upgraded depth fallback tier across all 6 deep reasoning roles (slow, plan, architect,
+## review, security, critical) by inserting cost-neutral google-antigravity/claude-opus-4-6 before
+## claude-sonnet-4-6. Leverages Antigravity's 0%-utilized Anthropic proxy lane for genuine Opus-tier
+## depth on failover without draining the scarce direct-Anthropic Pro account. Evaluated Claude
+## Fable 5 / 5.1; established opt-in escalation pattern for high-stakes architecture.
 ##
 ## v17: replaced dead nvidia/deepseek-ai/deepseek-v4-flash (HTTP 410 EOL 2026-08-07) and upgraded
 ## fallback resilience across all chains.
@@ -95,11 +101,13 @@ retry:
       - nvidia/minimaxai/minimax-m3
     slow:
       - anthropic/claude-opus-5
+      - google-antigravity/claude-opus-4-6
       - google-antigravity/claude-sonnet-4-6
       - xai-oauth/grok-4.6
       - openrouter/z-ai/glm-5.3-flash
     plan:
       - anthropic/claude-opus-5
+      - google-antigravity/claude-opus-4-6
       - google-antigravity/claude-sonnet-4-6
       - xai-oauth/grok-4.6
       - openrouter/z-ai/glm-5.3-flash
@@ -127,22 +135,26 @@ retry:
       - nvidia/minimaxai/minimax-m3
     architect:
       - openai-codex/gpt-5.6-sol
+      - google-antigravity/claude-opus-4-6
       - google-antigravity/claude-sonnet-4-6
       - xai-oauth/grok-4.6
       - openrouter/z-ai/glm-5.3-flash
     review:
       - anthropic/claude-opus-5
+      - google-antigravity/claude-opus-4-6
       - google-antigravity/claude-sonnet-4-6
       - xai-oauth/grok-4.6
       - openrouter/z-ai/glm-5.3-flash
     security:
       - anthropic/claude-opus-5
+      - google-antigravity/claude-opus-4-6
       - google-antigravity/claude-sonnet-4-6
       - xai-oauth/grok-4.6
       - openrouter/z-ai/glm-5.3-flash
     critical:
-      - openrouter/z-ai/glm-5.3-flash
+      - google-antigravity/claude-opus-4-6
       - google-antigravity/claude-sonnet-4-6
+      - openrouter/z-ai/glm-5.3-flash
       - openai-codex/gpt-5.6-sol
       - xai-oauth/grok-4.6
     fast_worker:

@@ -1,6 +1,6 @@
 # OMP model-role setup — import instructions
 
-**Snapshot: 2026-09-02 · v17.** Stale after ~4-6 weeks, or immediately if any subscription
+**Snapshot: 2026-09-03 · v18.** Stale after ~4-6 weeks, or immediately if any subscription
 changed — check `research/RESEARCH-PLAYBOOK.md`'s staleness check before importing this blind.
 
 `model-roles.yml` is a config **overlay**: `modelRoles`, `retry.fallbackChains`, and
@@ -18,7 +18,7 @@ The repo root holds only what you actually import. Everything explaining *why* l
 ```
 model-roles.yml       <- the config overlay: modelRoles + retry.fallbackChains   (import this)
 models-overlay.yml    <- companion models.yml overlay: per-model maxTokens fixes (import this too)
-agents/               <- role-backed custom agent definitions for architect + critical (import this too)
+agents/               <- custom agent definitions: architect, critical, and fable escalation (import this too)
 scripts/omp-wt/       <- cross-platform Git Worktree helper (Linux, macOS, Quest, Windows)
 README.md             <- you are here: import steps + the rationale for the current values
 research/
@@ -26,6 +26,7 @@ research/
   GEMINI-QUOTA-OPTIONS.md         <- 2026-08-15 investigation: Gemini/Antigravity quota burnout options
   META-MUSE-EVALUATION.md         <- 2026-08-25 evaluation: the `meta` provider, and why it wasn't adopted
   ARCHITECT-CRITICAL-AGENTS.md    <- 2026-08-26: wiring architect/critical into real subagent dispatch
+  FABLE-EVALUATION.md         <- 2026-09-03: Claude Fable 5 / 5.1 evaluation for architect & critical
 ```
 
 Just importing the config? You need the two `.yml` files, `agents/`, and the import steps below —
@@ -94,7 +95,7 @@ is logged in.
 1. Run `omp config path`, then open `config.yml` in the printed agent directory.
 2. Copy in the `modelRoles:` and `retry:` blocks from `model-roles.yml`.
 3. In the same directory, open `models.yml` (create if missing) and copy in `models-overlay.yml`'s `providers:` block.
-4. Copy `agents/architect.md` and `agents/critical.md` into `~/.omp/agent/agents/`.
+4. Copy `agents/*.md` (`architect.md`, `critical.md`, and `fable.md`) into `~/.omp/agent/agents/`.
 5. Restart any running `omp` session.
 
 Equivalent CLI commands for `config.yml`:
@@ -103,7 +104,7 @@ omp config set modelRoles '{"default":"google-antigravity/gemini-3.7-flash","smo
 
 omp config set task.agentModelOverrides '{"security-reviewer":"@security","reviewer":"@review","sonic":"@fast_worker","task":"@good_worker"}'
 
-omp config set retry.fallbackChains '{"default":["openai-codex/gpt-5.6-terra","openrouter/z-ai/glm-5.3-flash","nvidia/minimaxai/minimax-m3"],"smol":["google-antigravity/gemini-3.1-flash-lite","nvidia/minimaxai/minimax-m3"],"slow":["anthropic/claude-opus-5","google-antigravity/claude-sonnet-4-6","xai-oauth/grok-4.6","openrouter/z-ai/glm-5.3-flash"],"plan":["anthropic/claude-opus-5","google-antigravity/claude-sonnet-4-6","xai-oauth/grok-4.6","openrouter/z-ai/glm-5.3-flash"],"task":["google-antigravity/gemini-3.7-flash","openrouter/z-ai/glm-5.3-flash","nvidia/minimaxai/minimax-m3"],"designer":["openai-codex/gpt-5.6-terra","google-antigravity/gemini-3.7-flash","openrouter/z-ai/glm-5.3-flash"],"vision":["openrouter/google/gemini-3.7-flash","openai-codex/gpt-5.6-terra","xai-oauth/grok-4.6"],"commit":["openai-codex/gpt-5.6-luna","nvidia/minimaxai/minimax-m3"],"advisor":["openai-codex/gpt-5.6-terra","nvidia/minimaxai/minimax-m3"],"tiny":["xai-oauth/grok-composer-2.5-fast","google-antigravity/gemini-3.1-flash-lite","nvidia/minimaxai/minimax-m3"],"architect":["openai-codex/gpt-5.6-sol","google-antigravity/claude-sonnet-4-6","xai-oauth/grok-4.6","openrouter/z-ai/glm-5.3-flash"],"review":["anthropic/claude-opus-5","google-antigravity/claude-sonnet-4-6","xai-oauth/grok-4.6","openrouter/z-ai/glm-5.3-flash"],"security":["anthropic/claude-opus-5","google-antigravity/claude-sonnet-4-6","xai-oauth/grok-4.6","openrouter/z-ai/glm-5.3-flash"],"critical":["openrouter/z-ai/glm-5.3-flash","google-antigravity/claude-sonnet-4-6","openai-codex/gpt-5.6-sol","xai-oauth/grok-4.6"],"fast_worker":["xai-oauth/grok-build","google-antigravity/gemini-3.1-flash-lite","nvidia/minimaxai/minimax-m3"],"good_worker":["google-antigravity/gemini-3.7-flash","openrouter/z-ai/glm-5.3-flash","nvidia/minimaxai/minimax-m3"]}'
+omp config set retry.fallbackChains '{"default":["openai-codex/gpt-5.6-terra","openrouter/z-ai/glm-5.3-flash","nvidia/minimaxai/minimax-m3"],"smol":["google-antigravity/gemini-3.1-flash-lite","nvidia/minimaxai/minimax-m3"],"slow":["anthropic/claude-opus-5","google-antigravity/claude-opus-4-6","google-antigravity/claude-sonnet-4-6","xai-oauth/grok-4.6","openrouter/z-ai/glm-5.3-flash"],"plan":["anthropic/claude-opus-5","google-antigravity/claude-opus-4-6","google-antigravity/claude-sonnet-4-6","xai-oauth/grok-4.6","openrouter/z-ai/glm-5.3-flash"],"task":["google-antigravity/gemini-3.7-flash","openrouter/z-ai/glm-5.3-flash","nvidia/minimaxai/minimax-m3"],"designer":["openai-codex/gpt-5.6-terra","google-antigravity/gemini-3.7-flash","openrouter/z-ai/glm-5.3-flash"],"vision":["openrouter/google/gemini-3.7-flash","openai-codex/gpt-5.6-terra","xai-oauth/grok-4.6"],"commit":["openai-codex/gpt-5.6-luna","nvidia/minimaxai/minimax-m3"],"advisor":["openai-codex/gpt-5.6-terra","nvidia/minimaxai/minimax-m3"],"tiny":["xai-oauth/grok-composer-2.5-fast","google-antigravity/gemini-3.1-flash-lite","nvidia/minimaxai/minimax-m3"],"architect":["openai-codex/gpt-5.6-sol","google-antigravity/claude-opus-4-6","google-antigravity/claude-sonnet-4-6","xai-oauth/grok-4.6","openrouter/z-ai/glm-5.3-flash"],"review":["anthropic/claude-opus-5","google-antigravity/claude-opus-4-6","google-antigravity/claude-sonnet-4-6","xai-oauth/grok-4.6","openrouter/z-ai/glm-5.3-flash"],"security":["anthropic/claude-opus-5","google-antigravity/claude-opus-4-6","google-antigravity/claude-sonnet-4-6","xai-oauth/grok-4.6","openrouter/z-ai/glm-5.3-flash"],"critical":["google-antigravity/claude-opus-4-6","google-antigravity/claude-sonnet-4-6","openrouter/z-ai/glm-5.3-flash","openai-codex/gpt-5.6-sol","xai-oauth/grok-4.6"],"fast_worker":["xai-oauth/grok-build","google-antigravity/gemini-3.1-flash-lite","nvidia/minimaxai/minimax-m3"],"good_worker":["google-antigravity/gemini-3.7-flash","openrouter/z-ai/glm-5.3-flash","nvidia/minimaxai/minimax-m3"]}'
 
 omp config set retry.usageAwareFallback true
 omp config set retry.usageReservePolicy auto
