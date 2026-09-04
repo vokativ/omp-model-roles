@@ -1,6 +1,6 @@
 # OMP model-role setup — import instructions
 
-**Snapshot: 2026-09-03 · v18.** Stale after ~4-6 weeks, or immediately if any subscription
+**Snapshot: 2026-09-04 · v19.** Stale after ~4-6 weeks, or immediately if any subscription
 changed — check `research/RESEARCH-PLAYBOOK.md`'s staleness check before importing this blind.
 
 `model-roles.yml` is a config **overlay**: `modelRoles`, `retry.fallbackChains`, and
@@ -18,7 +18,7 @@ The repo root holds only what you actually import. Everything explaining *why* l
 ```
 model-roles.yml       <- the config overlay: modelRoles + retry.fallbackChains   (import this)
 models-overlay.yml    <- companion models.yml overlay: per-model maxTokens fixes (import this too)
-agents/               <- custom agent definitions: architect, critical, and fable escalation (import this too)
+agents/               <- custom agent definitions: architect, critical, and sage (thinking partner) (import this too)
 scripts/omp-wt/       <- cross-platform Git Worktree helper (Linux, macOS, Quest, Windows)
 README.md             <- you are here: import steps + the rationale for the current values
 research/
@@ -27,6 +27,7 @@ research/
   META-MUSE-EVALUATION.md         <- 2026-08-25 evaluation: the `meta` provider, and why it wasn't adopted
   ARCHITECT-CRITICAL-AGENTS.md    <- 2026-08-26: wiring architect/critical into real subagent dispatch
   FABLE-EVALUATION.md         <- 2026-09-03: Claude Fable 5 / 5.1 evaluation for architect & critical
+  THINKING-PARTNER-ROLE.md   <- 2026-09-04 · v19: Thinking Partner (`sage`) architecture, debate, and allocation
 ```
 
 Just importing the config? You need the two `.yml` files, `agents/`, and the import steps below —
@@ -55,6 +56,7 @@ Consequences baked into this file:
 - **`anthropic/claude-sonnet-5` and `grok-4.6` dropped from `default`**: Preserves scarce Anthropic 5h quotas exclusively for `architect`/`critical` and avoids Grok tool-churn latency on daily turns.
 - `slow`/`plan` remain on `openai-codex/gpt-5.6-sol` falling back to `anthropic/claude-opus-5` $\to$ `google-antigravity/claude-sonnet-4-6` $\to$ `xai-oauth/grok-4.6` $\to$ `openrouter/z-ai/glm-5.3-flash`.
 - `advisor` points at `google-antigravity/claude-sonnet-4-6` — free Claude access via Antigravity's untouched Anthropic-proxy lane.
+- **`sage` (Thinking Partner)** points at `anthropic/claude-opus-5`, backed by `google-antigravity/claude-opus-4-6` $\to$ `openai-codex/gpt-5.6-sol` $\to$ `google-antigravity/claude-sonnet-4-6` $\to$ `xai-oauth/grok-4.6` $\to$ `openrouter/z-ai/glm-5.3-flash`. Tailored for exploratory ideation, lateral thinking, and challenging orthodox assumptions without a rigid JSON schema.
 
 ### Optional: GPT-5.6 long context
 
@@ -95,12 +97,12 @@ is logged in.
 1. Run `omp config path`, then open `config.yml` in the printed agent directory.
 2. Copy in the `modelRoles:` and `retry:` blocks from `model-roles.yml`.
 3. In the same directory, open `models.yml` (create if missing) and copy in `models-overlay.yml`'s `providers:` block.
-4. Copy `agents/*.md` (`architect.md`, `critical.md`, and `fable.md`) into `~/.omp/agent/agents/`.
+4. Copy `agents/*.md` (`architect.md`, `critical.md`, and `sage.md`) into `~/.omp/agent/agents/`.
 5. Restart any running `omp` session.
 
 Equivalent CLI commands for `config.yml`:
 ```bash
-omp config set modelRoles '{"default":"google-antigravity/gemini-3.7-flash","smol":"openai-codex/gpt-5.6-luna","slow":"openai-codex/gpt-5.6-sol","vision":"google-antigravity/gemini-3.7-flash","plan":"openai-codex/gpt-5.6-sol","commit":"xai-oauth/grok-build","designer":"xai-oauth/grok-4.6","task":"openai-codex/gpt-5.6-terra","advisor":"google-antigravity/claude-sonnet-4-6","tiny":"openai-codex/gpt-5.6-luna","architect":"anthropic/claude-opus-5","review":"openai-codex/gpt-5.6-sol","security":"openai-codex/gpt-5.6-sol","critical":"anthropic/claude-opus-5","fast_worker":"openai-codex/gpt-5.6-luna","good_worker":"openai-codex/gpt-5.6-terra"}'
+omp config set modelRoles '{"default":"google-antigravity/gemini-3.7-flash","smol":"openai-codex/gpt-5.6-luna","slow":"openai-codex/gpt-5.6-sol","vision":"google-antigravity/gemini-3.7-flash","plan":"openai-codex/gpt-5.6-sol","commit":"xai-oauth/grok-build","designer":"xai-oauth/grok-4.6","task":"openai-codex/gpt-5.6-terra","advisor":"google-antigravity/claude-sonnet-4-6","tiny":"openai-codex/gpt-5.6-luna","architect":"anthropic/claude-opus-5","review":"openai-codex/gpt-5.6-sol","security":"openai-codex/gpt-5.6-sol","critical":"anthropic/claude-opus-5","fast_worker":"openai-codex/gpt-5.6-luna","good_worker":"openai-codex/gpt-5.6-terra","sage":"anthropic/claude-opus-5"}'
 
 omp config set task.agentModelOverrides '{"security-reviewer":"@security","reviewer":"@review","sonic":"@fast_worker","task":"@good_worker"}'
 
@@ -108,6 +110,7 @@ omp config set retry.fallbackChains '{"default":["openai-codex/gpt-5.6-terra","o
 
 omp config set retry.usageAwareFallback true
 omp config set retry.usageReservePolicy auto
+omp config set cycleOrder '["smol","default","slow","architect","sage"]'
 ```
 
 ## Verify

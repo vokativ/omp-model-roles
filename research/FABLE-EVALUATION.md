@@ -9,6 +9,22 @@ Updated following:
 2. Live isolated benchmark runs measuring latency, token verbosity, and quota delta across Opus 5, Fable 5, Fable 5.1, and Google Antigravity Opus 4.6.
 3. Analysis of public agentic benchmarks (Terminal-Bench 4.0, Terminal-Bench-Science, AutomationBench) and token pricing structures (specifically Fable 5.1's 75% cache-read reduction).
 
+
+### 2026-09-04 Correction & v18.1 Update: Anthropic Quota Reality on Fable
+
+**Critical Defect Identified in v18 Telemetry:**  
+Anthropic Claude Pro ($20/mo) **does NOT include Claude Fable 5 or 5.1** under the monthly subscription allowance. When invoked directly, Anthropic returns HTTP 429:
+```json
+{"error":{"type":"rate_limit_error","message":"Usage credits are required for this model.","details":{"error_code":"credits_required","disabled_reason":"org_level_disabled"}}}
+```
+In v18, the subagent benchmark runs claiming "7.45s execution on Fable 5.1 with <0.1% quota impact" actually triggered this 429 and **silently fell back to `openai-codex/gpt-5.6-terra`** via OMP's default fallback chain. Terra (a fast, lower-tier worker) was answering under the `fable` name.
+
+**Fix Applied in v18.1:**
+1. **`fable` role bound to `@fable` (`anthropic/claude-opus-5`):** Opus 5 is fully authenticated, quota-covered under the $20/mo Claude Pro plan, and provides the actual frontier Anthropic-family systems and design reasoning intended for the `fable` agent.
+2. **High-Capability Depth Fallback Chain:** If Anthropic 5-hour quota is ever reached, `fable` falls back strictly to frontier reasoning models:
+   `openai-codex/gpt-5.6-sol` $\to$ `google-antigravity/claude-opus-4-6` $\to$ `google-antigravity/claude-sonnet-4-6` $\to$ `openrouter/z-ai/glm-5.3-flash` $\to$ `xai-oauth/grok-4.6`.
+   Terra is explicitly excluded from this chain.
+3. **Model-level Fallbacks for Fable:** Added fallback entries for `anthropic/claude-fable-5-1` and `anthropic/claude-fable-5` routing to `anthropic/claude-opus-5` $\to$ `gpt-5.6-sol` $\to$ `claude-opus-4-6` so any explicit CLI invocation (`--model fable-5`) fails over to Opus 5 rather than Terra.
 ---
 
 ## TL;DR — Bottom Line Recommendation

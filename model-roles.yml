@@ -1,13 +1,19 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-09-03 · Snapshot version: 18
+## Generated: 2026-09-04 · Snapshot version: 19
 ## Stale? See research/RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
 ##
+## v19: replaced decommissioned `fable` with `sage` (Thinking Partner).
+##   - Primary: anthropic/claude-opus-5 (prose taste, conceptual reframing, and lateral ideation).
+##   - Fallback chain: google-antigravity/claude-opus-4-6 (0% proxy continuity) -> openai-codex/gpt-5.6-sol
+##     (abundant ChatGPT Pro) -> google-antigravity/claude-sonnet-4-6 -> xai-oauth/grok-4.6 -> openrouter/z-ai/glm-5.3-flash.
+##   - Model-level fallback chains for anthropic/claude-fable-5-1 and claude-fable-5 retained to defuse
+##     the account-level 429 credits_required hazard on explicit CLI invocations.
+##   - cycleOrder explicitly registered: [smol, default, slow, architect, sage].
 ## v18: upgraded depth fallback tier across all 6 deep reasoning roles (slow, plan, architect,
 ## review, security, critical) by inserting cost-neutral google-antigravity/claude-opus-4-6 before
 ## claude-sonnet-4-6. Leverages Antigravity's 0%-utilized Anthropic proxy lane for genuine Opus-tier
 ## depth on failover without draining the scarce direct-Anthropic Pro account. Evaluated Claude
 ## Fable 5 / 5.1; established opt-in escalation pattern for high-stakes architecture.
-##
 ## v17: replaced dead nvidia/deepseek-ai/deepseek-v4-flash (HTTP 410 EOL 2026-08-07) and upgraded
 ## fallback resilience across all chains.
 ##   - default primary retained on google-antigravity/gemini-3.7-flash (user preferred every-turn model),
@@ -82,6 +88,7 @@ modelRoles:
   critical: anthropic/claude-opus-5
   fast_worker: openai-codex/gpt-5.6-luna
   good_worker: openai-codex/gpt-5.6-terra
+  sage: anthropic/claude-opus-5
 
 task:
   agentModelOverrides:
@@ -165,5 +172,32 @@ retry:
       - google-antigravity/gemini-3.7-flash
       - openrouter/z-ai/glm-5.3-flash
       - nvidia/minimaxai/minimax-m3
+    sage:
+      - google-antigravity/claude-opus-4-6
+      - openai-codex/gpt-5.6-sol
+      - google-antigravity/claude-sonnet-4-6
+      - xai-oauth/grok-4.6
+      - openrouter/z-ai/glm-5.3-flash
+    anthropic/claude-fable-5-1:
+      - anthropic/claude-opus-5
+      - openai-codex/gpt-5.6-sol
+      - google-antigravity/claude-opus-4-6
+      - google-antigravity/claude-sonnet-4-6
+      - openrouter/z-ai/glm-5.3-flash
+      - xai-oauth/grok-4.6
+    anthropic/claude-fable-5:
+      - anthropic/claude-opus-5
+      - openai-codex/gpt-5.6-sol
+      - google-antigravity/claude-opus-4-6
+      - google-antigravity/claude-sonnet-4-6
+      - openrouter/z-ai/glm-5.3-flash
+      - xai-oauth/grok-4.6
   usageAwareFallback: true
   usageReservePolicy: "auto"
+
+cycleOrder:
+  - smol
+  - default
+  - slow
+  - architect
+  - sage
