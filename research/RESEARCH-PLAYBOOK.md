@@ -104,6 +104,7 @@ Root — the importable config:
 - `ARCHITECT-CRITICAL-AGENTS.md` — 2026-08-26: wiring architect/critical into real subagent dispatch.
 - `FABLE-EVALUATION.md` — 2026-09-03: evaluation of Claude Fable 5 / 5.1 for architect and critical roles, token economics on $20/mo Anthropic Pro, Google Antigravity Claude 4.6 fallbacks, and multi-agent debate (Architect vs Slow).
 - `THINKING-PARTNER-ROLE.md` — 2026-09-04 · v19: architecture, multi-agent debate (Architect vs Slow), and allocation for the `sage` Thinking Partner role, defusing the Anthropic 429 credits_required failure mode on Fable.
+- `SAGE-CREATIVE-INSTRUCTIONS.md` — 2026-09-04 · v19.1: cognitive divergence operators, anti-slop defect catalogs, and subtractive taste architecture for `sage` (Thinking Partner), adapted from Anshu Chimala's Apple R&D AI creativity methodology.
 
 Adding a new investigation? Put it in `research/`, register it in this list, and link it from
 `../README.md`'s rationale section so it is discoverable from the entry point.

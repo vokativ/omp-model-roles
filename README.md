@@ -1,6 +1,6 @@
 # OMP model-role setup — import instructions
 
-**Snapshot: 2026-09-04 · v19.** Stale after ~4-6 weeks, or immediately if any subscription
+**Snapshot: 2026-09-04 · v19.1.** Stale after ~4-6 weeks, or immediately if any subscription
 changed — check `research/RESEARCH-PLAYBOOK.md`'s staleness check before importing this blind.
 
 `model-roles.yml` is a config **overlay**: `modelRoles`, `retry.fallbackChains`, and
@@ -28,6 +28,7 @@ research/
   ARCHITECT-CRITICAL-AGENTS.md    <- 2026-08-26: wiring architect/critical into real subagent dispatch
   FABLE-EVALUATION.md         <- 2026-09-03: Claude Fable 5 / 5.1 evaluation for architect & critical
   THINKING-PARTNER-ROLE.md   <- 2026-09-04 · v19: Thinking Partner (`sage`) architecture, debate, and allocation
+  SAGE-CREATIVE-INSTRUCTIONS.md <- 2026-09-04 · v19.1: cognitive divergence, anti-slop catalogs, and subtractive taste
 ```
 
 Just importing the config? You need the two `.yml` files, `agents/`, and the import steps below —
@@ -56,7 +57,7 @@ Consequences baked into this file:
 - **`anthropic/claude-sonnet-5` and `grok-4.6` dropped from `default`**: Preserves scarce Anthropic 5h quotas exclusively for `architect`/`critical` and avoids Grok tool-churn latency on daily turns.
 - `slow`/`plan` remain on `openai-codex/gpt-5.6-sol` falling back to `anthropic/claude-opus-5` $\to$ `google-antigravity/claude-sonnet-4-6` $\to$ `xai-oauth/grok-4.6` $\to$ `openrouter/z-ai/glm-5.3-flash`.
 - `advisor` points at `google-antigravity/claude-sonnet-4-6` — free Claude access via Antigravity's untouched Anthropic-proxy lane.
-- **`sage` (Thinking Partner)** points at `anthropic/claude-opus-5`, backed by `google-antigravity/claude-opus-4-6` $\to$ `openai-codex/gpt-5.6-sol` $\to$ `google-antigravity/claude-sonnet-4-6` $\to$ `xai-oauth/grok-4.6` $\to$ `openrouter/z-ai/glm-5.3-flash`. Tailored for exploratory ideation, lateral thinking, and challenging orthodox assumptions without a rigid JSON schema.
+- **`sage` (Thinking Partner)** points at `anthropic/claude-opus-5`, backed by `google-antigravity/claude-opus-4-6` $\to$ `openai-codex/gpt-5.6-sol` $\to$ `google-antigravity/claude-sonnet-4-6` $\to$ `xai-oauth/grok-4.6` $\to$ `openrouter/z-ai/glm-5.3-flash`. In v19.1, upgraded with cognitive divergence operators, anti-slop defect elimination, and subtractive taste adapted from Anshu Chimala's Apple R&D AI creativity methodology (see `research/SAGE-CREATIVE-INSTRUCTIONS.md`). Emits no rigid JSON schema.
 
 ### Optional: GPT-5.6 long context
 
