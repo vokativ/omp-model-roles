@@ -1,7 +1,14 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-09-04 · Snapshot version: 19
+## Generated: 2026-09-05 · Snapshot version: 20
 ## Stale? See research/RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
 ##
+## v20: cutover `tiny` and `fast_worker` (sonic) to openai-codex/gpt-5.3-codex-spark; elevated
+## gpt-6-astra into `sage` (Thinking Partner) fallback chain.
+##   - Primary: openai-codex/gpt-5.3-codex-spark for tiny & fast_worker. Sustained decode: ~644 tok/s
+##     (12x faster than Luna) with 2.1s TTFT; routes volume to ChatGPT Pro's 0%-used dedicated Spark pool.
+##   - Sage fallback: inserted openai-codex/gpt-6-astra ahead of Sol. Preserves Opus 5 primary
+##     (protecting provider diversity) and Antigravity Opus 4.6 Tier 1 ($0 Claude continuity),
+##     elevating Astra's incisive dialectical reframing for Tier 2 OpenAI fallback.
 ## v19: replaced decommissioned `fable` with `sage` (Thinking Partner).
 ##   - Primary: anthropic/claude-opus-5 (prose taste, conceptual reframing, and lateral ideation).
 ##   - Fallback chain: google-antigravity/claude-opus-4-6 (0% proxy continuity) -> openai-codex/gpt-5.6-sol
@@ -79,14 +86,14 @@ modelRoles:
   vision: google-antigravity/gemini-3.7-flash
   commit: xai-oauth/grok-build
   advisor: google-antigravity/claude-sonnet-4-6
-  tiny: openai-codex/gpt-5.6-luna
+  tiny: openai-codex/gpt-5.3-codex-spark
 
   # --- Workflow, Review & Architecture Roles (Strategy C) ---
   architect: anthropic/claude-opus-5
   review: openai-codex/gpt-5.6-sol
   security: openai-codex/gpt-5.6-sol
   critical: anthropic/claude-opus-5
-  fast_worker: openai-codex/gpt-5.6-luna
+  fast_worker: openai-codex/gpt-5.3-codex-spark
   good_worker: openai-codex/gpt-5.6-terra
   sage: anthropic/claude-opus-5
 
@@ -174,6 +181,7 @@ retry:
       - nvidia/minimaxai/minimax-m3
     sage:
       - google-antigravity/claude-opus-4-6
+      - openai-codex/gpt-6-astra
       - openai-codex/gpt-5.6-sol
       - google-antigravity/claude-sonnet-4-6
       - xai-oauth/grok-4.6
