@@ -1,8 +1,8 @@
 ## Companion overlay to model-roles.yml — merge into ~/.omp/agent/models.yml
 ## (a DIFFERENT file than ~/.omp/agent/config.yml; see README.md's import steps).
-## Generated: 2026-09-02 · Snapshot version: 10
+## Generated: 2026-09-06 · Snapshot version: 11
 ##
-## Required by: vision role's primary (openrouter/google/gemini-3.7-flash, see model-roles.yml).
+## Required by: vision role's fallback (openrouter/google/gemini-3.8-flash, see model-roles.yml).
 ##
 ## Why this exists: tested empirically 2026-08-22 (see README.md's "vision"/"designer"
 ## rationale) — a raw OpenRouter call to this model at its default token budget spent
@@ -20,5 +20,5 @@
 providers:
   openrouter:
     modelOverrides:
-      google/gemini-3.7-flash:
+      google/gemini-3.8-flash:
         maxTokens: 65536

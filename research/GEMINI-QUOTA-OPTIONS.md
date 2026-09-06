@@ -20,7 +20,7 @@ Buy API Keys Right Now" recommendation above, in a targeted way, not a reversal 
   (`google-antigravity/*` → `[google/*, google-vertex/*]`) was considered and rejected in favor
   of scoping any change to individual roles, based on real A/B test evidence rather than the
   generic "same weights, different pool" theory.
-- **`vision` got `openrouter/google/gemini-3.7-flash` as its first fallback** (OpenRouter, not
+- **`vision` got `openrouter/google/gemini-3.8-flash` as its first fallback** (OpenRouter, not
   direct Google AI Studio or Vertex — no GCP billing setup needed) — but only after testing it
   head-to-head against every other candidate on a real production image and confirming it won
   on both speed and accuracy. See `README.md`'s rationale section for the actual numbers.
@@ -63,12 +63,12 @@ not current.
 ### Current snapshot
 
 Your morning's cross-repo research pushed heavy volume through `default`, which — since this
-morning's `model-roles.yml` commit — primaries on `google-antigravity/gemini-3.7-flash`. Live
+morning's `model-roles.yml` commit — primaries on `google-antigravity/gemini-3.8-flash`. Live
 snapshot at time of writing:
 
 | Antigravity meter | Latest | 30d peak | Feeds |
 |---|---|---|---|
-| Usage (Google), daily | 55.0% | 55.0% | `gemini-3.7-flash` (`default`, `vision`, `designer`) |
+| Usage (Google), daily | 55.0% | 55.0% | `gemini-3.8-flash` (`default`, `vision`, `designer`) |
 | Usage (Anthropic), daily | 100.0% | 100.0% | Antigravity-proxied Claude — **already hit the wall this window** |
 | Usage (Anthropic), weekly | 70.5% | 70.5% | same proxy, weekly window |
 | Usage (OpenAI), daily | 100.0% | 100.0% | Antigravity-proxied OpenAI — **also hit the wall** |
@@ -77,7 +77,7 @@ snapshot at time of writing:
 Pulled via `omp usage --history --days 30`. The two Antigravity-proxy *daily* meters (Anthropic
 and OpenAI) have already peaked at 100% at least once in this window — direct evidence that
 Antigravity's daily lanes do run dry under load, not just a hypothetical. The Google-native daily
-lane (the one `gemini-3.7-flash` actually draws on) hasn't hit that yet, but `default`, `vision`,
+lane (the one `gemini-3.8-flash` actually draws on) hasn't hit that yet, but `default`, `vision`,
 and `designer` all now primary on that exact meter — more concentrated load than before this
 morning's change.
 
@@ -105,7 +105,7 @@ retry:
 
 Two things worth knowing before touching this:
 
-1. **It's the documented answer to "Antigravity ran dry."** It keeps `gemini-3.7-flash` (same
+1. **It's the documented answer to "Antigravity ran dry."** It keeps `gemini-3.8-flash` (same
    weights, same character) and swaps which *pool* pays: first pay-as-you-go Gemini API
    (`google/*`, needs `GEMINI_API_KEY`), then Vertex AI (`google-vertex/*`, needs a GCP project).
 2. **Provider wildcards outrank role chains.** OMP picks a chain by specificity: exact
@@ -124,14 +124,14 @@ covered in the ready-to-paste snippet at the end.
 | | Do nothing (Recommended) | OpenRouter (50% Promo) | Gemini API (Google AI Studio) | Google AI Pro ($19.99/mo) |
 |---|---|---|---|---|
 | Cost | **$0** extra | **$0.375/1M in, $1.875/1M out** (pay-as-you-go) | $0.75/1M in, $3.75/1M out | $19.99/mo flat |
-| What it buys | Immediate Sonnet 5 / Terra fallback (already paid, 90%+ idle) | Same-model Gemini 3.7 Flash overflow at half direct Google cost | Direct Google Gemini overflow tier | 4x bigger *free* Antigravity quota + $10/mo Cloud credit |
-| Setup | None | Fund OpenRouter credits → `openrouter/google/gemini-3.7-flash` | `ai.google.dev` → GCP billing setup | Google One upgrade |
+| What it buys | Immediate Sonnet 5 / Terra fallback (already paid, 90%+ idle) | Same-model Gemini 3.8 Flash overflow at half direct Google cost | Direct Google Gemini overflow tier | 4x bigger *free* Antigravity quota + $10/mo Cloud credit |
+| Setup | None | Fund OpenRouter credits → `openrouter/google/gemini-3.8-flash` | `ai.google.dev` → GCP billing setup | Google One upgrade |
 | Billing risk | Zero | Zero (isolated prepaid balance) | Can collide with existing app GCP billing accounts | Fixed recurring subscription |
 | Right for you if | **Current state**: Antigravity is healthy, flat subscriptions absorb overflow | Antigravity runs dry daily AND you want same-weights overflow with zero billing hassle | Strict requirement for first-party Google endpoint | Antigravity IDE UI itself is needed |
 
 ### Price comparison: Google AI Studio vs OpenRouter
 
-Live rates for `gemini-3.7-flash` (checked 2026-08-16):
+Live rates for `gemini-3.8-flash` (checked 2026-08-16):
 - **Google AI Studio Direct**: $0.75 / 1M input, $3.75 / 1M output (standard context ≤128k).
 - **OpenRouter (Discounted)**: **$0.375 / 1M input, $1.875 / 1M output** (50% cheaper, 1M context).
 
@@ -158,7 +158,7 @@ Live rates for `gemini-3.7-flash` (checked 2026-08-16):
 2. ~~**Your paid pools have 90%+ idle headroom**~~: partly superseded — Codex still has deep
    headroom (2% 7d, 30d peak 5%), but the Anthropic pool does *not* (5h peak 94% over 30d),
    which is why v10 demotes `claude-sonnet-5` below both Terra and DeepSeek V4 Flash.
-3. **If you ever need same-model overflow in the future**: Prefer OpenRouter (`openrouter/google/gemini-3.7-flash`). It is 50% cheaper than direct Google AI Studio and avoids touching or complicating existing Google Cloud billing accounts tied to your production apps. *(Still current.)*
+3. **If you ever need same-model overflow in the future**: Prefer OpenRouter (`openrouter/google/gemini-3.8-flash`). It is 50% cheaper than direct Google AI Studio and avoids touching or complicating existing Google Cloud billing accounts tied to your production apps. *(Still current.)*
 
 ### When to review
 Re-evaluate during the monthly check-in (`omp usage --history --days 30`). Only consider adding OpenRouter if:

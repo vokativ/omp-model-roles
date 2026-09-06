@@ -85,7 +85,7 @@ in `research/` (this folder).
 Root — the importable config:
 - `../model-roles.yml` — the current applied `modelRoles` + `retry.fallbackChains` overlay (importable via `PI_CONFIG_FILES` or manual merge into `config.yml`).
 - `../models-overlay.yml` — companion `models.yml` overlay (per-model overrides like `maxTokens`).
-  Currently just the OpenRouter Gemini 3.7 Flash `maxTokens` fix that `vision`'s fallback chain
+  Currently just the OpenRouter Gemini 3.8 Flash `maxTokens` fix that `vision`'s fallback chain
   depends on — check whether any newly-added fallback model needs one of these before assuming
   `model-roles.yml` alone is a complete import.
 - `../README.md` — import instructions, the repo-layout map, plus the rationale/subscription table

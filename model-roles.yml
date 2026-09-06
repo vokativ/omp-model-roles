@@ -1,7 +1,10 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-09-05 · Snapshot version: 20
+## Generated: 2026-09-06 · Snapshot version: 21
 ## Stale? See research/RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
 ##
+## v21: replaced google-antigravity/gemini-3.7-flash with gemini-3.8-flash and
+## openrouter/google/gemini-3.7-flash with gemini-3.8-flash across all roles and fallbacks
+## (default, vision, task, designer, good_worker).
 ## v20: cutover `tiny` and `fast_worker` (sonic) to openai-codex/gpt-5.3-codex-spark; elevated
 ## gpt-6-astra into `sage` (Thinking Partner) fallback chain.
 ##   - Primary: openai-codex/gpt-5.3-codex-spark for tiny & fast_worker. Sustained decode: ~644 tok/s
@@ -23,13 +26,13 @@
 ## Fable 5 / 5.1; established opt-in escalation pattern for high-stakes architecture.
 ## v17: replaced dead nvidia/deepseek-ai/deepseek-v4-flash (HTTP 410 EOL 2026-08-07) and upgraded
 ## fallback resilience across all chains.
-##   - default primary retained on google-antigravity/gemini-3.7-flash (user preferred every-turn model),
+##   - default primary retained on google-antigravity/gemini-3.8-flash (user preferred every-turn model),
 ##     falling back to gpt-5.6-terra -> openrouter/z-ai/glm-5.3-flash -> nvidia/minimaxai/minimax-m3.
 ##   - openrouter/z-ai/glm-5.3-flash added as the subscription-independent capability tier in 8 chains
 ##     (#1 on Tau2-Bench Airline/Agentic at 58.2, 1.31M context, 131K output, multimodal, $0.075/$0.25).
 ##   - nvidia/minimaxai/minimax-m3 added as the unmetered $0 floor in 8 chains (1M context, 16K max-out).
 ##     Deliberately excluded from depth roles (slow/plan/architect/review/security/critical) and vision.
-##   - vision primary remains google-antigravity/gemini-3.7-flash, with openrouter/google/gemini-3.7-flash
+##   - vision primary remains google-antigravity/gemini-3.8-flash, with openrouter/google/gemini-3.8-flash
 ##     (2026-08-22 A/B winner) as first fallback, followed by gpt-5.6-terra and grok-4.6.
 ##   - critical first fallback switched to openrouter/z-ai/glm-5.3-flash, closing the v14 defect
 ##     where Sol collided with slow/plan/review/security producers.
@@ -77,13 +80,13 @@
 
 modelRoles:
   # --- Core Built-in Roles ---
-  default: google-antigravity/gemini-3.7-flash
+  default: google-antigravity/gemini-3.8-flash
   smol: openai-codex/gpt-5.6-luna
   slow: openai-codex/gpt-5.6-sol
   plan: openai-codex/gpt-5.6-sol
   task: openai-codex/gpt-5.6-terra
   designer: xai-oauth/grok-4.6
-  vision: google-antigravity/gemini-3.7-flash
+  vision: google-antigravity/gemini-3.8-flash
   commit: xai-oauth/grok-build
   advisor: google-antigravity/claude-sonnet-4-6
   tiny: openai-codex/gpt-5.3-codex-spark
@@ -126,15 +129,15 @@ retry:
       - xai-oauth/grok-4.6
       - openrouter/z-ai/glm-5.3-flash
     task:
-      - google-antigravity/gemini-3.7-flash
+      - google-antigravity/gemini-3.8-flash
       - openrouter/z-ai/glm-5.3-flash
       - nvidia/minimaxai/minimax-m3
     designer:
       - openai-codex/gpt-5.6-terra
-      - google-antigravity/gemini-3.7-flash
+      - google-antigravity/gemini-3.8-flash
       - openrouter/z-ai/glm-5.3-flash
     vision:
-      - openrouter/google/gemini-3.7-flash
+      - openrouter/google/gemini-3.8-flash
       - openai-codex/gpt-5.6-terra
       - xai-oauth/grok-4.6
     commit:
@@ -176,7 +179,7 @@ retry:
       - google-antigravity/gemini-3.1-flash-lite
       - nvidia/minimaxai/minimax-m3
     good_worker:
-      - google-antigravity/gemini-3.7-flash
+      - google-antigravity/gemini-3.8-flash
       - openrouter/z-ai/glm-5.3-flash
       - nvidia/minimaxai/minimax-m3
     sage:
