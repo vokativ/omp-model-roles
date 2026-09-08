@@ -1,7 +1,11 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-09-06 · Snapshot version: 21
+## Generated: 2026-09-08 · Snapshot version: 22
 ## Stale? See research/RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
 ##
+## v22: made Astra the architect primary; kept critical as an independent Opus 5 gate and Sage's
+## Opus 5 primary for diversity; removed the standalone Astra role; reordered architect failover
+## cross-provider first: Antigravity Opus, direct Opus, Sol, Antigravity Sonnet, Grok, then GLM.
+
 ## v21: replaced google-antigravity/gemini-3.7-flash with gemini-3.8-flash and
 ## openrouter/google/gemini-3.7-flash with gemini-3.8-flash across all roles and fallbacks
 ## (default, vision, task, designer, good_worker).
@@ -92,7 +96,7 @@ modelRoles:
   tiny: openai-codex/gpt-5.3-codex-spark
 
   # --- Workflow, Review & Architecture Roles (Strategy C) ---
-  architect: anthropic/claude-opus-5
+  architect: openai-codex/gpt-6-astra
   review: openai-codex/gpt-5.6-sol
   security: openai-codex/gpt-5.6-sol
   critical: anthropic/claude-opus-5
@@ -151,8 +155,9 @@ retry:
       - google-antigravity/gemini-3.1-flash-lite
       - nvidia/minimaxai/minimax-m3
     architect:
-      - openai-codex/gpt-5.6-sol
       - google-antigravity/claude-opus-4-6
+      - anthropic/claude-opus-5
+      - openai-codex/gpt-5.6-sol
       - google-antigravity/claude-sonnet-4-6
       - xai-oauth/grok-4.6
       - openrouter/z-ai/glm-5.3-flash
