@@ -1,6 +1,6 @@
 ## Companion overlay to model-roles.yml — merge into ~/.omp/agent/models.yml
 ## (a DIFFERENT file than ~/.omp/agent/config.yml; see README.md's import steps).
-## Generated: 2026-09-06 · Snapshot version: 11
+## Generated: 2026-09-17 · Snapshot version: 12
 ##
 ## Required by: vision role's fallback (openrouter/google/gemini-3.8-flash, see model-roles.yml).
 ##
@@ -11,8 +11,8 @@
 ## doesn't hit this because it already uses a comparably large ceiling (66K max-out).
 ## This override matches that ceiling so the OpenRouter vision primary doesn't truncate.
 ##
-## Note on nvidia/minimaxai/minimax-m3: its maxTokens of 16384 is a NIM server-side ceiling.
-## Do NOT add an override here attempting to raise it; that would cause HTTP 400 bad requests.
+## Note on nvidia/nvidia/nemotron-3-super-120b-a12b: its catalog maxTokens is 262144 (262K),
+## matching its context window, so it needs no maxTokens override.
 ##
 ## Note on openrouter/z-ai/glm-5.3-flash: its catalog maxTokens is already 131072, so it
 ## needs no override.

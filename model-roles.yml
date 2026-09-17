@@ -1,6 +1,16 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-09-08 · Snapshot version: 22
+## Generated: 2026-09-17 · Snapshot version: 23
 ## Stale? See research/RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
+##
+## v23: replaced dead nvidia/minimaxai/minimax-m3 (HTTP 410 EOL 2026-09-09) with
+## nvidia/nvidia/nemotron-3-super-120b-a12b across all 8 fallback chains (default, smol,
+## task, commit, advisor, tiny, fast_worker, good_worker).
+##   - EOL discovery: scanned live NVIDIA NIM catalog (82 active models, 149 EOL/404);
+##     minimax-m3 reached EOL on 2026-09-09T09:00:00Z.
+##   - Replacement: nvidia/nvidia/nemotron-3-super-120b-a12b (120B MoE with 12B active,
+##     262K context, 262K max output tokens, minimal-xhigh thinking ladder, native tool calling).
+##   - Eliminates the server-side 16K token cap defect of MiniMax M3 (now 262K native out).
+##   - Sub-second TTFT (~0.5s) on NIM, robust unmetered $0 floor.
 ##
 ## v22: made Astra the architect primary; kept critical as an independent Opus 5 gate and Sage's
 ## Opus 5 primary for diversity; removed the standalone Astra role; reordered architect failover
@@ -79,7 +89,7 @@
 ##   - openai-codex      (ChatGPT Pro, $100/mo, 5x quota — the ABUNDANT pool, heavy roles & tiny work)
 ##   - google-antigravity (free preview; Google lane weekly metered, Anthropic proxy lane separately metered)
 ##   - xai-oauth         (X Premium $8/mo bundled SuperGrok credits — small, weekly reset, use sparingly)
-##   - nvidia             (free NIM catalog — unmetered $0 floor; use minimaxai/minimax-m3, 1M ctx, 16K out)
+##   - nvidia             (free NIM catalog — unmetered $0 floor; use nvidia/nemotron-3-super-120b-a12b, 262K ctx, 262K out)
 ##   - openrouter         (prepaid credit balance — high-capability tier & vision fallback)
 
 modelRoles:
@@ -116,10 +126,10 @@ retry:
     default:
       - openai-codex/gpt-5.6-terra
       - openrouter/z-ai/glm-5.3-flash
-      - nvidia/minimaxai/minimax-m3
+      - nvidia/nvidia/nemotron-3-super-120b-a12b
     smol:
       - google-antigravity/gemini-3.1-flash-lite
-      - nvidia/minimaxai/minimax-m3
+      - nvidia/nvidia/nemotron-3-super-120b-a12b
     slow:
       - anthropic/claude-opus-5
       - google-antigravity/claude-opus-4-6
@@ -135,7 +145,7 @@ retry:
     task:
       - google-antigravity/gemini-3.8-flash
       - openrouter/z-ai/glm-5.3-flash
-      - nvidia/minimaxai/minimax-m3
+      - nvidia/nvidia/nemotron-3-super-120b-a12b
     designer:
       - openai-codex/gpt-5.6-terra
       - google-antigravity/gemini-3.8-flash
@@ -146,14 +156,14 @@ retry:
       - xai-oauth/grok-4.6
     commit:
       - openai-codex/gpt-5.6-luna
-      - nvidia/minimaxai/minimax-m3
+      - nvidia/nvidia/nemotron-3-super-120b-a12b
     advisor:
       - openai-codex/gpt-5.6-terra
-      - nvidia/minimaxai/minimax-m3
+      - nvidia/nvidia/nemotron-3-super-120b-a12b
     tiny:
       - xai-oauth/grok-composer-2.5-fast
       - google-antigravity/gemini-3.1-flash-lite
-      - nvidia/minimaxai/minimax-m3
+      - nvidia/nvidia/nemotron-3-super-120b-a12b
     architect:
       - google-antigravity/claude-opus-4-6
       - anthropic/claude-opus-5
@@ -182,11 +192,11 @@ retry:
     fast_worker:
       - xai-oauth/grok-build
       - google-antigravity/gemini-3.1-flash-lite
-      - nvidia/minimaxai/minimax-m3
+      - nvidia/nvidia/nemotron-3-super-120b-a12b
     good_worker:
       - google-antigravity/gemini-3.8-flash
       - openrouter/z-ai/glm-5.3-flash
-      - nvidia/minimaxai/minimax-m3
+      - nvidia/nvidia/nemotron-3-super-120b-a12b
     sage:
       - google-antigravity/claude-opus-4-6
       - openai-codex/gpt-6-astra
