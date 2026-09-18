@@ -1,6 +1,24 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-09-17 · Snapshot version: 23
+## Generated: 2026-09-18 · Snapshot version: 24
 ## Stale? See research/RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
+##
+## v24: cut `tiny`/`fast_worker` over off retired openai-codex/gpt-5.3-codex-spark (OpenAI
+## retired Spark the week of 2026-09-13; confirmed 0 catalog hits via `omp models find
+## gpt-5.3-codex-spark` and multiple community reports of the model vanishing from Codex CLI's
+## selector while its dedicated quota meter stayed visible). Promoted each role's existing
+## tier-1 fallback to primary since both already run on healthy xai-oauth capacity (9% used,
+## 91% left): tiny -> xai-oauth/grok-composer-2.5-fast, fast_worker -> xai-oauth/grok-build.
+## Trimmed the now-redundant leading fallback entry from both chains.
+##   - Investigation: live `omp usage` on 2026-09-18 showed openai-codex 7-day pool at 93% used
+##     (0.07x quota left, inside the 10% usageReservePct reserve margin) — NOT caused by Spark
+##     (its lifetime usage across all sessions was ~423K tokens, a rounding error against
+##     gpt-5.6-terra's 46.5M and gpt-5.6-luna's 15.7M). The real driver is `task`/`smol` role
+##     volume from heavy subagent fan-out; Spark retirement is a separate, real defect that was
+##     leaving `tiny`/`fast_worker` pointed at a model no longer in the catalog.
+##   - Also live-corrected the stale Anthropic/OpenAI capacity read that produced the v22
+##     "openai-codex abundant" narrative: Anthropic is now the pool with headroom (4%/14% used,
+##     0.86-0.96x left) and openai-codex is the constrained one (93% used, 0.07x left). See
+##     README.md's capacity table for the current reading.
 ##
 ## v23: replaced dead nvidia/minimaxai/minimax-m3 (HTTP 410 EOL 2026-09-09) with
 ## nvidia/nvidia/nemotron-3-super-120b-a12b across all 8 fallback chains (default, smol,
@@ -86,7 +104,8 @@
 ##
 ## Assumes these logins exist on the target machine:
 ##   - anthropic        (Claude Pro, $20/mo — the SCARCE pool, keep light, reserve for architect/critical)
-##   - openai-codex      (ChatGPT Pro, $100/mo, 5x quota — the ABUNDANT pool, heavy roles & tiny work)
+##   - openai-codex      (ChatGPT Pro, $100/mo, 5x quota — heavy roles: task/smol/slow/plan/
+##     architect/review/security/good_worker; currently near its 7-day cap, see README capacity table)
 ##   - google-antigravity (free preview; Google lane weekly metered, Anthropic proxy lane separately metered)
 ##   - xai-oauth         (X Premium $8/mo bundled SuperGrok credits — small, weekly reset, use sparingly)
 ##   - nvidia             (free NIM catalog — unmetered $0 floor; use nvidia/nemotron-3-super-120b-a12b, 262K ctx, 262K out)
@@ -103,14 +122,14 @@ modelRoles:
   vision: google-antigravity/gemini-3.8-flash
   commit: xai-oauth/grok-build
   advisor: google-antigravity/claude-sonnet-4-6
-  tiny: openai-codex/gpt-5.3-codex-spark
+  tiny: xai-oauth/grok-composer-2.5-fast
 
   # --- Workflow, Review & Architecture Roles (Strategy C) ---
   architect: openai-codex/gpt-6-astra
   review: openai-codex/gpt-5.6-sol
   security: openai-codex/gpt-5.6-sol
   critical: anthropic/claude-opus-5
-  fast_worker: openai-codex/gpt-5.3-codex-spark
+  fast_worker: xai-oauth/grok-build
   good_worker: openai-codex/gpt-5.6-terra
   sage: anthropic/claude-opus-5
 
@@ -161,7 +180,6 @@ retry:
       - openai-codex/gpt-5.6-terra
       - nvidia/nvidia/nemotron-3-super-120b-a12b
     tiny:
-      - xai-oauth/grok-composer-2.5-fast
       - google-antigravity/gemini-3.1-flash-lite
       - nvidia/nvidia/nemotron-3-super-120b-a12b
     architect:
@@ -190,7 +208,6 @@ retry:
       - openai-codex/gpt-5.6-sol
       - xai-oauth/grok-4.6
     fast_worker:
-      - xai-oauth/grok-build
       - google-antigravity/gemini-3.1-flash-lite
       - nvidia/nvidia/nemotron-3-super-120b-a12b
     good_worker:
