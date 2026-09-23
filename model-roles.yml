@@ -1,6 +1,24 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-09-23 · Snapshot version: 25
+## Generated: 2026-09-23 · Snapshot version: 26
 ## Stale? See research/RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
+##
+## v26: upgraded all `openai-codex/gpt-5.6-terra` references to `openai-codex/gpt-6-sol`
+## across role assignments (task, good_worker -> gpt-6-sol) and fallback chains (default,
+## designer, vision, advisor -> gpt-6-sol). Also upgraded all `anthropic/claude-opus-5`
+## references to `anthropic/claude-opus-5-5` across role assignments (critical, sage ->
+## claude-opus-5-5) and fallback chains (slow, plan, architect, review, security, fable).
+##   - Rationale: Per Simon Willison's 2026-09-22 pricing analysis:
+##     1) GPT-6 Sol is $2/M in, $0.20/M cached in, and $10/M out (17% cheaper than Terra's
+##        $12/M out, with identical input/cache rates and no >272K surcharge). Any remaining
+##        reason to use Terra evaporated. Sol brings 872K context window, 128K max out, and
+##        low..max thinking ladder.
+##     2) Claude Opus 5.5 cut input/output pricing 20% ($4/$20 vs $5/$25) and prompt cache
+##        reads 60% ($0.20 vs $0.50). Communicates clearly with Fable 5.1-tier intelligence
+##        and high token efficiency. All agent definitions (critical, sage, architect) retain
+##        `thinking: high`, avoiding the Opus 5.5 "max" over-thinking SVG edge case.
+##   - Quota & Independence: Live `omp usage` (2026-09-23) shows openai-codex at 26% (74% left)
+##     and anthropic at 10% (5h) / 2% (7d). `critical` gate remains on Anthropic (claude-opus-5-5),
+##     preserving INDEPENDENT producer/reviewer provenance against Sol-produced work.
 ##
 ## v25: upgraded `openai-codex/gpt-5.6-luna` to `gpt-6-luna` and `gpt-5.6-sol` to `gpt-6-sol`
 ## across all role assignments (smol -> gpt-6-luna; slow, plan, review, security -> gpt-6-sol)
@@ -123,7 +141,7 @@ modelRoles:
   smol: openai-codex/gpt-6-luna
   slow: openai-codex/gpt-6-sol
   plan: openai-codex/gpt-6-sol
-  task: openai-codex/gpt-5.6-terra
+  task: openai-codex/gpt-6-sol
   designer: xai-oauth/grok-4.6
   vision: google-antigravity/gemini-3.8-flash
   commit: xai-oauth/grok-build
@@ -134,10 +152,10 @@ modelRoles:
   architect: openai-codex/gpt-6-astra
   review: openai-codex/gpt-6-sol
   security: openai-codex/gpt-6-sol
-  critical: anthropic/claude-opus-5
+  critical: anthropic/claude-opus-5-5
   fast_worker: xai-oauth/grok-build
-  good_worker: openai-codex/gpt-5.6-terra
-  sage: anthropic/claude-opus-5
+  good_worker: openai-codex/gpt-6-sol
+  sage: anthropic/claude-opus-5-5
 
 task:
   agentModelOverrides:
@@ -149,20 +167,20 @@ task:
 retry:
   fallbackChains:
     default:
-      - openai-codex/gpt-5.6-terra
+      - openai-codex/gpt-6-sol
       - openrouter/z-ai/glm-5.3-flash
       - nvidia/nvidia/nemotron-3-super-120b-a12b
     smol:
       - google-antigravity/gemini-3.1-flash-lite
       - nvidia/nvidia/nemotron-3-super-120b-a12b
     slow:
-      - anthropic/claude-opus-5
+      - anthropic/claude-opus-5-5
       - google-antigravity/claude-opus-4-6
       - google-antigravity/claude-sonnet-4-6
       - xai-oauth/grok-4.6
       - openrouter/z-ai/glm-5.3-flash
     plan:
-      - anthropic/claude-opus-5
+      - anthropic/claude-opus-5-5
       - google-antigravity/claude-opus-4-6
       - google-antigravity/claude-sonnet-4-6
       - xai-oauth/grok-4.6
@@ -172,37 +190,37 @@ retry:
       - openrouter/z-ai/glm-5.3-flash
       - nvidia/nvidia/nemotron-3-super-120b-a12b
     designer:
-      - openai-codex/gpt-5.6-terra
+      - openai-codex/gpt-6-sol
       - google-antigravity/gemini-3.8-flash
       - openrouter/z-ai/glm-5.3-flash
     vision:
       - openrouter/google/gemini-3.8-flash
-      - openai-codex/gpt-5.6-terra
+      - openai-codex/gpt-6-sol
       - xai-oauth/grok-4.6
     commit:
       - openai-codex/gpt-6-luna
       - nvidia/nvidia/nemotron-3-super-120b-a12b
     advisor:
-      - openai-codex/gpt-5.6-terra
+      - openai-codex/gpt-6-sol
       - nvidia/nvidia/nemotron-3-super-120b-a12b
     tiny:
       - google-antigravity/gemini-3.1-flash-lite
       - nvidia/nvidia/nemotron-3-super-120b-a12b
     architect:
       - google-antigravity/claude-opus-4-6
-      - anthropic/claude-opus-5
+      - anthropic/claude-opus-5-5
       - openai-codex/gpt-6-sol
       - google-antigravity/claude-sonnet-4-6
       - xai-oauth/grok-4.6
       - openrouter/z-ai/glm-5.3-flash
     review:
-      - anthropic/claude-opus-5
+      - anthropic/claude-opus-5-5
       - google-antigravity/claude-opus-4-6
       - google-antigravity/claude-sonnet-4-6
       - xai-oauth/grok-4.6
       - openrouter/z-ai/glm-5.3-flash
     security:
-      - anthropic/claude-opus-5
+      - anthropic/claude-opus-5-5
       - google-antigravity/claude-opus-4-6
       - google-antigravity/claude-sonnet-4-6
       - xai-oauth/grok-4.6
@@ -228,14 +246,14 @@ retry:
       - xai-oauth/grok-4.6
       - openrouter/z-ai/glm-5.3-flash
     anthropic/claude-fable-5-1:
-      - anthropic/claude-opus-5
+      - anthropic/claude-opus-5-5
       - openai-codex/gpt-6-sol
       - google-antigravity/claude-opus-4-6
       - google-antigravity/claude-sonnet-4-6
       - openrouter/z-ai/glm-5.3-flash
       - xai-oauth/grok-4.6
     anthropic/claude-fable-5:
-      - anthropic/claude-opus-5
+      - anthropic/claude-opus-5-5
       - openai-codex/gpt-6-sol
       - google-antigravity/claude-opus-4-6
       - google-antigravity/claude-sonnet-4-6
