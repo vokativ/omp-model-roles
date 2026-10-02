@@ -1,6 +1,13 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-10-02 · Snapshot version: 29
+## Generated: 2026-10-02 · Snapshot version: 30
 ## Stale? See research/RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
+##
+## v30: updated smol fallback chain for prewalk and sub-default cost profile.
+##   - Upgraded tier 1 fallback from legacy gemini-3.1-flash-lite to gemini-3.5-flash-lite
+##     on google-antigravity (1M context, 66K output, verified live tool execution).
+##   - Inserted xai-oauth/grok-composer-2.5-fast as tier 2 fallback ahead of Nemotron,
+##     giving smol an independent, fast xAI tier (200K context, 0% used weekly pool).
+##   - Nemotron-3-Super retained as tier 3 $0 unmetered floor.
 ##
 ## v29: architect -> gpt-6.1-sol for frequent technical reviews as well as architecture.
 ##   - Removed the architect's mandatory JSON schema; retained read-only evidence-based
@@ -202,7 +209,8 @@ retry:
       - openrouter/z-ai/glm-5.3-flash
       - nvidia/nvidia/nemotron-3-super-120b-a12b
     smol:
-      - google-antigravity/gemini-3.1-flash-lite
+      - google-antigravity/gemini-3.5-flash-lite
+      - xai-oauth/grok-composer-2.5-fast
       - nvidia/nvidia/nemotron-3-super-120b-a12b
     slow:
       - anthropic/claude-opus-5-5
