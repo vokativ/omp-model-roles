@@ -1,6 +1,16 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-10-01 · Snapshot version: 28
+## Generated: 2026-10-02 · Snapshot version: 29
 ## Stale? See research/RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
+##
+## v29: architect -> gpt-6.1-sol for frequent technical reviews as well as architecture.
+##   - Removed the architect's mandatory JSON schema; retained read-only evidence-based
+##     review/design guidance. critical keeps its structured gate; sage keeps its remit.
+##   - Removed the architect fallback back to its new primary. Cross-provider fallbacks
+##     remain; Astra stays available explicitly and in sage's existing fallback chain.
+##   - Cross-machine session review supports extended context for this workload.
+##     Owner chose one configuration everywhere: extendedContext: true.
+##     Prewalk remains opt-in; see README for Sol -> Luna implementation workflow.
+##   - No claim of measured quality parity or subscription-quota savings versus Astra.
 ##
 ## v28: upgraded all `openai-codex/gpt-6-sol` references to `openai-codex/gpt-6.1-sol`
 ## across role assignments (slow, plan, task, review, security, good_worker -> gpt-6.1-sol)
@@ -148,9 +158,9 @@
 ## "architect"|"critical", ...) dispatch targets. See research/ARCHITECT-CRITICAL-AGENTS.md.
 ##
 ## Assumes these logins exist on the target machine:
-##   - anthropic        (Claude Pro, $20/mo — the SCARCE pool, keep light, reserve for architect/critical)
+##   - anthropic        (Claude Pro, $20/mo — the SCARCE pool, keep light, reserve for sage/critical)
 ##   - openai-codex      (ChatGPT Pro, $100/mo, 5x quota — heavy roles: task/smol/slow/plan/
-##     architect/review/security/good_worker; currently near its 7-day cap, see README capacity table)
+##     architect/review/security/good_worker; quota varies, check omp usage)
 ##   - google-antigravity (free preview; Google lane weekly metered, Anthropic proxy lane separately metered)
 ##   - xai-oauth         (X Premium $8/mo bundled SuperGrok credits — small, weekly reset, use sparingly)
 ##   - nvidia             (free NIM catalog — unmetered $0 floor; use nvidia/nemotron-3-super-120b-a12b, 262K ctx, 262K out)
@@ -170,7 +180,7 @@ modelRoles:
   tiny: xai-oauth/grok-composer-2.5-fast
 
   # --- Workflow, Review & Architecture Roles (Strategy C) ---
-  architect: openai-codex/gpt-6-astra
+  architect: openai-codex/gpt-6.1-sol
   review: openai-codex/gpt-6.1-sol
   security: openai-codex/gpt-6.1-sol
   critical: anthropic/claude-opus-5-5
@@ -230,7 +240,6 @@ retry:
     architect:
       - google-antigravity/claude-opus-4-6
       - anthropic/claude-opus-5-5
-      - openai-codex/gpt-6.1-sol
       - google-antigravity/claude-sonnet-4-6
       - xai-oauth/grok-4.7
       - openrouter/z-ai/glm-5.3-flash
@@ -289,3 +298,6 @@ cycleOrder:
   - slow
   - architect
   - sage
+
+# Owner-approved shared policy for the $100 OpenAI account; see README evidence.
+extendedContext: true

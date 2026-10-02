@@ -44,8 +44,9 @@ match what you applied, and commit + push.
 
 3. **Classify roles by volume and cost-per-call, not by "which is best":**
    - `default` — highest volume, fires every turn. Needs the model best suited to the *actual* workload mix (see below), on a pool that can sustain constant use.
-   - `task`/`smol` — high volume (subagent dispatch, background classification). Route to whichever pool has real headroom; quality matters more for `task` (does real work) than `smol` (trivial/background).
-   - `slow`/`plan` — low frequency, expensive per call (deep/max-thinking bursts). Fine to point at a pool with headroom even if it's not your "primary" account, since infrequent big spikes are exactly what headroom is for.
+   - `task`/`smol` — high volume (subagent dispatch, background classification). Route to whichever pool has real headroom. `smol` also executes implementation after an opted-in prewalk, so do not evaluate it only on trivial/background work.
+   - `slow`/`plan` — measure actual use, not assumed low frequency. `slow` may drive a whole difficult task or the opening of a prewalk; `/plan` remains useful when approval before implementation is required.
+   - `architect` — the owner uses it frequently for technical reviews, not only rare RFCs. In v29 it shares Sol with `slow`/`review`/workers; different role names are not independent model evidence. Use a distinct model deliberately when that matters.
    - `commit`, and any other rarely-invoked role — the safe place to actually exercise a login you're barely using (e.g. a cheap/bundled AI subscription with small credits), since low frequency ≈ low risk to a small pool.
    - `advisor` — if enabled, roughly **doubles** whatever pool it shares with `default` (it reviews every turn). Prefer a free/separate pool for it so enabling it later doesn't create new pressure on your scarcest account.
    - `vision`/`designer` — occasional, multimodal. Free/generous pools are usually fine here.
@@ -57,6 +58,19 @@ match what you applied, and commit + push.
 6. **Every fallback chain entry should be a different provider than its primary** (and ideally different from the other fallback tiers too) — the point of a fallback chain is surviving one provider's outage/quota exhaustion, which a same-provider fallback doesn't protect against.
 
 7. **Remember quota is usually account-level, not per-machine.** If this config runs on N machines concurrently, model load on any shared-login pool as N×, not 1×.
+
+   Account for repeated reading, cached input, output, and thinking over the whole
+   task rather than multiplying nominal per-call prices. Catalog API prices are
+   not subscription-quota conversion factors. Avoid planner → executor handoffs
+   solely as an assumed cost optimization; trial same-session prewalk instead.
+   Keep independent subagents/reviews where isolation earns their context cost.
+
+   After reviewing both machines' session histories, the owner chose one shared
+   v29 configuration with `extendedContext: true`. Import it on every machine;
+   do not retain the superseded Mac-off trial or machine-local split. See README's
+   measured context distribution and limitations. Compare quota over a full reset
+   cycle, compaction frequency, lost constraints, and rework. A higher ceiling is
+   not pre-allocation; a lower ceiling can increase compaction and re-reading.
 
 8. **Apply, verify, ship:**
    ```bash
@@ -83,7 +97,7 @@ Repo root holds only the importable config plus the README; everything explainin
 in `research/` (this folder).
 
 Root — the importable config:
-- `../model-roles.yml` — the current applied `modelRoles` + `retry.fallbackChains` overlay (importable via `PI_CONFIG_FILES` or manual merge into `config.yml`).
+- `../model-roles.yml` — model roles, agent bindings, retry policies/chains, cycle order, and owner-approved `extendedContext: true`. Merge all supplied keys into `config.yml`; `omp --config ./model-roles.yml` applies a run-only overlay, not a persistent install.
 - `../models-overlay.yml` — companion `models.yml` overlay (per-model overrides like `maxTokens`).
   Currently just the OpenRouter Gemini 3.8 Flash `maxTokens` fix that `vision`'s fallback chain
   depends on — check whether any newly-added fallback model needs one of these before assuming
@@ -101,7 +115,7 @@ Root — the importable config:
   role; the Contributor tier's discount is paid for with permission to train on submitted prompts
   and completions, and a plain API key is excluded from `usageAwareFallback`. Read it before
   re-litigating "should we add the cheap Meta model somewhere".
-- `ARCHITECT-CRITICAL-AGENTS.md` — 2026-08-26: wiring architect/critical into real subagent dispatch.
+- `ARCHITECT-CRITICAL-AGENTS.md` — original dispatch investigation, with a v29 addendum for the review-oriented architect and its verification.
 - `FABLE-EVALUATION.md` — 2026-09-03: evaluation of Claude Fable 5 / 5.1 for architect and critical roles, token economics on $20/mo Anthropic Pro, Google Antigravity Claude 4.6 fallbacks, and multi-agent debate (Architect vs Slow).
 - `THINKING-PARTNER-ROLE.md` — 2026-09-04 · v19: architecture, multi-agent debate (Architect vs Slow), and allocation for the `sage` Thinking Partner role, defusing the Anthropic 429 credits_required failure mode on Fable.
 - `SAGE-CREATIVE-INSTRUCTIONS.md` — 2026-09-04 · v19.1: cognitive divergence operators, anti-slop defect catalogs, and subtractive taste architecture for `sage` (Thinking Partner), adapted from Anshu Chimala's Apple R&D AI creativity methodology.

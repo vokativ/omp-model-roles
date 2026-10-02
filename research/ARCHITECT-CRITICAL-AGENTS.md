@@ -1,5 +1,68 @@
 # Wiring `architect`/`critical` into real subagent dispatch — 2026-08-26
 
+## Current contract — v29, 2026-10-02
+
+This section supersedes the model assignments and architect output contract in the
+historical investigation below. The original dispatch/containment observations
+remain dated evidence, not claims about all later OMP releases.
+
+- `architect` now runs on `openai-codex/gpt-6.1-sol`, with `thinking: high`.
+  The owner uses it for frequent technical reviews as well as architecture decisions.
+  The duplicate Sol fallback was removed; cross-provider fallbacks remain.
+- Its mandatory nine-field JSON schema is gone. Reviews return an assessment,
+  prioritized evidence-backed findings, corrections, and verification gaps.
+  Design requests still cover decisions, contracts, tradeoffs, and implementation
+  checks. Migration and rollback sections appear only when relevant.
+- Read-only intent remains. Added the currently available `find` tool for semantic
+  discovery; the historical claim below that it is not an OMP tool is obsolete.
+  The allowlist and prompt are still not a sandbox.
+- `critical` keeps its machine-readable verdict and provenance guard. `sage` keeps
+  its exploratory remit. Neither is a mandatory follow-on to an architect review.
+- Sol is now shared by architect, slow, regular review, and implementation workers.
+  This is a workflow distinction, not model diversity. Opus is shared by sage and
+  critical. Check resolved identities after fallback rather than counting roles.
+- `/model @architect` selects a model only; it does not install the custom agent's
+  prompt or restrictions. Dispatch the named agent to get this contract.
+
+Rationale: the installed catalog lists Astra at $10/$50 per million input/output
+tokens and $1 cached input, versus Sol at $2/$10 and $0.10. Those prices justify
+trying Sol for frequent use, not a promise about subscription savings or quality
+parity. The architect schema was removed to fit human review output, not on a
+claim that JSON constraints impair reasoning or measurably slowed this agent.
+
+Following the cross-machine review, the owner chose `extendedContext: true` in
+the shared overlay for every machine, superseding the off trial and machine-local
+proposal. README records the supporting session measurements and limitations.
+Prewalk remains explicitly opted in for implementation, not read-only review.
+See [README's daily workflow](../README.md#daily-workflow-choose-the-job-not-a-committee)
+for commands, role boundaries, and the limits of the Stencil benchmark evidence.
+
+### v29 verification
+
+- Installed OMP 18.4.10 accepted the global settings; CLI role resolution reports
+  architect → `openai-codex/gpt-6.1-sol`. Parsed overlay values and the documented
+  import commands matched the installed global configuration. The final seventh
+  command is `extendedContext true`, reflecting the owner's unified policy.
+- Two live `architect` dispatches, without caller-supplied output schemas, returned
+  Markdown. A bounded review identified a tenant-isolation leak from a cache keyed
+  only by tenant-local invoice ID, cited the fixture, gave the A/B failure trace,
+  and proposed a composite key. It explicitly did not claim to have run tests.
+- A separate design request covered single-use SQLite invite consumption under
+  concurrency and crashes. It recommended one write transaction for conditional
+  consumption plus membership insertion, specified expiry semantics, and supplied
+  validation cases without implementing or proposing a new service.
+- The ephemeral dispatch result did not expose concrete child model identities.
+  These observations establish discovery and useful review/design behavior, not
+  traced per-child model provenance, Astra/Sol quality parity, or quota savings.
+- An isolated CLI smoke used `--model @slow --prewalk-into @smol` on a two-branch
+  clamp correction. JSON events identify the editing model as `gpt-6.1-sol`, then
+  report `Prewalk: switched to openai-codex/gpt-6-luna after first edit call.`
+  Subsequent assistant events identify Luna, which ran the Python assertions:
+  below, above, lower equality, upper equality, and interior all passed. This
+  verifies the handoff path, not comparative cost or performance on real projects.
+  Temporary fixtures and the isolated session directory were removed afterward.
+
+
 ## The gap
 
 `model-roles.yml` has defined `architect` and `critical` as `modelRoles`/`retry.fallbackChains`

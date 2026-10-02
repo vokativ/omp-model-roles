@@ -1,11 +1,11 @@
 # OMP model-role setup — import instructions
 
-**Snapshot: 2026-10-01 · v28.** Stale after ~4-6 weeks, or immediately if any subscription
+**Snapshot: 2026-10-02 · v29.** Stale after ~4-6 weeks, or immediately if any subscription
 changed — check `research/RESEARCH-PLAYBOOK.md`'s staleness check before importing this blind.
 
-`model-roles.yml` is a config **overlay**: `modelRoles`, `retry.fallbackChains`, and
-`retry.usageAwareFallback`/`retry.usageReservePolicy`. No API keys. Safe to copy anywhere,
-commit to a repo, or paste into an existing config.
+`model-roles.yml` is a config **overlay**: `modelRoles`, `task.agentModelOverrides`,
+`retry` policies/chains, `cycleOrder`, and owner-approved `extendedContext: true`.
+No API keys. Merge into an existing config; do not replace unrelated local preferences.
 
 Subscriptions or workload change? Don't hand-edit this file — see
 `research/RESEARCH-PLAYBOOK.md` for the methodology and the questions to re-run before updating it.
@@ -53,39 +53,165 @@ Consequences baked into this file:
 - **`openrouter/z-ai/glm-5.3-flash` added as the capability tier across 8 chains**: Tested #1 on OpenRouter's Tau2-Bench Airline/Agentic benchmark (58.2 agentic, 71.5 coding), with 1.31M context, 131K output, and fast tool calling at $0.075/$0.25 per million tokens.
 - **`nvidia/nvidia/nemotron-3-super-120b-a12b` replaces dead MiniMax M3**: Provides an unmetered zero-cost floor in 8 chains (262K context, 262K native max-out, sub-second TTFT). Unlike MiniMax M3, it has no 16K server-side token cap and supports the full thinking ladder and tool calling. Deliberately excluded from depth roles (`slow`, `plan`, `architect`, `review`, `security`, `critical`) and `vision` to reserve them for flagship reasoning and multimodal models.
 - **`vision`** retains `google-antigravity/gemini-3.8-flash` primary, with `openrouter/google/gemini-3.8-flash` (2026-08-22 A/B winner) as first fallback, followed by `openai-codex/gpt-6.1-sol` and `grok-4.7`.
-- **`critical` first fallback changed to `openrouter/z-ai/glm-5.3-flash`**: Closes the open v14 defect where Sol collided with `slow`/`plan`/`review`/`security` producer roles; GLM is independent of all role primaries.
+- **`critical` keeps cross-provider review as its normal path**: primary Opus 5.5, then Antigravity Opus 4.6, Antigravity Sonnet 4.6, GLM, Sol, and Grok. Fallbacks can collide with a producer, so actual resolved model provenance—not role names—controls the independence guard.
 - **`anthropic/claude-sonnet-5` and `grok-4.6` dropped from `default`**: Preserves scarce Anthropic 5h quotas for `sage`/`critical` and avoids Grok tool-churn latency on daily turns.
 - `slow`/`plan` remain on `openai-codex/gpt-6.1-sol` falling back to `anthropic/claude-opus-5-5` $\to$ `google-antigravity/claude-opus-4-6` $\to$ `google-antigravity/claude-sonnet-4-6` $\to$ `xai-oauth/grok-4.7` $\to$ `openrouter/z-ai/glm-5.3-flash`.
 - `advisor` points at `google-antigravity/claude-sonnet-4-6` — free Claude access via Antigravity's untouched Anthropic-proxy lane.
-- **`architect`** is primary on `openai-codex/gpt-6-astra`, backed by `google-antigravity/claude-opus-4-6` $\to$ `anthropic/claude-opus-5-5` $\to$ `openai-codex/gpt-6.1-sol` $\to$ `google-antigravity/claude-sonnet-4-6` $\to$ `xai-oauth/grok-4.7` $\to$ `openrouter/z-ai/glm-5.3-flash`, using the open OpenAI main pool without adding a standalone Astra role.
+- **`architect` moves to `openai-codex/gpt-6.1-sol` in v29** for frequent technical reviews as well as architecture decisions. Its read-only agent returns proportional Markdown rather than a mandatory RFC-shaped JSON object. The installed catalog lists Sol at $2/$10 per million input/output tokens versus Astra at $10/$50; cached input is $0.10 versus $1. These are catalog prices, not measured subscription-quota multipliers or proof of review-quality parity. Its fallbacks remain Antigravity Opus 4.6 → direct Opus 5.5 → Antigravity Sonnet 4.6 → Grok 4.7 → GLM. Astra remains available by explicit model selection and in Sage's existing fallback chain.
 - **`sage` (Thinking Partner)** stays on `anthropic/claude-opus-5-5` for provider diversity, backed by `google-antigravity/claude-opus-4-6` $\to$ `openai-codex/gpt-6-astra` $\to$ `openai-codex/gpt-6.1-sol` $\to$ `google-antigravity/claude-sonnet-4-6` $\to$ `xai-oauth/grok-4.7` $\to$ `openrouter/z-ai/glm-5.3-flash`. Emits no rigid JSON schema.
-- **`task` / `good_worker` upgraded to `openai-codex/gpt-6.1-sol`**: In v28, Sol is upgraded to GPT 6.1 Sol ($2/M input, $0.10/M cached input, and $10/M output, with 922K context window and 128K output). Subagent implementation runs on GPT 6.1 Sol with 922K context and 128K output.
+- **`task` / `good_worker` use `openai-codex/gpt-6.1-sol`**: $2/M input, $0.10/M cached input, $10/M output, and 128K max output in the installed catalog. The shared v29 overlay enables extended context, giving Codex Sol an effective **922K** window; turning it off would cap it at **272K**.
 - **`designer` and fallback chains upgraded to `xai-oauth/grok-4.7`**: Grok 4.7 (2026-09-21) delivers higher benchmark performance (DeepSWE 71.0% vs 65.2%, Terminal-Bench 37.6% vs 20.3%) and improved presentation/document design at identical pricing ($2/$6), operating within the existing X Premium SuperGrok credit pool. `commit` and `fast_worker` remain on `xai-oauth/grok-build` and `tiny` on `xai-oauth/grok-composer-2.5-fast`.
 - **`tiny` and `fast_worker` (sonic) moved off retired `openai-codex/gpt-5.3-codex-spark` in v24** to `xai-oauth/grok-composer-2.5-fast` and `xai-oauth/grok-build` respectively: OpenAI retired Spark the week of 2026-09-13 (confirmed via `omp models find gpt-5.3-codex-spark` returning zero catalog hits, plus community reports of it vanishing from the Codex CLI selector while its dedicated quota meter stayed visible). Both roles now run on healthy `xai-oauth` capacity (9% of the weekly SuperGrok pool used) and each promotes its former tier-1 fallback to primary, dropping the now-dead leading fallback entry.
 
-### Optional: GPT-6 / 6.1 long context
+### Extended context: one enabled configuration everywhere
 
-`openai-codex` GPT-6 and GPT 6.1 models support up to a 922K-token context window (872K on GPT-6, 922K on GPT 6.1 Sol), but OMP's default
-`extendedContext: false` caps them at 272K to avoid premium long-context consumption.
-This is intentionally an owner decision, not a default for every authenticated OpenAI login:
+After the 2026-10-02 cross-machine review, the owner chose **one configuration
+everywhere: `extendedContext: true`**. This supersedes both the initial off trial
+and the interim machine-local proposal. The portable overlay and CLI import
+commands now enable it explicitly. The Ubuntu development server was already on;
+the Mac was subsequently enabled to match. No separate profile is necessary.
 
-- **Enable it** when the account owner confirms a ChatGPT Pro-or-higher plan (roughly $100/month)
-  and has comfortable Codex quota (currently `extendedContext: true` on this machine). It does not pre-allocate 922K tokens; it only permits a session
-  to grow beyond 272K when it actually needs to.
-- **Leave it off** for Plus/basic/unknown plans or when preserving Codex quota matters more than
-  unusually large repository or conversation context.
+Evidence: streamed 604 local and 1,022 server session JSONL files, then analyzed
+dated usage from 2026-09-02 through the scan on 2026-10-02 (~07:21 UTC). The table
+counts **main sessions with recorded Codex calls**, not all providers or subagents.
 
-Ask the owner before changing the setting. After approval:
+| Observed Codex usage | Mac | Ubuntu server |
+|---|---:|---:|
+| Main sessions | 13 | 34 |
+| Main sessions with a prompt over 272K | 5 | 10 |
+| Main-session calls over 272K | 708 / 1,001 | 1,670 / 5,010 |
+| Maximum prompt | 731,425 | 726,966 |
+| Main-session prompt cache-hit share | 97.8% | 97.9% |
+| Subagent sessions | 171 | 675 |
+| Subagent sessions with a prompt over 272K | 0 | 0 |
+| Subagent prompt p95 | 117,994 | 114,732 |
+
+Prompt size is per-call `usage.input + cacheRead + cacheWrite`, excluding output,
+not cumulative session usage. It matched `contextSnapshot.promptTokens` for every
+recorded Codex conversation call in this window. Counts exclude auxiliary
+`model_usage` records; no duplicate usage entries or shared session IDs were found.
+Only metadata and selected user requests were examined, not every resulting change.
+No existing project `.omp/config.yml` overrides were found along recorded cwd
+ancestor paths; historical runtime overrides and unrecorded sessions remain unknown.
+
+Representative server sessions covered application modernization through deployment
+and branch/database reconciliation. Another repeatedly refreshed the same external
+research over several days: that is a better candidate for a fresh session using
+persisted findings. Large contexts demonstrate actual demand, not proof that every
+retained token was useful or every task required that much memory.
+
+The shared $100 OpenAI account reported **44% weekly usage**, **56% remaining**,
+and about **1 day 18 hours until reset** on both machines. These are the same
+account allowance, not two budgets. Cached tokens are still metered; API-equivalent
+dollars in session records are not actual subscription bills or a quota formula.
+This point-in-time headroom supports keeping the capability, not unlimited growth.
+
+Limits: most long Codex requests used earlier Terra/Sol models; this is not a Sol 6.1
+quality or quota benchmark. The last seven days contained no Codex prompts over
+272K on either machine, so current activity is lighter than the full-month sample.
+Five explicit compactions were recorded on the server in the window (three native,
+two snapcompact), none on the Mac; this does not count every pruning operation.
+There is no controlled on/off comparison proving how much earlier compaction would
+cost or lose. With current default reserves, a 272K window can trigger maintenance
+around 231K, rather than waiting until the full ceiling.
+
+**Practical policy:** allow large coherent development sessions; start fresh at a
+genuine task boundary instead of carrying completed research/debugging indefinitely.
+Do not add more review agents just because context is available. Watch shared
+`omp usage` over a full reset cycle, plus compaction frequency, lost constraints,
+and rework. If quota becomes tight, target repeated discovery and redundant reviews
+before assuming the context ceiling is the cause.
+
+To inspect the shared setting and effective model limit:
 
 ```bash
-omp config set extendedContext true
 omp config get extendedContext --json
 omp models find gpt-6.1-sol --json
 ```
 
-The final command reports `openai-codex/gpt-6.1-sol` with
-`contextWindow: 922000`. Start a new OMP session after changing the setting. Do not set
-`contextWindow` or `maxTokens` manually in `models.yml`; those do not expand a provider limit.
+The persistent setting is `omp config set extendedContext true`; start a new
+session after importing it. OMP also exposes `/extended-context on` in its
+interactive UI. Do not fake a larger provider limit through `models.yml`.
+The server and Mac both use extended context under this owner-approved policy.
+
+## Daily workflow: choose the job, not a committee
+
+| Need | Normal choice |
+|---|---|
+| Small, clear change or everyday conversation | `omp`; stay on the default model |
+| Build/fix with a useful exploration phase and routine implementation | Sol → Luna prewalk, explicitly opted in |
+| Hard reasoning remains throughout implementation | Stay on `@slow`; no forced downgrade |
+| Review a design, implementation, plan, or configuration | Ask for the `architect` agent; define the question and scope |
+| Focused code defects / security issues | Bundled `reviewer` / `security-reviewer` |
+| Challenge the premise or explore a different direction | `sage` |
+| Adversarial check before a high-risk release/migration | `critical`, with producer identity and validation evidence |
+| Human approval required before any implementation | `/plan`; prewalk is not an approval boundary |
+
+**Roles select models; agents select instructions.** `/model @architect` or
+Ctrl+P selects Sol, not `agents/architect.md`'s read-only review contract.
+Request "use the architect agent to review X" for that contract. `slow`,
+`architect`, `review`, and implementation workers currently share Sol; `sage` and
+`critical` share Opus. Different prompts can help but are not independent model votes.
+Keep reviews targeted; do not run all four by habit. Retain `critical`'s structured
+verdict/provenance schema; architect's schema was removed for human usability, not
+because its performance overhead was measured.
+
+### Implementation with prewalk
+
+Start a new implementation session:
+
+```bash
+omp --model @slow --prewalk-into @smol "Implement X; preserve Y; verify Z."
+```
+
+This starts on Sol and targets Luna with the current role mappings (fallbacks may
+change the concrete models). Plain `omp --prewalk` instead starts on the default
+Gemini model; it does **not** automatically select `@plan`, `@slow`, or `@architect`.
+
+In an existing session, first select `/model @slow`, then run `/prewalk`, then send
+the implementation request. `/prewalk` arms a one-shot handoff; it is not an
+always-on mode. `/prewalk restart` returns to `@default` (Gemini here), not `@slow`.
+
+The target inherits the conversation and todo state rather than just a prose plan.
+It still incurs input processing, can re-read files, and must validate the result.
+In installed OMP 18.4.10, any successful todo operation opens the gate; the switch
+occurs at the turn boundary after the first eligible edit/write result, **even if
+that edit failed**. It is not proof that the approach works. Leave the normal
+verification steps in the request. A pure read-only review has no reason to use it.
+
+Global `prewalk.enabled` and `task.prewalk` remain off; the latter is a separate
+control for generic task subagents. Trial the explicit command before adopting
+automatic handoffs. No new profile or parallel configuration type is needed.
+
+### Subagents: keep useful separation, avoid duplicate discovery
+
+Use subagents for genuinely independent implementation slices, broad research
+whose source material would overwhelm the main context, or a deliberately fresh
+review. Give each a bounded question, relevant paths, constraints, and evidence.
+Prefer one agent to investigate **and implement** a slice rather than passing it
+between a scout, planner, and executor. Keep integration and acceptance with one owner.
+
+Read-only review is not wasted implementation planning: independent inspection is
+part of its value. For ordinary work, one targeted review is enough; add a second
+only for a distinct risk or unresolved disagreement. On overlapping edits, use
+explicit ownership or worktrees—not more prompts.
+
+### What the Stencil evidence supports
+
+- [Prewalk](https://stencil.so/blog/prewalk): a trajectory handoff outperformed
+  read-only plan → executor on the article's tested tasks/models. This does not
+  invalidate RFCs, human approval, independent review, or complex-task orchestration.
+  Its reported costs/pass rates are not measurements of our Sol/Luna pair.
+- [Harness Playbook](https://stencil.so/blog/harness-playbook): small stable tool
+  surfaces and explicit state/policy matter. Its permanent-tool grammar results
+  do not prove our architect output schema caused latency or constrained reasoning.
+- [Snapcompact](https://stencil.so/blog/snapcompact): compaction has fidelity and
+  decoding tradeoffs; long coherent sessions can be useful. It is not evidence for
+  universally shortening sessions or enabling image compaction on every fallback.
+- [Harness Problem](https://stencil.so/blog/the-harness-problem): editing interfaces
+  materially affect reliability. Keep using OMP's anchored edits; do not infer that
+  every cheaper model now matches a frontier model on arbitrary work.
+
 ## Prerequisite: auth
 
 The mapping references six providers: `anthropic`, `openai-codex`, `google-antigravity`,
@@ -96,28 +222,31 @@ is logged in.
 
 ### Option A — merge into the global config (affects every project on that machine)
 1. Run `omp config path`, then open `config.yml` in the printed agent directory.
-2. Copy in the `modelRoles:` and `retry:` blocks from `model-roles.yml`.
+2. Merge all top-level keys from `model-roles.yml` into `config.yml`, including `task`, `cycleOrder`, and `extendedContext: true`, preserving unrelated settings.
 3. In the same directory, open `models.yml` (create if missing) and copy in `models-overlay.yml`'s `providers:` block.
 4. Copy `agents/*.md` (`architect.md`, `critical.md`, and `sage.md`) into `~/.omp/agent/agents/`.
 5. Restart any running `omp` session.
 
 Equivalent CLI commands for `config.yml`:
 ```bash
-omp config set modelRoles '{"default":"google-antigravity/gemini-3.8-flash","smol":"openai-codex/gpt-6-luna","slow":"openai-codex/gpt-6.1-sol","vision":"google-antigravity/gemini-3.8-flash","plan":"openai-codex/gpt-6.1-sol","commit":"xai-oauth/grok-build","designer":"xai-oauth/grok-4.7","task":"openai-codex/gpt-6.1-sol","advisor":"google-antigravity/claude-sonnet-4-6","tiny":"xai-oauth/grok-composer-2.5-fast","architect":"openai-codex/gpt-6-astra","review":"openai-codex/gpt-6.1-sol","security":"openai-codex/gpt-6.1-sol","critical":"anthropic/claude-opus-5-5","fast_worker":"xai-oauth/grok-build","good_worker":"openai-codex/gpt-6.1-sol","sage":"anthropic/claude-opus-5-5"}'
+omp config set modelRoles '{"default":"google-antigravity/gemini-3.8-flash","smol":"openai-codex/gpt-6-luna","slow":"openai-codex/gpt-6.1-sol","vision":"google-antigravity/gemini-3.8-flash","plan":"openai-codex/gpt-6.1-sol","commit":"xai-oauth/grok-build","designer":"xai-oauth/grok-4.7","task":"openai-codex/gpt-6.1-sol","advisor":"google-antigravity/claude-sonnet-4-6","tiny":"xai-oauth/grok-composer-2.5-fast","architect":"openai-codex/gpt-6.1-sol","review":"openai-codex/gpt-6.1-sol","security":"openai-codex/gpt-6.1-sol","critical":"anthropic/claude-opus-5-5","fast_worker":"xai-oauth/grok-build","good_worker":"openai-codex/gpt-6.1-sol","sage":"anthropic/claude-opus-5-5"}'
 
 omp config set task.agentModelOverrides '{"security-reviewer":"@security","reviewer":"@review","sonic":"@fast_worker","task":"@good_worker"}'
 
-omp config set retry.fallbackChains '{"default":["openai-codex/gpt-6.1-sol","openrouter/z-ai/glm-5.3-flash","nvidia/nvidia/nemotron-3-super-120b-a12b"],"smol":["google-antigravity/gemini-3.1-flash-lite","nvidia/nvidia/nemotron-3-super-120b-a12b"],"slow":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-4-6","google-antigravity/claude-sonnet-4-6","xai-oauth/grok-4.7","openrouter/z-ai/glm-5.3-flash"],"plan":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-4-6","google-antigravity/claude-sonnet-4-6","xai-oauth/grok-4.7","openrouter/z-ai/glm-5.3-flash"],"task":["google-antigravity/gemini-3.8-flash","openrouter/z-ai/glm-5.3-flash","nvidia/nvidia/nemotron-3-super-120b-a12b"],"designer":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-3.8-flash","openrouter/z-ai/glm-5.3-flash"],"vision":["openrouter/google/gemini-3.8-flash","openai-codex/gpt-6.1-sol","xai-oauth/grok-4.7"],"commit":["openai-codex/gpt-6-luna","nvidia/nvidia/nemotron-3-super-120b-a12b"],"advisor":["openai-codex/gpt-6.1-sol","nvidia/nvidia/nemotron-3-super-120b-a12b"],"tiny":["google-antigravity/gemini-3.1-flash-lite","nvidia/nvidia/nemotron-3-super-120b-a12b"],"architect":["google-antigravity/claude-opus-4-6","anthropic/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/claude-sonnet-4-6","xai-oauth/grok-4.7","openrouter/z-ai/glm-5.3-flash"],"review":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-4-6","google-antigravity/claude-sonnet-4-6","xai-oauth/grok-4.7","openrouter/z-ai/glm-5.3-flash"],"security":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-4-6","google-antigravity/claude-sonnet-4-6","xai-oauth/grok-4.7","openrouter/z-ai/glm-5.3-flash"],"critical":["google-antigravity/claude-opus-4-6","google-antigravity/claude-sonnet-4-6","openrouter/z-ai/glm-5.3-flash","openai-codex/gpt-6.1-sol","xai-oauth/grok-4.7"],"fast_worker":["google-antigravity/gemini-3.1-flash-lite","nvidia/nvidia/nemotron-3-super-120b-a12b"],"good_worker":["google-antigravity/gemini-3.8-flash","openrouter/z-ai/glm-5.3-flash","nvidia/nvidia/nemotron-3-super-120b-a12b"],"sage":["google-antigravity/claude-opus-4-6","openai-codex/gpt-6-astra","openai-codex/gpt-6.1-sol","google-antigravity/claude-sonnet-4-6","xai-oauth/grok-4.7","openrouter/z-ai/glm-5.3-flash"],"anthropic/claude-fable-5-1":["anthropic/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/claude-opus-4-6","google-antigravity/claude-sonnet-4-6","openrouter/z-ai/glm-5.3-flash","xai-oauth/grok-4.7"],"anthropic/claude-fable-5":["anthropic/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/claude-opus-4-6","google-antigravity/claude-sonnet-4-6","openrouter/z-ai/glm-5.3-flash","xai-oauth/grok-4.7"]}'
+omp config set retry.fallbackChains '{"default":["openai-codex/gpt-6.1-sol","openrouter/z-ai/glm-5.3-flash","nvidia/nvidia/nemotron-3-super-120b-a12b"],"smol":["google-antigravity/gemini-3.1-flash-lite","nvidia/nvidia/nemotron-3-super-120b-a12b"],"slow":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-4-6","google-antigravity/claude-sonnet-4-6","xai-oauth/grok-4.7","openrouter/z-ai/glm-5.3-flash"],"plan":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-4-6","google-antigravity/claude-sonnet-4-6","xai-oauth/grok-4.7","openrouter/z-ai/glm-5.3-flash"],"task":["google-antigravity/gemini-3.8-flash","openrouter/z-ai/glm-5.3-flash","nvidia/nvidia/nemotron-3-super-120b-a12b"],"designer":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-3.8-flash","openrouter/z-ai/glm-5.3-flash"],"vision":["openrouter/google/gemini-3.8-flash","openai-codex/gpt-6.1-sol","xai-oauth/grok-4.7"],"commit":["openai-codex/gpt-6-luna","nvidia/nvidia/nemotron-3-super-120b-a12b"],"advisor":["openai-codex/gpt-6.1-sol","nvidia/nvidia/nemotron-3-super-120b-a12b"],"tiny":["google-antigravity/gemini-3.1-flash-lite","nvidia/nvidia/nemotron-3-super-120b-a12b"],"architect":["google-antigravity/claude-opus-4-6","anthropic/claude-opus-5-5","google-antigravity/claude-sonnet-4-6","xai-oauth/grok-4.7","openrouter/z-ai/glm-5.3-flash"],"review":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-4-6","google-antigravity/claude-sonnet-4-6","xai-oauth/grok-4.7","openrouter/z-ai/glm-5.3-flash"],"security":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-4-6","google-antigravity/claude-sonnet-4-6","xai-oauth/grok-4.7","openrouter/z-ai/glm-5.3-flash"],"critical":["google-antigravity/claude-opus-4-6","google-antigravity/claude-sonnet-4-6","openrouter/z-ai/glm-5.3-flash","openai-codex/gpt-6.1-sol","xai-oauth/grok-4.7"],"fast_worker":["google-antigravity/gemini-3.1-flash-lite","nvidia/nvidia/nemotron-3-super-120b-a12b"],"good_worker":["google-antigravity/gemini-3.8-flash","openrouter/z-ai/glm-5.3-flash","nvidia/nvidia/nemotron-3-super-120b-a12b"],"sage":["google-antigravity/claude-opus-4-6","openai-codex/gpt-6-astra","openai-codex/gpt-6.1-sol","google-antigravity/claude-sonnet-4-6","xai-oauth/grok-4.7","openrouter/z-ai/glm-5.3-flash"],"anthropic/claude-fable-5-1":["anthropic/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/claude-opus-4-6","google-antigravity/claude-sonnet-4-6","openrouter/z-ai/glm-5.3-flash","xai-oauth/grok-4.7"],"anthropic/claude-fable-5":["anthropic/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/claude-opus-4-6","google-antigravity/claude-sonnet-4-6","openrouter/z-ai/glm-5.3-flash","xai-oauth/grok-4.7"]}'
 
 omp config set retry.usageAwareFallback true
 omp config set retry.usageReservePolicy auto
 omp config set cycleOrder '["smol","default","slow","architect","sage"]'
+omp config set extendedContext true
 ```
 
 ## Verify
 ```bash
 omp config get modelRoles --json
 omp config get retry.fallbackChains --json
+omp config get extendedContext --json  # true on every machine
+omp models find gpt-6.1-sol --json      # Codex contextWindow: 922000
 omp models find openrouter/google/gemini-3.8-flash  # must show `google/gemini-3.8-flash` with 66K max-out
 omp models find nemotron-3-super
 omp models find openrouter/z-ai/glm-5.3-flash
