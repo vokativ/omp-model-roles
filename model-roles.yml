@@ -1,6 +1,14 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-10-02 · Snapshot version: 30
+## Generated: 2026-10-07 · Snapshot version: 31
 ## Stale? See research/RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
+##
+## v31: migrated Antigravity Claude fallbacks to the main paid Google AI Pro account.
+##   - Opus 4.6 -> Opus 5.5 and Sonnet 4.6 -> Sonnet 5.5 in all nine fallback chains;
+##     advisor primary -> Antigravity Sonnet 5.5. Existing chain order is unchanged.
+##   - Both 5.5 selectors verified through OMP at thinking: high, with fallback disabled.
+##   - Four free accounts still expose Claude 4.6, not 5.5; they are not extra 5.5 capacity.
+##     Google schedules Claude 4.6 removal for 2026-11-02. See README's account-tier notes.
+##   - Direct and Antigravity Opus 5.5 are not independent model votes.
 ##
 ## v30: updated smol fallback chain for prewalk and sub-default cost profile.
 ##   - Upgraded tier 1 fallback from legacy gemini-3.1-flash-lite to gemini-3.5-flash-lite
@@ -183,7 +191,7 @@ modelRoles:
   designer: xai-oauth/grok-4.7
   vision: google-antigravity/gemini-3.8-flash
   commit: xai-oauth/grok-build
-  advisor: google-antigravity/claude-sonnet-4-6
+  advisor: google-antigravity/claude-sonnet-5-5
   tiny: xai-oauth/grok-composer-2.5-fast
 
   # --- Workflow, Review & Architecture Roles (Strategy C) ---
@@ -214,14 +222,14 @@ retry:
       - nvidia/nvidia/nemotron-3-super-120b-a12b
     slow:
       - anthropic/claude-opus-5-5
-      - google-antigravity/claude-opus-4-6
-      - google-antigravity/claude-sonnet-4-6
+      - google-antigravity/claude-opus-5-5
+      - google-antigravity/claude-sonnet-5-5
       - xai-oauth/grok-4.7
       - openrouter/z-ai/glm-5.3-flash
     plan:
       - anthropic/claude-opus-5-5
-      - google-antigravity/claude-opus-4-6
-      - google-antigravity/claude-sonnet-4-6
+      - google-antigravity/claude-opus-5-5
+      - google-antigravity/claude-sonnet-5-5
       - xai-oauth/grok-4.7
       - openrouter/z-ai/glm-5.3-flash
     task:
@@ -246,26 +254,26 @@ retry:
       - google-antigravity/gemini-3.1-flash-lite
       - nvidia/nvidia/nemotron-3-super-120b-a12b
     architect:
-      - google-antigravity/claude-opus-4-6
+      - google-antigravity/claude-opus-5-5
       - anthropic/claude-opus-5-5
-      - google-antigravity/claude-sonnet-4-6
+      - google-antigravity/claude-sonnet-5-5
       - xai-oauth/grok-4.7
       - openrouter/z-ai/glm-5.3-flash
     review:
       - anthropic/claude-opus-5-5
-      - google-antigravity/claude-opus-4-6
-      - google-antigravity/claude-sonnet-4-6
+      - google-antigravity/claude-opus-5-5
+      - google-antigravity/claude-sonnet-5-5
       - xai-oauth/grok-4.7
       - openrouter/z-ai/glm-5.3-flash
     security:
       - anthropic/claude-opus-5-5
-      - google-antigravity/claude-opus-4-6
-      - google-antigravity/claude-sonnet-4-6
+      - google-antigravity/claude-opus-5-5
+      - google-antigravity/claude-sonnet-5-5
       - xai-oauth/grok-4.7
       - openrouter/z-ai/glm-5.3-flash
     critical:
-      - google-antigravity/claude-opus-4-6
-      - google-antigravity/claude-sonnet-4-6
+      - google-antigravity/claude-opus-5-5
+      - google-antigravity/claude-sonnet-5-5
       - openrouter/z-ai/glm-5.3-flash
       - openai-codex/gpt-6.1-sol
       - xai-oauth/grok-4.7
@@ -277,24 +285,24 @@ retry:
       - openrouter/z-ai/glm-5.3-flash
       - nvidia/nvidia/nemotron-3-super-120b-a12b
     sage:
-      - google-antigravity/claude-opus-4-6
+      - google-antigravity/claude-opus-5-5
       - openai-codex/gpt-6-astra
       - openai-codex/gpt-6.1-sol
-      - google-antigravity/claude-sonnet-4-6
+      - google-antigravity/claude-sonnet-5-5
       - xai-oauth/grok-4.7
       - openrouter/z-ai/glm-5.3-flash
     anthropic/claude-fable-5-1:
       - anthropic/claude-opus-5-5
       - openai-codex/gpt-6.1-sol
-      - google-antigravity/claude-opus-4-6
-      - google-antigravity/claude-sonnet-4-6
+      - google-antigravity/claude-opus-5-5
+      - google-antigravity/claude-sonnet-5-5
       - openrouter/z-ai/glm-5.3-flash
       - xai-oauth/grok-4.7
     anthropic/claude-fable-5:
       - anthropic/claude-opus-5-5
       - openai-codex/gpt-6.1-sol
-      - google-antigravity/claude-opus-4-6
-      - google-antigravity/claude-sonnet-4-6
+      - google-antigravity/claude-opus-5-5
+      - google-antigravity/claude-sonnet-5-5
       - openrouter/z-ai/glm-5.3-flash
       - xai-oauth/grok-4.7
   usageAwareFallback: true
