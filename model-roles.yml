@@ -1,6 +1,12 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-10-07 · Snapshot version: 31
+## Generated: 2026-10-08 · Snapshot version: 32
 ## Stale? See research/RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
+##
+## v32: bounded Haiku 5.5 adoption on the direct Claude Pro subscription.
+##   - commit primary -> anthropic/claude-haiku-5-5:low; Grok Build retained as first fallback.
+##   - Native OMP 18.8.3 catalog, OAuth tool replay, and actual commit dry-run verified.
+##   - Keep high-volume and depth roles/chains unchanged to protect shared Pro headroom.
+##   - No Antigravity Haiku route or custom model registration; see README for evidence.
 ##
 ## v31: migrated Antigravity Claude fallbacks to the main paid Google AI Pro account.
 ##   - Opus 4.6 -> Opus 5.5 and Sonnet 4.6 -> Sonnet 5.5 in all nine fallback chains;
@@ -173,7 +179,7 @@
 ## "architect"|"critical", ...) dispatch targets. See research/ARCHITECT-CRITICAL-AGENTS.md.
 ##
 ## Assumes these logins exist on the target machine:
-##   - anthropic        (Claude Pro, $20/mo — the SCARCE pool, keep light, reserve for sage/critical)
+##   - anthropic        (Claude Pro, $20/mo — reserve for sage/critical; bounded Haiku commit exception)
 ##   - openai-codex      (ChatGPT Pro, $100/mo, 5x quota — heavy roles: task/smol/slow/plan/
 ##     architect/review/security/good_worker; quota varies, check omp usage)
 ##   - google-antigravity (free preview; Google lane weekly metered, Anthropic proxy lane separately metered)
@@ -190,7 +196,7 @@ modelRoles:
   task: openai-codex/gpt-6.1-sol
   designer: xai-oauth/grok-4.7
   vision: google-antigravity/gemini-3.8-flash
-  commit: xai-oauth/grok-build
+  commit: anthropic/claude-haiku-5-5:low
   advisor: google-antigravity/claude-sonnet-5-5
   tiny: xai-oauth/grok-composer-2.5-fast
 
@@ -245,6 +251,7 @@ retry:
       - openai-codex/gpt-6.1-sol
       - xai-oauth/grok-4.7
     commit:
+      - xai-oauth/grok-build
       - openai-codex/gpt-6-luna
       - nvidia/nvidia/nemotron-3-super-120b-a12b
     advisor:

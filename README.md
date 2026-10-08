@@ -1,6 +1,6 @@
 # OMP model-role setup — import instructions
 
-**Snapshot: 2026-10-07 · v31.** Stale after ~4-6 weeks, or immediately if any subscription
+**Snapshot: 2026-10-08 · v32.** Stale after ~4-6 weeks, or immediately if any subscription
 changed — check `research/RESEARCH-PLAYBOOK.md`'s staleness check before importing this blind.
 
 `model-roles.yml` is a config **overlay**: `modelRoles`, `task.agentModelOverrides`,
@@ -41,10 +41,10 @@ subscription capacity, confirmed via `omp usage` on the source machine:
 
 | Login | Plan | Capacity signal | Treat as |
 |---|---|---|---|
-| `anthropic` | Claude Pro, $20/mo | Smallest raw pool by tier; live reading 2026-09-23 was **10%** (5h) / **2%** (7d) used — currently has headroom (`omp usage`), eligible for launch reset credit | **structurally scarce, currently available** — kept off `default` entirely; reserved for `sage`/`critical` primaries (`anthropic/claude-opus-5-5`). Re-check `omp usage` before reallocating: point-in-time readings swing fast |
+| `anthropic` | Claude Pro, $20/mo | Smallest raw pool by tier; 2026-10-08 pre-screen reading: **95%** (5h) / **78%** (7d) remaining | **protected depth pool, bounded commit exception** — `sage`/`critical` stay on Opus 5.5; infrequent `commit` uses Haiku 5.5 at low effort. API prices do not determine subscription-quota ratios |
 | `openai-codex` | ChatGPT Pro, $100/mo | 5x Plus quota; live reading 2026-10-01 was **27%** used (7d) / **73%** remaining (`omp usage`) | **structurally abundant, healthy headroom** — backs `task`/`smol`/`slow`/`plan`/`architect`/`review`/`security`/`good_worker`; `task`, `good_worker`, `slow`, `plan`, `review`, and `security` upgraded to GPT 6.1 Sol in v28 |
 | `google-antigravity` | One Google AI Pro account (main setup) + four free accounts | 2026-10-07 inventory: paid Gemini **100% remaining**, paid Claude **97.5% remaining**; free accounts expose Claude 4.6, not 5.5 | **primary everyday lane & paid-plan pressure release** — `default`/`vision` primary + paid Claude 5.5 proxy; do not count free accounts as extra 5.5 capacity |
-| `xai-oauth` | X Premium, $8/mo (bundled SuperGrok credits) | Small, weekly-reset credit pool | **primary for `designer` & `commit`** + depth-tier late fallback |
+| `xai-oauth` | X Premium, $8/mo (bundled SuperGrok credits) | Small, weekly-reset credit pool | **primary for `designer` and fast-worker lanes** + first `commit` fallback and depth-tier late fallback |
 | `nvidia` | free NIM catalog | unmetered $0 floor | **last-resort $0 floor** — use `nvidia/nemotron-3-super-120b-a12b` (262K ctx, 262K out). `minimax-m3` was EOL 2026-09-09 |
 | `openrouter` | prepaid credit balance | Pay-per-token, subscription-independent | **high-capability tier & vision fallback** — `z-ai/glm-5.3-flash` (58.2 agentic, 1.31M ctx, $0.075/$0.25) & `google/gemini-3.8-flash` |
 
@@ -60,8 +60,37 @@ Consequences baked into this file:
 - **`architect` moves to `openai-codex/gpt-6.1-sol` in v29** for frequent technical reviews as well as architecture decisions. Its read-only agent returns proportional Markdown rather than a mandatory RFC-shaped JSON object. The installed catalog lists Sol at $2/$10 per million input/output tokens versus Astra at $10/$50; cached input is $0.10 versus $1. These are catalog prices, not measured subscription-quota multipliers or proof of review-quality parity. Its fallbacks are now Antigravity Opus 5.5 → direct Opus 5.5 → Antigravity Sonnet 5.5 → Grok 4.7 → GLM. Astra remains available by explicit model selection and in Sage's existing fallback chain.
 - **`sage` (Thinking Partner)** stays on `anthropic/claude-opus-5-5` for provider diversity, backed by `google-antigravity/claude-opus-5-5` $\to$ `openai-codex/gpt-6-astra` $\to$ `openai-codex/gpt-6.1-sol` $\to$ `google-antigravity/claude-sonnet-5-5` $\to$ `xai-oauth/grok-4.7` $\to$ `openrouter/z-ai/glm-5.3-flash`. Emits no rigid JSON schema.
 - **`task` / `good_worker` use `openai-codex/gpt-6.1-sol`**: $2/M input, $0.10/M cached input, $10/M output, and 128K max output in the installed catalog. The shared v29 overlay enables extended context, giving Codex Sol an effective **922K** window; turning it off would cap it at **272K**.
-- **`designer` and fallback chains upgraded to `xai-oauth/grok-4.7`**: Grok 4.7 (2026-09-21) delivers higher benchmark performance (DeepSWE 71.0% vs 65.2%, Terminal-Bench 37.6% vs 20.3%) and improved presentation/document design at identical pricing ($2/$6), operating within the existing X Premium SuperGrok credit pool. `commit` and `fast_worker` remain on `xai-oauth/grok-build` and `tiny` on `xai-oauth/grok-composer-2.5-fast`.
+- **`designer` and fallback chains upgraded to `xai-oauth/grok-4.7`**: Grok 4.7 (released 2026-09-21) delivers higher benchmark performance (DeepSWE 71.0% vs 65.2%, Terminal-Bench 37.6% vs 20.3%) and improved presentation/document design at identical pricing ($2/$6), operating within the existing X Premium SuperGrok credit pool. `fast_worker` remains on `xai-oauth/grok-build` and `tiny` on `xai-oauth/grok-composer-2.5-fast`; `commit` now uses Haiku 5.5, retaining Grok Build as first fallback.
 - **`tiny` and `fast_worker` (sonic) moved off retired `openai-codex/gpt-5.3-codex-spark` in v24** to `xai-oauth/grok-composer-2.5-fast` and `xai-oauth/grok-build` respectively: OpenAI retired Spark the week of 2026-09-13 (confirmed via `omp models find gpt-5.3-codex-spark` returning zero catalog hits, plus community reports of it vanishing from the Codex CLI selector while its dedicated quota meter stayed visible). Both roles now run on healthy `xai-oauth` capacity (9% of the weekly SuperGrok pool used) and each promotes its former tier-1 fallback to primary, dropping the now-dead leading fallback entry.
+
+### Haiku 5.5: bounded subscription adoption (v32)
+
+`commit` now uses `anthropic/claude-haiku-5-5:low`, followed by Grok Build → Luna →
+Nemotron. It is infrequent, bounded summarization work, not general implementation.
+Keep `smol`, `tiny`, `fast_worker`, `advisor`, general workers, vision/design, and
+every depth chain unchanged: automatic fallback traffic can become sustained load
+on the same Claude Pro allowance used by `sage` and `critical`.
+
+Claude Pro OAuth access and native OMP 18.8.3 tool replay were exercised with model
+and usage-aware fallback disabled. No Haiku was listed by any of the five
+authenticated Antigravity inventories. OpenRouter lists it as a separately billed
+API model, not subscription capacity. No custom model definition is needed.
+
+On one identical staged utility-function addition, actual `omp commit --dry-run
+--no-changelog` requests produced faithful, validated messages:
+
+| Model | Wall time | Commit-agent tool calls |
+|---|---:|---:|
+| Haiku 5.5, low effort | 5.63 s | 3 |
+| Grok Build | 44.81 s | 6 |
+
+This is a single-workload screening result, not a general speed, quality, or quota
+benchmark. [Haiku's overview](https://platform.claude.com/docs/en/models/haiku-5-5/overview)
+specifies 1M context, 128K output, adaptive effort, and text/image input. API
+input/output prices are $0.10/$0.50 per million tokens through 100K prompt tokens,
+and $0.50/$2.50 above 100K; those are not Claude Pro quota multipliers.
+[Anthropic recommends](https://www.anthropic.com/claude-haiku-5-5) narrowly scoped
+work for Haiku and larger Sonnet/Opus models for complex agentic coding.
 
 ### Antigravity: paid main setup versus free accounts (v31)
 
@@ -258,11 +287,11 @@ overrides and custom agents still use the installation steps below.
 
 Equivalent CLI commands for `config.yml`:
 ```bash
-omp config set modelRoles '{"default":"google-antigravity/gemini-3.8-flash","smol":"openai-codex/gpt-6-luna","slow":"openai-codex/gpt-6.1-sol","vision":"google-antigravity/gemini-3.8-flash","plan":"openai-codex/gpt-6.1-sol","commit":"xai-oauth/grok-build","designer":"xai-oauth/grok-4.7","task":"openai-codex/gpt-6.1-sol","advisor":"google-antigravity/claude-sonnet-5-5","tiny":"xai-oauth/grok-composer-2.5-fast","architect":"openai-codex/gpt-6.1-sol","review":"openai-codex/gpt-6.1-sol","security":"openai-codex/gpt-6.1-sol","critical":"anthropic/claude-opus-5-5","fast_worker":"xai-oauth/grok-build","good_worker":"openai-codex/gpt-6.1-sol","sage":"anthropic/claude-opus-5-5"}'
+omp config set modelRoles '{"default":"google-antigravity/gemini-3.8-flash","smol":"openai-codex/gpt-6-luna","slow":"openai-codex/gpt-6.1-sol","vision":"google-antigravity/gemini-3.8-flash","plan":"openai-codex/gpt-6.1-sol","commit":"anthropic/claude-haiku-5-5:low","designer":"xai-oauth/grok-4.7","task":"openai-codex/gpt-6.1-sol","advisor":"google-antigravity/claude-sonnet-5-5","tiny":"xai-oauth/grok-composer-2.5-fast","architect":"openai-codex/gpt-6.1-sol","review":"openai-codex/gpt-6.1-sol","security":"openai-codex/gpt-6.1-sol","critical":"anthropic/claude-opus-5-5","fast_worker":"xai-oauth/grok-build","good_worker":"openai-codex/gpt-6.1-sol","sage":"anthropic/claude-opus-5-5"}'
 
 omp config set task.agentModelOverrides '{"security-reviewer":"@security","reviewer":"@review","sonic":"@fast_worker","task":"@good_worker"}'
 
-omp config set retry.fallbackChains '{"default":["openai-codex/gpt-6.1-sol","openrouter/z-ai/glm-5.3-flash","nvidia/nvidia/nemotron-3-super-120b-a12b"],"smol":["google-antigravity/gemini-3.5-flash-lite","xai-oauth/grok-composer-2.5-fast","nvidia/nvidia/nemotron-3-super-120b-a12b"],"slow":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-5-5","google-antigravity/claude-sonnet-5-5","xai-oauth/grok-4.7","openrouter/z-ai/glm-5.3-flash"],"plan":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-5-5","google-antigravity/claude-sonnet-5-5","xai-oauth/grok-4.7","openrouter/z-ai/glm-5.3-flash"],"task":["google-antigravity/gemini-3.8-flash","openrouter/z-ai/glm-5.3-flash","nvidia/nvidia/nemotron-3-super-120b-a12b"],"designer":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-3.8-flash","openrouter/z-ai/glm-5.3-flash"],"vision":["openrouter/google/gemini-3.8-flash","openai-codex/gpt-6.1-sol","xai-oauth/grok-4.7"],"commit":["openai-codex/gpt-6-luna","nvidia/nvidia/nemotron-3-super-120b-a12b"],"advisor":["openai-codex/gpt-6.1-sol","nvidia/nvidia/nemotron-3-super-120b-a12b"],"tiny":["google-antigravity/gemini-3.1-flash-lite","nvidia/nvidia/nemotron-3-super-120b-a12b"],"architect":["google-antigravity/claude-opus-5-5","anthropic/claude-opus-5-5","google-antigravity/claude-sonnet-5-5","xai-oauth/grok-4.7","openrouter/z-ai/glm-5.3-flash"],"review":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-5-5","google-antigravity/claude-sonnet-5-5","xai-oauth/grok-4.7","openrouter/z-ai/glm-5.3-flash"],"security":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-5-5","google-antigravity/claude-sonnet-5-5","xai-oauth/grok-4.7","openrouter/z-ai/glm-5.3-flash"],"critical":["google-antigravity/claude-opus-5-5","google-antigravity/claude-sonnet-5-5","openrouter/z-ai/glm-5.3-flash","openai-codex/gpt-6.1-sol","xai-oauth/grok-4.7"],"fast_worker":["google-antigravity/gemini-3.1-flash-lite","nvidia/nvidia/nemotron-3-super-120b-a12b"],"good_worker":["google-antigravity/gemini-3.8-flash","openrouter/z-ai/glm-5.3-flash","nvidia/nvidia/nemotron-3-super-120b-a12b"],"sage":["google-antigravity/claude-opus-5-5","openai-codex/gpt-6-astra","openai-codex/gpt-6.1-sol","google-antigravity/claude-sonnet-5-5","xai-oauth/grok-4.7","openrouter/z-ai/glm-5.3-flash"],"anthropic/claude-fable-5-1":["anthropic/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/claude-opus-5-5","google-antigravity/claude-sonnet-5-5","openrouter/z-ai/glm-5.3-flash","xai-oauth/grok-4.7"],"anthropic/claude-fable-5":["anthropic/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/claude-opus-5-5","google-antigravity/claude-sonnet-5-5","openrouter/z-ai/glm-5.3-flash","xai-oauth/grok-4.7"]}'
+omp config set retry.fallbackChains '{"default":["openai-codex/gpt-6.1-sol","openrouter/z-ai/glm-5.3-flash","nvidia/nvidia/nemotron-3-super-120b-a12b"],"smol":["google-antigravity/gemini-3.5-flash-lite","xai-oauth/grok-composer-2.5-fast","nvidia/nvidia/nemotron-3-super-120b-a12b"],"slow":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-5-5","google-antigravity/claude-sonnet-5-5","xai-oauth/grok-4.7","openrouter/z-ai/glm-5.3-flash"],"plan":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-5-5","google-antigravity/claude-sonnet-5-5","xai-oauth/grok-4.7","openrouter/z-ai/glm-5.3-flash"],"task":["google-antigravity/gemini-3.8-flash","openrouter/z-ai/glm-5.3-flash","nvidia/nvidia/nemotron-3-super-120b-a12b"],"designer":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-3.8-flash","openrouter/z-ai/glm-5.3-flash"],"vision":["openrouter/google/gemini-3.8-flash","openai-codex/gpt-6.1-sol","xai-oauth/grok-4.7"],"commit":["xai-oauth/grok-build","openai-codex/gpt-6-luna","nvidia/nvidia/nemotron-3-super-120b-a12b"],"advisor":["openai-codex/gpt-6.1-sol","nvidia/nvidia/nemotron-3-super-120b-a12b"],"tiny":["google-antigravity/gemini-3.1-flash-lite","nvidia/nvidia/nemotron-3-super-120b-a12b"],"architect":["google-antigravity/claude-opus-5-5","anthropic/claude-opus-5-5","google-antigravity/claude-sonnet-5-5","xai-oauth/grok-4.7","openrouter/z-ai/glm-5.3-flash"],"review":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-5-5","google-antigravity/claude-sonnet-5-5","xai-oauth/grok-4.7","openrouter/z-ai/glm-5.3-flash"],"security":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-5-5","google-antigravity/claude-sonnet-5-5","xai-oauth/grok-4.7","openrouter/z-ai/glm-5.3-flash"],"critical":["google-antigravity/claude-opus-5-5","google-antigravity/claude-sonnet-5-5","openrouter/z-ai/glm-5.3-flash","openai-codex/gpt-6.1-sol","xai-oauth/grok-4.7"],"fast_worker":["google-antigravity/gemini-3.1-flash-lite","nvidia/nvidia/nemotron-3-super-120b-a12b"],"good_worker":["google-antigravity/gemini-3.8-flash","openrouter/z-ai/glm-5.3-flash","nvidia/nvidia/nemotron-3-super-120b-a12b"],"sage":["google-antigravity/claude-opus-5-5","openai-codex/gpt-6-astra","openai-codex/gpt-6.1-sol","google-antigravity/claude-sonnet-5-5","xai-oauth/grok-4.7","openrouter/z-ai/glm-5.3-flash"],"anthropic/claude-fable-5-1":["anthropic/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/claude-opus-5-5","google-antigravity/claude-sonnet-5-5","openrouter/z-ai/glm-5.3-flash","xai-oauth/grok-4.7"],"anthropic/claude-fable-5":["anthropic/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/claude-opus-5-5","google-antigravity/claude-sonnet-5-5","openrouter/z-ai/glm-5.3-flash","xai-oauth/grok-4.7"]}'
 
 omp config set retry.usageAwareFallback true
 omp config set retry.usageReservePolicy auto
