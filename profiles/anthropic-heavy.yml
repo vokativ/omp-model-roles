@@ -1,0 +1,127 @@
+{
+  "modelRoles": {
+    "default": "google-antigravity/gemini-3.8-flash",
+    "smol": "anthropic/claude-sonnet-5-5",
+    "slow": "anthropic/claude-opus-5-5",
+    "plan": "anthropic/claude-opus-5-5",
+    "task": "anthropic/claude-sonnet-5-5",
+    "designer": "xai-oauth/grok-4.7",
+    "vision": "google-antigravity/gemini-3.8-flash",
+    "commit": "anthropic/claude-haiku-5-5:low",
+    "advisor": "google-antigravity/gemini-3.8-flash",
+    "tiny": "anthropic/claude-haiku-5-5:low",
+    "architect": "anthropic/claude-opus-5-5",
+    "review": "anthropic/claude-sonnet-5-5",
+    "security": "anthropic/claude-sonnet-5-5",
+    "critical": "openai-codex/gpt-6.1-sol",
+    "fast_worker": "anthropic/claude-haiku-5-5:low",
+    "good_worker": "anthropic/claude-sonnet-5-5",
+    "sage": "anthropic/claude-opus-5-5"
+  },
+  "task": {
+    "agentModelOverrides": {
+      "security-reviewer": "@security",
+      "reviewer": "@review",
+      "sonic": "@fast_worker",
+      "task": "@good_worker"
+    }
+  },
+  "retry": {
+    "fallbackChains": {
+      "default": [
+        "anthropic/claude-sonnet-5-5",
+        "openai-codex/gpt-6.1-sol",
+        "xai-oauth/grok-build"
+      ],
+      "smol": [
+        "openai-codex/gpt-6-luna",
+        "google-antigravity/gemini-3.8-flash",
+        "xai-oauth/grok-build"
+      ],
+      "slow": [
+        "openai-codex/gpt-6.1-sol",
+        "google-antigravity/claude-opus-5-5",
+        "xai-oauth/grok-4.7"
+      ],
+      "plan": [
+        "openai-codex/gpt-6.1-sol",
+        "google-antigravity/claude-opus-5-5",
+        "xai-oauth/grok-4.7"
+      ],
+      "task": [
+        "openai-codex/gpt-6.1-sol",
+        "google-antigravity/gemini-3.8-flash",
+        "xai-oauth/grok-build"
+      ],
+      "designer": [
+        "anthropic/claude-sonnet-5-5",
+        "openai-codex/gpt-6.1-sol",
+        "google-antigravity/gemini-3.8-flash"
+      ],
+      "vision": [
+        "anthropic/claude-sonnet-5-5",
+        "openai-codex/gpt-6.1-sol",
+        "xai-oauth/grok-4.7"
+      ],
+      "commit": [
+        "openai-codex/gpt-6-luna",
+        "google-antigravity/gemini-3.8-flash",
+        "xai-oauth/grok-build"
+      ],
+      "advisor": [
+        "anthropic/claude-haiku-5-5:low",
+        "openai-codex/gpt-6-luna",
+        "xai-oauth/grok-build"
+      ],
+      "tiny": [
+        "openai-codex/gpt-6-luna",
+        "google-antigravity/gemini-3.8-flash",
+        "xai-oauth/grok-build"
+      ],
+      "architect": [
+        "openai-codex/gpt-6.1-sol",
+        "google-antigravity/claude-opus-5-5",
+        "xai-oauth/grok-4.7"
+      ],
+      "review": [
+        "openai-codex/gpt-6.1-sol",
+        "google-antigravity/claude-opus-5-5",
+        "xai-oauth/grok-4.7"
+      ],
+      "security": [
+        "openai-codex/gpt-6.1-sol",
+        "google-antigravity/claude-opus-5-5",
+        "xai-oauth/grok-4.7"
+      ],
+      "critical": [
+        "google-antigravity/gemini-3.1-pro",
+        "xai-oauth/grok-4.7"
+      ],
+      "fast_worker": [
+        "openai-codex/gpt-6-luna",
+        "google-antigravity/gemini-3.8-flash",
+        "xai-oauth/grok-build"
+      ],
+      "good_worker": [
+        "openai-codex/gpt-6.1-sol",
+        "google-antigravity/gemini-3.8-flash",
+        "xai-oauth/grok-build"
+      ],
+      "sage": [
+        "openai-codex/gpt-6.1-sol",
+        "google-antigravity/claude-opus-5-5",
+        "xai-oauth/grok-4.7"
+      ]
+    },
+    "usageAwareFallback": true,
+    "usageReservePolicy": "auto"
+  },
+  "cycleOrder": [
+    "smol",
+    "default",
+    "slow",
+    "architect",
+    "sage"
+  ],
+  "extendedContext": true
+}

@@ -12,27 +12,77 @@ Subscriptions or workload change? Don't hand-edit this file — see
 
 ## Repo layout
 
-The repo root holds only what you actually import. Everything explaining *why* lives in
-`research/`, so you can ignore it unless you're re-deriving the allocation.
+The root overlays and `agents/` are what you import. Selection instructions live in
+`instructions/`; source research and rationale live in `research/`.
 
 ```
 model-roles.yml       <- the config overlay: modelRoles + retry.fallbackChains   (import this)
 models-overlay.yml    <- companion models.yml overlay: per-model maxTokens fixes (import this too)
 agents/               <- custom agent definitions: architect, critical, and sage (thinking partner) (import this too)
 scripts/omp-wt/       <- cross-platform Git Worktree helper (Linux, macOS, Quest, Windows)
+instructions/SELECT-MODEL-MIX.md <- instructions for OMP to preview a four-provider allocation
+profiles/anthropic-heavy.yml <- optional run-only alternative, NOT the current setup
 README.md             <- you are here: import steps + the rationale for the current values
 research/
   RESEARCH-PLAYBOOK.md            <- how to re-derive the allocation from scratch; staleness check
+  SUBSCRIPTION-MIXES.md           <- 2026-10-08: sourced SKUs/prices, tier mixes, API-credit/auth caveats
   GEMINI-QUOTA-OPTIONS.md         <- 2026-08-15 investigation: Gemini/Antigravity quota burnout options
   META-MUSE-EVALUATION.md         <- 2026-08-25 evaluation: the `meta` provider, and why it wasn't adopted
   ARCHITECT-CRITICAL-AGENTS.md    <- 2026-08-26: wiring architect/critical into real subagent dispatch
-  FABLE-EVALUATION.md         <- 2026-09-03: Claude Fable 5 / 5.1 evaluation for architect & critical
+  FABLE-EVALUATION.md         <- 2026-10-08: web-only Fable 5.1 vs Opus 5.5 for plan/architect; historical local metrics withdrawn
   THINKING-PARTNER-ROLE.md   <- 2026-09-04 · v19: Thinking Partner (`sage`) architecture, debate, and allocation
   SAGE-CREATIVE-INSTRUCTIONS.md <- 2026-09-04 · v19.1: cognitive divergence, anti-slop catalogs, and subtractive taste
 ```
 
 Just importing the config? You need the two `.yml` files, `agents/`, and the import steps below —
 nothing in `research/`.
+
+## Optional subscription mixes — preview without changing this setup
+
+[Subscription mixes](research/SUBSCRIPTION-MIXES.md) covers major OpenAI, Anthropic,
+Google, and SpaceX/xAI/X plans, prices and caveats. The single selection behavior
+contract is [instructions/SELECT-MODEL-MIX.md](instructions/SELECT-MODEL-MIX.md):
+**instructions for OMP to follow, not a standalone program**.
+It includes an **Anthropic-heavy alternative** (Max 5x $100 + ChatGPT Plus $20,
+optionally Google AI Pro and X Premium), not a replacement for the v32 overlay.
+The source notes distinguish native subscription allowances from permitted OMP/API
+use: Max's newly offered monthly API credits must be claimed after seven days and
+used through an allowed API-key route. Existing OAuth remains untouched.
+
+Paste this request into an OMP session, supplying your actual plans, workload, and
+budget rather than assuming the example describes your account:
+
+```text
+Read instructions/SELECT-MODEL-MIX.md and follow it. Preview a complete conditional
+future allocation for Claude Max 5x, ChatGPT Plus, non-trial Google AI Pro, and X Premium.
+My workload is frequent implementation, planning, and architecture review,
+with occasional vision/design work and one active machine. Subscription budget:
+about $148/month; no additional paid API spend or top-ups. Max API credits are not
+yet claimed and route permissions are unconfirmed; mark those as prerequisites,
+not verified access. Inspect state/catalog read-only if available and ask only for
+material missing information. Show all 17 roles, ordered fallbacks, agent bindings,
+the full proposed overlay, rationale, provenance/independence limits, and budget
+caveats. Compare Fable 5.1 with Opus 5.5 separately for plan and architect using
+web evidence only. Do not apply changes, modify files/auth, install a profile,
+buy anything, or send Fable/selected-model probe requests.
+```
+
+Reading the instruction file offline sends no model request. Asking OMP to follow
+it uses the existing OMP session/model and may consume that model's allowance;
+preview does not mean a zero-inference offline executable.
+[profiles/anthropic-heavy.yml](profiles/anthropic-heavy.yml) remains an opt-in static
+alternative, **not automatically installed**. Any later run needs the notes'
+isolated-profile API-auth and provider-enforced spending prerequisites.
+The [2026-10-08 Fable 5.1-versus-Opus 5.5 evaluation](research/FABLE-EVALUATION.md)
+supports **provisional Opus 5.5 for both `plan` and `architect` in that alternative**.
+Fable remains a credible conditional choice, with correctness/rubric counterevidence,
+not a promised upgrade or an excluded family; no direct controlled OMP plan/read-only
+architect comparison was found in the reviewed sources. Historical local Fable
+speed/depletion metrics are withdrawn because those runs fell back to OpenAI.
+No Fable access is available now, and this preview authorizes no Fable or selected-model
+trial calls. **No Max trial or alternative quality/quota benchmark is claimed.**
+The current setup and its evidence below stay unchanged; subscription planning alone
+does not bump Snapshot 32.
 
 ## Design rationale (why these specific models, not just "the best ones")
 

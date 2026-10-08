@@ -22,16 +22,51 @@ line. Before importing this config on a machine, or before treating it as curren
 4. Whenever you do re-derive and update the files, bump `Snapshot version` by 1 and set
    `Generated` to today's date, in both `model-roles.yml` and `README.md`.
 
-## One-shot prompt (paste into a fresh OMP session on any machine)
+   **Planning-only exemption:** researching alternative subscriptions or generating
+   an opt-in overlay without applying it is not a new live snapshot. Do not bump the
+   root snapshot, rewrite current-setup claims, change existing auth, or run the
+   apply/commit/push workflow for that work. See [SUBSCRIPTION-MIXES.md](SUBSCRIPTION-MIXES.md)
+   for sourced four-provider SKUs and an isolated API-auth alternative. For selection
+   behavior, follow [../instructions/SELECT-MODEL-MIX.md](../instructions/SELECT-MODEL-MIX.md)
+   as the single instruction contract. Ask OMP for a preview with exact plans,
+   workload, and budget; no root/config/auth changes or Fable requests. Offline
+   reading sends no request, while asking OMP may consume its existing model allowance.
 
+## One-shot preview request (paste into a fresh OMP session)
+
+```text
+Read instructions/SELECT-MODEL-MIX.md from this local clone and follow it.
+Preview a full allocation, including the complete proposed overlay, without changing
+files, config, agents, auth, subscriptions, or billing. My exact plans are:
+[provider, product, tier, trial status, price, and authorized OMP/API route for each].
+My workload is: [implementation/planning/architecture/research/vision volume and
+concurrent machines]. My budget is: [subscription ceiling, separately funded API
+budget, included-credit status, and no-spend/top-up constraints]. Inspect current
+state, usage, and catalog read-only if available; ask only for material missing
+information. Show all 17 roles, ordered fallbacks, agent bindings, rationale,
+provenance/independence limits, and entitlement/budget caveats. If these are future
+plans, complete the conditional preview and list unmet access/funding prerequisites
+instead of silently reverting to today's setup. Compare Fable 5.1 with Opus 5.5
+separately for plan and architect using web research only; do not send Fable or
+additional selected-model probes/trial requests or claim unobserved performance/access.
 ```
-Read research/RESEARCH-PLAYBOOK.md from https://github.com/vokativ/omp-model-roles (or the
-local clone). Follow its methodology: inspect my current OMP model-role config and `omp usage`,
-ask me the subscription checklist questions in that file, research current model/plan
-capacity online, then propose and apply an updated quota-aware modelRoles +
-retry.fallbackChains allocation. Update model-roles.yml and README.md in that repo to
-match what you applied, and commit + push.
-```
+
+Replace the bracketed descriptions with your facts; this is an ordinary request,
+not a new command language. Preview is the default, and the existing optional
+profile is not installed by asking. Using OMP can consume the currently selected
+model's allowance. Applying an allocation is a separate, explicitly authorized
+operation; the import/update steps below are not permission to apply a preview.
+
+For the four-provider preview, the
+[2026-10-08 web evaluation](FABLE-EVALUATION.md) retains **Opus 5.5 provisionally
+for both plan and architect in the Anthropic-heavy alternative**. Fable 5.1 remains
+a credible conditional choice: independent rubric/correctness counterevidence
+prevents a universal Opus-winner claim, and no controlled direct OMP plan/read-only
+architect head-to-head was found in the reviewed sources. Follow instruction step 5
+for separate role criteria, effort tuning, and reversal/access/budget conditions.
+Historical local Fable timing/depletion metrics are withdrawn because the requests
+fell back to OpenAI; do not reuse them or demand unavailable Fable tests now.
+This decision changes neither the live v32 setup nor the static alternative profile.
 
 ## Methodology
 
@@ -40,7 +75,9 @@ match what you applied, and commit + push.
    - `omp usage` — which providers are actually authenticated, and real quota pressure (5h/7d/weekly/daily windows, % used). This is ground truth; the model catalog (`omp models`) just shows what's technically reachable, not what's affordable.
    - `omp models <provider>` for each authenticated provider — current model lineup, since names/tiers shift release to release (e.g. a vendor's "flagship/balanced/fast" naming ladder).
 
-2. **Ask me the subscription checklist below.** Don't assume the mix from last time still holds.
+2. **Resolve the subscription checklist below.** Use facts supplied in the request
+   and read-only state; ask only for material missing information. Don't assume the
+   mix from last time still holds.
 
 3. **Classify roles by volume and cost-per-call, not by "which is best":**
    - `default` — highest volume, fires every turn. Needs the model best suited to the *actual* workload mix (see below), on a pool that can sustain constant use.
@@ -72,7 +109,7 @@ match what you applied, and commit + push.
    cycle, compaction frequency, lost constraints, and rework. A higher ceiling is
    not pre-allocation; a lower ceiling can increase compaction and re-reading.
 
-8. **Apply, verify, ship:**
+8. **Only after explicit authorization to update the live setup: apply, verify, ship.**
    ```bash
    omp config set modelRoles '{...}'
    omp config set retry.fallbackChains '{...}'
@@ -81,7 +118,7 @@ match what you applied, and commit + push.
    ```
    Update `model-roles.yml` and `README.md` in this repo to match exactly what's live, commit, push.
 
-## Subscription checklist (ask me these — don't assume)
+## Subscription checklist (ask only for material missing facts)
 
 - **Per provider you have a login for**: exact plan/tier and price? (e.g. Anthropic Free / Pro $20 / Max 5x $100 / Max 20x $200 / Team; OpenAI Free / Plus $20 / Pro $100 / Pro $200 / Team; Google — which product and tier, storage-plan vs AI-specific subscription vs a free preview program; xAI — bundled-with-social-app tier vs standalone SuperGrok Lite/Standard/Heavy; any others: Groq, Mistral, DeepSeek, Perplexity, OpenRouter credits, local models via Ollama/LM Studio/llama.cpp?)
 - **Anything added or dropped** since the last pass?
@@ -93,8 +130,8 @@ match what you applied, and commit + push.
 
 ## Files in this repo
 
-Repo root holds only the importable config plus the README; everything explaining *why* lives
-in `research/` (this folder).
+The importable overlays and README are at the root. Selection instructions live in
+`instructions/`; source research and rationale live in `research/` (this folder).
 
 Root — the importable config:
 - `../model-roles.yml` — model roles, agent bindings, retry policies/chains, cycle order, and owner-approved `extendedContext: true`. Merge all supplied keys into `config.yml`; `omp --config ./model-roles.yml` applies a run-only overlay, not a persistent install.
@@ -105,8 +142,18 @@ Root — the importable config:
 - `../README.md` — import instructions, the repo-layout map, plus the rationale/subscription table
   that justified the current values, including the locally measured 2026-08-25 A/B.
 
+Optional planning instructions/profile — not the current imported setup:
+- `../instructions/SELECT-MODEL-MIX.md` — the single behavior contract for OMP to
+  preview a subscription/workload/budget-aware allocation; not a standalone program.
+- `../profiles/anthropic-heavy.yml` — opt-in static alternative, not auto-installed.
+  A run-only overlay is not authentication isolation: follow the notes' API-credit,
+  isolated-profile, provider-permission, and Console spending prerequisites before any run.
+
 `research/` — methodology and point-in-time investigations:
 - `RESEARCH-PLAYBOOK.md` — this file.
+- `SUBSCRIPTION-MIXES.md` — 2026-10-08 major OpenAI/Anthropic/Google/SpaceX-xAI-X SKUs,
+  sourced prices and missing-price caveats, recommended paying-tier mixes, instruction
+  usage, full Anthropic-heavy role map, and safe API-auth/budget prerequisites.
 - `GEMINI-QUOTA-OPTIONS.md` — point-in-time investigation into Gemini/Antigravity quota burnout
   options; superseded in part by the `vision`/`designer` decisions in this snapshot — see its own
   addendum before treating its recommendation as current.
@@ -116,7 +163,7 @@ Root — the importable config:
   and completions, and a plain API key is excluded from `usageAwareFallback`. Read it before
   re-litigating "should we add the cheap Meta model somewhere".
 - `ARCHITECT-CRITICAL-AGENTS.md` — original dispatch investigation, with a v29 addendum for the review-oriented architect and its verification.
-- `FABLE-EVALUATION.md` — 2026-09-03: evaluation of Claude Fable 5 / 5.1 for architect and critical roles, token economics on $20/mo Anthropic Pro, Google Antigravity Claude 4.6 fallbacks, and multi-agent debate (Architect vs Slow).
+- `FABLE-EVALUATION.md` — 2026-10-08 web-only Fable 5.1 versus Opus 5.5 comparison for plan and architect: official/independent evidence, correctness counterevidence, effort/cost/latency limits, provisional Opus defaults, and conditional Fable reversal/access criteria. Historical local Fable speed/depletion claims are withdrawn after OpenAI fallback invalidated their model identity.
 - `THINKING-PARTNER-ROLE.md` — 2026-09-04 · v19: architecture, multi-agent debate (Architect vs Slow), and allocation for the `sage` Thinking Partner role, defusing the Anthropic 429 credits_required failure mode on Fable.
 - `SAGE-CREATIVE-INSTRUCTIONS.md` — 2026-09-04 · v19.1: cognitive divergence operators, anti-slop defect catalogs, and subtractive taste architecture for `sage` (Thinking Partner), adapted from Anshu Chimala's Apple R&D AI creativity methodology.
 

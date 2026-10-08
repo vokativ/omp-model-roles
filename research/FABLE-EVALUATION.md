@@ -1,176 +1,123 @@
-# Claude Fable 5 / 5.1 Evaluation — Architect & Critical Roles
+# Fable 5.1 versus Opus 5.5 — `plan` and `architect`
 
-*In `research/`. Bare filenames such as `model-roles.yml` and `README.md` refer to the repo root, one level up.*
+**Web-evidence review: 2026-10-08.** This replaces the contradictory September evaluation. It is selection guidance, not a selector program, a local benchmark, or evidence of this user's Fable access. Sources below distinguish vendor measurements, vendor-reported external results, and independently retrieved evaluator reports. Living pages were observed on 2026-10-08; that is not an invented publication date.
 
-Written 2026-09-03 in response to: "What do we do about the architect and critical models? Should we switch them from Opus 5 to Fable 5 or 5.1 (which just came out today)? Would that run out of quota very quickly on our basic $20/mo Anthropic subscription? Does it fall back to Google (Opus 4.6)? How should we structure this and test to understand if it's worth it?"
+## Decision and withdrawn evidence
 
-Updated following:
-1. Completion of a parallel workload that previously contributed to Anthropic meter readings.
-2. Live isolated benchmark runs measuring latency, token verbosity, and quota delta across Opus 5, Fable 5, Fable 5.1, and Google Antigravity Opus 4.6.
-3. Analysis of public agentic benchmarks (Terminal-Bench 4.0, Terminal-Bench-Science, AutomationBench) and token pricing structures (specifically Fable 5.1's 75% cache-read reduction).
+**[INFERENCE] Retain Opus 5.5 provisionally for both `plan` and `architect` in the existing Anthropic-heavy alternative.** Public engineering/workflow and professional-analysis proxies generally support that choice at lower API list prices. Fable 5.1 remains a meaningful conditional candidate: its independent rubric-completeness and memorization-discounted coding-correctness results challenge any categorical Opus quality claim. Neither model is a demonstrated OMP role winner.
 
+The existing alternative is unchanged as an evidence-based decision, not because Fable was ignored. This review does not change the current root configuration, models, agents, authentication, or provider routes. **The user has no Fable access: no Fable calls, probes, or local tests were made or are authorized by this note.** Preserve the independent OpenAI `critical` allocation; switching between two Anthropic models does not add model-family independence against an Anthropic producer.
 
-### 2026-09-04 Correction & v18.1 Update: Anthropic Quota Reality on Fable
+**Withdrawn local claims:** the historical **7.36s / 7.45s** and **<0.1% quota** figures were not Fable measurements. The attempted Fable requests failed and fell back to OpenAI; outputs attributed to Fable therefore did not establish Fable identity. Those invalidated September records are the source of these quoted figures, not a new observation. The former local architecture table, “crisper/faster” conclusion, negligible-quota claim, and validated-local-architect recommendation are withdrawn, not qualified by a footnote. Historical Opus 5 comparisons cannot decide the present **Opus 5.5 versus Fable 5.1** question. Old quota snapshots and fallback configuration examples are not current evidence.
 
-**Critical Defect Identified in v18 Telemetry:**  
-Anthropic Claude Pro ($20/mo) **does NOT include Claude Fable 5 or 5.1** under the monthly subscription allowance. When invoked directly, Anthropic returns HTTP 429:
-```json
-{"error":{"type":"rate_limit_error","message":"Usage credits are required for this model.","details":{"error_code":"credits_required","disabled_reason":"org_level_disabled"}}}
-```
-In v18, the subagent benchmark runs claiming "7.45s execution on Fable 5.1 with <0.1% quota impact" actually triggered this 429 and **silently fell back to `openai-codex/gpt-5.6-terra`** via OMP's default fallback chain. Terra (a fast, lower-tier worker) was answering under the `fable` name.
+## Exact identities and access boundary
 
-**Fix Applied in v18.1:**
-1. **`fable` role bound to `@fable` (`anthropic/claude-opus-5`):** Opus 5 is fully authenticated, quota-covered under the $20/mo Claude Pro plan, and provides the actual frontier Anthropic-family systems and design reasoning intended for the `fable` agent.
-2. **High-Capability Depth Fallback Chain:** If Anthropic 5-hour quota is ever reached, `fable` falls back strictly to frontier reasoning models:
-   `openai-codex/gpt-5.6-sol` $\to$ `google-antigravity/claude-opus-4-6` $\to$ `google-antigravity/claude-sonnet-4-6` $\to$ `openrouter/z-ai/glm-5.3-flash` $\to$ `xai-oauth/grok-4.6`.
-   Terra is explicitly excluded from this chain.
-3. **Model-level Fallbacks for Fable:** Added fallback entries for `anthropic/claude-fable-5-1` and `anthropic/claude-fable-5` routing to `anthropic/claude-opus-5` $\to$ `gpt-5.6-sol` $\to$ `claude-opus-4-6` so any explicit CLI invocation (`--model fable-5`) fails over to Opus 5 rather than Terra.
----
+Official overviews identify [Fable 5.1](https://platform.claude.com/docs/en/models/fable-5-1/overview), released **2026-09-01**, API ID `claude-fable-5-1`, and [Opus 5.5](https://platform.claude.com/docs/en/models/opus-5-5/overview), released **2026-09-22**, API ID `claude-opus-5-5` (living docs, observed 2026-10-08). Earlier Fable 5 and Opus 5 are distinct versions.
 
-## TL;DR — Bottom Line Recommendation
+The [Fable/Mythos announcement and system card](https://www.anthropic.com/claude-fable-and-mythos-5-1) (September 2026; [card dated 2026-09-01](https://www.anthropic.com/claude-fable-5-1-mythos-5-1-system-card)) describe shared weights but different safeguards/access programs. **Mythos is not Fable deployment evidence.** Product capability/creation labels, provider availability, and a catalog name do not prove this user's entitlement, an authorized OMP route, or the delivered model identity.
 
-1. **Strategic Role Allocation:**
-   - **Keep `anthropic/claude-opus-5` as the primary default for `critical`.** `critical` is an adversarial review gate whose primary purpose is catching flaws produced by Gemini (`default`), Terra (`task`), and Sol (`slow`/`plan`/`review`). Opus 5 provides rock-solid model-family, provider, and weights independence at half the cost ($5/$25 vs $10/$50).
-   - **For `architect`, support Claude Fable 5.1 via an explicit opt-in escalation path.** Fable 5.1 (released 2026-09-01) is the frontier model for complex system design and multi-step agentic execution. In our live benchmark, with bounded thinking (`thinking: low`), Fable 5.1 executed in **7.45 seconds** (Fable 5 in 7.36s), producing concise, highly structured architectural RFCs without verbosity, and consumed negligible quota (<0.1% on the 5-hour meter).
-2. **Token Efficiency & The Cache-Read Advantage:**
-   - While Fable 5.1 has a $10/$50 headline price, Anthropic reduced **cache-read pricing by 75%** down to **$0.25/M tokens** (versus $0.50 on Opus 5 and $1.00 on Fable 5).
-   - In real-world repository interactions dominated by cached context (>80% cache-read ratio), Fable 5.1's effective cost per task is competitive with Opus 5 while offering substantially superior long-horizon autonomy.
-3. **Google Antigravity Claude 4.6 Integration (v18 Live):**
-   - Google Antigravity provides **`claude-opus-4-6`** and **`claude-sonnet-4-6`** (both 250K context, 64K output). It does **NOT** provide Opus 5 or Fable.
-   - Tested live: `google-antigravity/claude-opus-4-6` completed the architecture benchmark in **11.38 seconds** with exceptional rigor and **zero dollar cost** to the user.
-   - Across all 5 Google Antigravity accounts, the Anthropic proxy lane is **0.0% used**.
-   - **Applied in v18:** Inserted `google-antigravity/claude-opus-4-6` ahead of `claude-sonnet-4-6` across all six depth roles (`slow`, `plan`, `architect`, `review`, `security`, `critical`), providing a genuine Opus-tier fallback that routes to the free proxy pool.
+Anthropic's living [model-selection guide](https://platform.claude.com/docs/en/about-claude/models/choosing-a-model) (observed 2026-10-08) recommends starting most workloads with Opus 5.5 and considering Fable 5.1 when Opus at `xhigh` or `max` still falls short on demanding reasoning/long-horizon work. Its “highest-capability” Fable positioning is not proof of superiority on these two roles.
 
----
+## Comparable public results — relevant proxies, not role benchmarks
 
-## 1. Verified Model Catalog & Quota Telemetry
+Vendor rows cite the **2026-09-22 [Opus 5.5 system card][card]**. Independent AA rows cite the original **2026-09-22 [Artificial Analysis report][aa]**. Equal effort labels do not establish equal compute, token budget, wall time, or cost.
 
-### Model Specifications
+| Evaluation | Opus 5.5 | Fable 5.1 | Provenance, settings, and limits |
+| --- | ---: | ---: | --- |
+| Terminal-Bench 4.0 | **64.8%** | **55.8%** | Anthropic, both **max**, Claude Code `--bare`; production safeguards/fallbacks. [Card §8.5, pp177–178][card]. |
+| Terminal-Bench-Science 0.1 | **58.7%** | **52.6%** | Anthropic, both max, Claude Code `--bare`; task-clustered uncertainty prevents treating this point gap as decisive. [Card §8.6, pp178–179][card]. |
+| FrontierSWE v2 | **62.3%** | **56.3%** | Proximal external result **as reported by Anthropic**, same max/Proximal harness; long-horizon engineering, not read-only architecture. [Card §8.7, p179][card]. |
+| CursorBench 4.0 | **57.8%** | **51.8%** | Cursor production harness, both max, **as reported by Anthropic**; not independently fetched experiment evidence here. [Card §8.8, pp179–180][card]. |
+| GDPval-AA v2.1 | **1846 Elo** | **1735 Elo** | Original independent AA professional-artifact evaluation, max/default fallback; also reported in [card §8.14.3, p209][card]. [AA report][aa]. Elo is not accuracy percent. |
+| AA-Briefcase v1.1 | **1822 Elo** | **1678 Elo in card** | Both max; [card §8.14.4, p210][card]. Original [AA report][aa] says Opus leads by **143 points**, with analytical/presentation leads but **Fable ahead on rubric scoring**; see discrepancy below. |
+| Toolathlon-Verified | **77.8% Pass@1** | **77.8% Pass@1** | Anthropic, same internal harness/adaptive thinking/max, classifiers on; workflow/instruction-following tie. [Card §8.14.5, pp210–211][card]. |
+| AutomationBench | **40.0%** | **31.4%** | Zapier held-out policy/workflow evaluation **as reported by Anthropic**, both max; no fallback, safeguard intervention fails the task. [Card §8.14.6, pp211–212][card]. |
 
-| Model | Selector | Context | Max Output | Input $/1M | Output $/1M | Cache Read | Cache Write | Release Date |
-|---|---|---|---|---|---|---|---|---|
-| **Claude Opus 5** | `anthropic/claude-opus-5` | 1,000,000 | 128,000 | $5.00 | $25.00 | $0.50 | $6.25 | 2026-07-24 |
-| **Claude Fable 5** | `anthropic/claude-fable-5` | 1,000,000 | 128,000 | $10.00 | $50.00 | $1.00 | $12.50 | 2026-06-09 |
-| **Claude Fable 5.1** | `anthropic/claude-fable-5-1` | 1,000,000 | 128,000 | $10.00 | $50.00 | **$0.25** | $12.50 | 2026-09-01 |
-| **GPT-5.6 Sol** | `openai-codex/gpt-5.6-sol` | 1,000,000 | 128,000 | (Plan) | (Plan) | (Plan) | (Plan) | 2026-08 |
-| **Antigravity Opus 4.6** | `google-antigravity/claude-opus-4-6` | 250,000 | 64,000 | $0 (Proxy) | $0 (Proxy) | $0 (Proxy) | $0 (Proxy) | 2026-05 |
-| **Antigravity Sonnet 4.6** | `google-antigravity/claude-sonnet-4-6` | 250,000 | 64,000 | $0 (Proxy) | $0 (Proxy) | $0 (Proxy) | $0 (Proxy) | 2026-05 |
+**Terminal-Bench headline caveat:** the advertised **66.4%** Opus score is at **xhigh**, not the equal-max point above. The card reports **66 tasks**, Opus **five trials/task**, and fallback on **2.5% of requests / 10% of trials**; it does not provide a confidence interval for the **64.8% max** point or specify Fable's trial count in that paragraph ([card §8.5][card], 2026-09-22). Do not combine the headline with Fable's max score as an equal-setting experiment. Production substitutions include Opus 4.8 for cybersecurity and Opus 5 for biology/frontier-LLM development ([card §1.5][card]); deployed-system results are not guaranteed pure named-model outputs throughout. Fable also has safeguard substitutions; Mythos has different safeguards.
 
-### Quota Status (Isolated Baseline After Parallel Workload Finished)
+**AA discrepancy and interpretation:** the original [AA report][aa] (2026-09-22) gives Opus **1822** and a **+143** Fable gap, while the [card §8.14.4][card] gives Fable **1678**. Do not present **1679**, obtained by subtraction, as an independently reported exact Fable measurement or silently resolve the discrepancy. AA's analytical/presentation lead and Fable's higher rubric result are distinct axes: persuasive, polished output is not necessarily more complete or correct.
 
-- **Anthropic ($20/mo Claude Pro, 1 account):**
-  - Claude 5-Hour window: **22.0% used** (resets in 4h19m). Headroom: 78% available.
-  - Claude 7-Day window: **40.0% used** (resets in 1d2h).
-  - *Observation:* Two consecutive runs of Fable 5 and Fable 5.1 with `--thinking=low` did not move the 5-hour meter by even 1%. When managed cleanly without unbounded thinking loops, Fable 5.1 does not burn out quota prematurely.
-- **OpenAI Codex ($100/mo ChatGPT Pro, 5x Plus quota):**
-  - 7-day chat pool: **26.0% used** (peak 26.0%).
-  - 5-hour Spark pool: **0.0% used**.
-  - Headroom: Abundant.
-- **Google Antigravity (5 accounts):**
-  - Anthropic proxy lane: **0.0% used across all 5 accounts**.
-  - Daily Google lane: 33.6% used on primary account.
-  - Headroom: Untapped Claude 4.6 reservoir.
+Original [AA-Briefcase methodology](https://artificialanalysis.ai/evaluations/aa-briefcase) (observed 2026-10-08) covers realistic professional projects with source-file evidence and separate requirements/correctness rubrics. Each task starts independently with standardized prior artifacts; the “multi-week” framing does **not** demonstrate consistency of a model's own evolving plan across weeks. AA's original report and model pages describe **max/default fallback**; these are independent production-route measurements, not verified all-pure-model trajectories.
 
----
+Independent AA Terminal-Bench uses a different harness from the vendor table: the original [AA evaluation page](https://artificialanalysis.ai/evaluations/terminalbench-4-0) (observed 2026-10-08) reports Opus max **59.6%** with mini-swe-agent; the original launch article does not supply a paired Fable percentage for that run. It cannot be merged with the Claude Code vendor row.
 
-## 2. Benchmark Findings: Public Literature & Live Local Testing
+## Independent evidence and substantive Fable counterevidence
 
-### Public Frontier Benchmarks (September 2026)
+### Mercor: directional support, not a decisive winner
 
-Fable 5.1 was tuned specifically for sustained agentic execution where Opus 5 or Fable 5 occasionally lost momentum or required manual guidance:
+Original benchmark-owner pages were retrieved **2026-10-08**; exact model run dates, full setting/fallback provenance, and pinned run commits were not disclosed in the retrieved pages.
 
-| Benchmark | Claude Fable 5 | Claude Fable 5.1 | Notes |
-|---|---|---|---|
-| **Terminal-Bench 4.0** | 42.0% | **55.8%** | +13.8% absolute gain in terminal agent capability |
-| **Terminal-Bench-Science 0.1** | 24.7% | **52.6%** | >2× score on complex multi-step reasoning |
-| **AutomationBench** | 17.1% | **31.4%** | Significant uplift in automated workflow completion |
-| **CursorBench 3.2.0** | 70.5% | **73.4%** | Top frontier coding score |
+| Original evaluation / requested metric | Opus 5.5 max | Fable 5.1 max | Role relevance and uncertainty |
+| --- | ---: | ---: | --- |
+| [APEX-Agents 1.1, Pass@1](https://www.mercor.com/apex/apex-agents-leaderboard/?pass=pass-1) | **73.5% ±4.9%** | **68.6% ±4.9%** | Professional banking/consulting/law workflows; overlapping reported ranges. |
+| [APEX-SWE, Terminus-2, Pass@1](https://www.mercor.com/apex/apex-swe-leaderboard/?harness=terminus-2&pass=pass-1) | **67.6% ±5.9%** | **63.6% ±6.3%** | Service integration, deployment, observability/debugging; overlapping reported ranges. |
 
-### Live Local Architectural Benchmark (2026-09-03)
+These original Mercor results are independent evaluator evidence, unlike an external result copied into Anthropic's card. Same max and task family support a within-evaluation comparison, not equal resource budgets or a statistically established unique winner. Professional-task proxies are also not wholly separate capability dimensions merely because evaluators differ. See Mercor's [2026-09-08 APEX-Agents methodology](https://www.mercor.com/blog/introducing-apex-agents-1-1/) and [2026-03-24 APEX-SWE introduction](https://www.mercor.com/blog/introducing-apex-swe/).
 
-Prompt: *Architectural trade-offs and zero-downtime migration of a distributed idempotency key cache from Redis Cluster to DynamoDB with Global Tables.*
+### Endor Labs: correctness ordering matters
 
-| Metric | Claude Opus 5 | Claude Fable 5 | Claude Fable 5.1 | Google Antigravity Opus 4.6 |
-|---|---|---|---|---|
-| **Latency (s)** | High (hit 30s timeout / queue) | **7.36s** | **7.45s** | **11.38s** |
-| **Response Tone** | Extremely detailed, verbose | Dense, structural, crisp | Dense, structural, actionable | Nuanced, practical, direct |
-| **Reasoning Efficiency** | Over-elaborates in unmanaged thinking | Concise, focused on invariants | Highly focused on root causes | Excellent domain trade-off balance |
-| **5h Quota Impact** | Substantial when thinking unconstrained | < 0.1% delta | < 0.1% delta | 0% (Antigravity proxy) |
-| **Effective Availability** | High queue/overload risk under load | Immediate capacity | Immediate capacity | Immediate capacity |
+The original **2026-09-24 [Endor Labs experiment][endor]** is repository patch generation, not a measured plan-only, architecture-review, or security-review role. It executed **200 tasks**, scoring **179** after excluding overly strict/trap instances. Functional and hidden security tests were combined with trajectory-based recall/cheating detection and **LLM adjudication**; scores below apply the authors' memorization deductions.
 
-**Takeaway:** Fable 5.1 is noticeably crisper and less verbose than Opus 5 when answering structural questions. Its latency (7.45s) is less than a third of Opus 5's extended thinking turns, and its output is immediately actionable.
+| Memorization-discounted metric | Opus 5.5 | Fable 5.1 | Source |
+| --- | ---: | ---: | --- |
+| FuncPass: functional correctness | **68.7% (123/179)** | **87.2% (156/179)** | [Endor, 2026-09-24][endor] |
+| SecPass: functional AND security correctness | **33.5% (60/179)** | **37.4% (67/179)** | [Endor, 2026-09-24][endor] |
 
----
+**Material limits:** Claude Code versions differed: Opus **2.1.280**, Fable **2.1.258**; effort/temperature were not stated. Without recall deductions, the functional/security ordering favors Opus, so adjudication materially affects the result. Endor reports no smaller-model fallback for Opus, but that does not make the mismatched agent setups a controlled pure-model architecture study ([Endor, 2026-09-24][endor]; [methodology, 2026-04-15, updated 2026-05-07](https://www.endorlabs.com/learn/agent-security-league-evaluating-the-security-of-ai-coded-software)).
 
-## 3. The Multi-Agent Debate: Architect vs Slow
+Fable's substantial functional-correctness edge is a real reason to preserve it as a conditional option for correctness-sensitive work. The narrower security gap in this experiment does not prove a universal Fable security-review or architect advantage. Nor can fast completions associated with recalled solutions be treated as superior reasoning.
 
-The evaluation orchestrated a structured debate in `eval` between `@slow` (`openai-codex/gpt-5.6-sol`) and `@architect` (`anthropic/claude-opus-5`).
+## Performance, effort, and API prices are different ledgers
 
-### Slow Model Perspective (`openai-codex/gpt-5.6-sol`)
-- **API List Price vs Quota Weight:** Warned that Fable 5.1's 2× list price ($10/$50) would normally cut buying power in half.
-- **The Equal-Spend Standard:** In an API billing regime, 1 Fable call must be compared against **two Opus 5 calls** or an **Opus 5 + Sol cross-family ensemble**.
-- **Critical Independence:** Emphasized that setting `critical` to Fable doubles review costs without improving vendor diversity against OpenAI/Google producers.
+The original [AA report][aa] (2026-09-22) reports approximately **119k Opus versus 78k Fable output tokens per Intelligence Index task at max**. That is more output for Opus in this workload, whereas Endor's patch-generation workload reports the opposite direction. Live [Opus](https://artificialanalysis.ai/models/claude-opus-5-5) and [Fable](https://artificialanalysis.ai/models/claude-fable-5-1) AA pages (observed 2026-10-08) distinguish decoding speed from first-answer latency; page-labelled “TTFT” includes reasoning in the chart interpretation. These are not OMP role latencies. **No universal faster, less-verbose, or lower-per-task-cost claim follows.**
 
-### Architect Model Response (`anthropic/claude-opus-5`)
-- **Convergence on Critical:** Agreed that `critical` should remain on Opus 5 to maximize availability and protect independence.
-- **Justification for Fable in Architecture:** Highlighted that for irreversible, catastrophic-risk decisions (cross-service consistency, public auth boundary overhaul, multi-region database migration), the incremental intelligence of Fable 5.1 easily justifies the cost.
-- **Google Clarification:** Pointed out that Antigravity Claude models are strictly Opus 4.6 and Sonnet 4.6 capped at 250K context, making failover to Google an explicit model downgrade rather than a transparent substitution.
+Both models support adaptive thinking and low/medium/high/xhigh/max effort. Official API defaults are **Opus medium / Fable high**, and effort is a behavioral signal rather than a strict token budget ([effort guide](https://platform.claude.com/docs/en/build-with-claude/effort) and model overviews, observed 2026-10-08). More effort is not always better: unnecessary/out-of-scope edits can reduce FrontierCode scores ([card §8.4][card], 2026-09-22). Effort/settings must be considered with the actual role and route, not inferred from a generic model label.
 
----
+**Standard global Claude API list prices, USD per million tokens**, living [pricing guide][pricing] observed 2026-10-08; not measured subscription deductions or a provider-specific quote:
 
-## 4. Fallback Architecture & Google Antigravity Optimization (v18)
+| Token category | Fable 5.1 | Opus 5.5 |
+| --- | ---: | ---: |
+| Uncached input | **$10** | **$4** |
+| Output | **$50** | **$20** |
+| Cache read/hit-refresh | **$0.25** | **$0.20** |
+| Cache write, five-minute TTL | **$12.50** | **$5** |
+| Cache write, one-hour TTL | **$20** | **$8** |
 
-### Why v18 Upgrades to `claude-opus-4-6`
-Previously, `model-roles.yml` routed depth fallbacks directly to `google-antigravity/claude-sonnet-4-6`. Because Antigravity's Anthropic proxy lane is 0% used and offers `claude-opus-4-6`, depth roles should hit Opus 4.6 first.
+[Pricing guide][pricing] and the [Fable](https://platform.claude.com/docs/en/models/fable-5-1/overview) / [Opus](https://platform.claude.com/docs/en/models/opus-5-5/overview) overviews (observed 2026-10-08) source every entry. **[CALCULATION] Fable input/output/write prices are 2.5× Opus at identical billable token counts; cache reads are 1.25×**, not 2.5×. These are neither quota ratios nor per-task/per-success ratios: output length, tool steps, cache mix, write TTL, and actual route pricing matter. Both API overviews list **1M context / 128K synchronous output**, which is capacity, not evidence of correct synthesis or native-plan limits.
 
-### Applied Configuration (`model-roles.yml` v18)
+Anthropic's launch speed/cost improvement claims compare Opus 5.5 with **Opus 5**, not Fable ([launch, 2026-09-22](https://www.anthropic.com/claude-opus-5-5)). They are not a substitute for a Fable comparison.
 
-```yaml
-retry:
-  fallbackChains:
-    architect:
-      - openai-codex/gpt-5.6-sol
-      - google-antigravity/claude-opus-4-6    # v18: Opus-tier reasoning from 0% proxy lane
-      - google-antigravity/claude-sonnet-4-6
-      - xai-oauth/grok-4.6
-      - openrouter/z-ai/glm-5.3-flash
+### Native allowance versus API credits
 
-    critical:
-      - google-antigravity/claude-opus-4-6    # v18: Independent Claude proxy on free 0% lane
-      - google-antigravity/claude-sonnet-4-6
-      - openrouter/z-ai/glm-5.3-flash         # Independent third-party fallback
-      - openai-codex/gpt-5.6-sol              # Valid for non-Sol produced work
-      - xai-oauth/grok-4.6
+- **Native Max:** Fable models are included up to **50% of regular weekly usage limits**, within the shared pool, not an extra pool; they consume it faster without an exact multiplier published in the reviewed help. This is native Claude/Code/Cowork allowance, not API tokens or OMP entitlement. Pro uses pay-as-you-go credits for Fable. [“Claude Fable models on your plan”](https://support.claude.com/en/articles/15424964-claude-fable-models-on-your-plan) and [Max help](https://support.claude.com/en/articles/11049741-what-is-the-max-plan), living pages observed 2026-10-08.
+- **Separate monthly API credits:** eligible Max **5x / 20x** plans can claim **$100 / $200 per month** after **seven days** on an active plan and link one Console organization. Credits expire each billing cycle, are shared by that organization's keys, and do not increase native limits. They cover available first-party API models; interactive Claude Code, native extra usage, and third-party cloud routes are not covered. [Monthly API-credit help](https://support.claude.com/en/articles/17154008-monthly-api-credits-for-max-and-team-plans), living page observed 2026-10-08.
+- **OMP boundary [INFERENCE]:** claimed, available credits could fund an authorized first-party API-key route in that linked organization, if the relevant OMP catalog/provider route exists. They do not authorize arbitrary subscription OAuth, prove a credit claim/balance, or grant this user Fable access. Native **50% weekly inclusion** and **monthly API dollars** remain distinct ledgers. No entitlement, auth, credit, spend, or configuration changes are proposed by this research.
 
-    slow:
-      - anthropic/claude-opus-5
-      - google-antigravity/claude-opus-4-6    # v18
-      - google-antigravity/claude-sonnet-4-6
-      - xai-oauth/grok-4.6
-      - openrouter/z-ai/glm-5.3-flash
+## Separate role recommendations and reversal criteria
 
-    plan:
-      - anthropic/claude-opus-5
-      - google-antigravity/claude-opus-4-6    # v18
-      - google-antigravity/claude-sonnet-4-6
-      - xai-oauth/grok-4.6
-      - openrouter/z-ai/glm-5.3-flash
-```
+### `plan`
 
----
+**[INFERENCE] Keep available, authorized Opus 5.5 provisionally.** Its independent analytical/professional-output and workflow evidence supports requirements synthesis, dependency/risk mapping, migration sequencing, and actionable acceptance criteria. Use explicit source requirements, assumptions, unresolved questions, and runnable handoffs; a polished narrative is not a complete plan. Do not force max: start from the route's supported default and justify higher effort by task uncertainty and known budget.
 
-## 5. Practical Operational Guide
+Fable's higher AA rubric scoring is relevant counterevidence for missed requirements. **Reverse toward Fable only after access/identity/budget are genuinely established and task-relevant evidence shows materially better requirement coverage, dependency correctness, uncertainty handling, or executable sequencing than Opus at reasonable higher effort, with acceptable actual cost/latency.** A generic capability label, old Opus 5 comparison, native allowance table, or unavailable route does not satisfy that condition.
 
-### When to Use What
+### `architect`
 
-1. **Everyday Architecture & Review (`default` flow):**
-   - Leave `modelRoles.architect` on `anthropic/claude-opus-5`. It is thoroughly tested, cost-effective, and handles routine RFCs and structural decomposition with high quality.
-2. **High-Stakes Architecture Escalation (Fable 5.1):**
-   - For mission-critical decisions (e.g. distributed consistency, security protocols, multi-region database migration), invoke Fable 5.1 explicitly:
-     ```bash
-     omp --model anthropic/claude-fable-5-1 "Design the auth token migration RFC"
-     ```
-   - Or dispatch via subagent with `thinking: medium` or `thinking: low` to maintain rapid turnaround and tight token bounds.
-3. **Pre-Commit Gate (`critical` role):**
-   - Always run on `@critical` (`anthropic/claude-opus-5`).
-   - If Anthropic experiences transient overload, OMP automatically routes to `google-antigravity/claude-opus-4-6` $\to$ `google-antigravity/claude-sonnet-4-6` $\to$ `openrouter/z-ai/glm-5.3-flash`, preserving review independence with zero direct token spend.
+**[INFERENCE] Keep available, authorized Opus 5.5 provisionally, with a weaker claim about read-only architecture judgment.** Long-horizon engineering and service-integration proxies support it, but they do not measure missed architectural hazards, long-term maintainability, or critique of a fixed design. Require externally grounded constraints, competing designs, explicit trade-offs, and verification of factual premises.
+
+The [card §2.3.3, pp35–36][card] (2026-09-22) documents architect-relevant Opus failures: narrowly addressing review feedback without reconsidering the design, testing plans against self-written rather than intended-user requirements, and favoring incremental hypotheses in open-ended research. Endor's Fable correctness evidence reinforces caution, but remains patch-generation evidence rather than architectural review.
+
+**Reverse toward Fable only with an authorized, verified route and representative blind comparisons showing fewer missed constraints, stronger root-cause/trade-off reasoning, or more maintainable designs; alternatively, a reproducible demanding problem that Opus at reasonable higher effort fails and Fable solves.** The benefit must justify actual cost/latency. Reconsider either choice if safeguards change the delivered model or access/budget changes. Preserve the independent OpenAI `critical` gate rather than treating an Anthropic-to-Anthropic model switch as independent review.
+
+## Scope of conclusion and exclusions
+
+**No direct head-to-head OMP `plan` or `architect` comparison was found in the reviewed primary and independent sources/searches.** This is a bounded finding, not a claim that none exists anywhere. A future role-specific comparison would need the same repository evidence, prompts/instructions, verified identities, repeat counts, effort/resource limits, fallback policy, blinded correctness rubrics, and cost/latency per accepted plan/design. Fable is unavailable now; that comparison was not run.
+
+[LLM Stats](https://llm-stats.com/models/compare/claude-fable-5-1-vs-claude-opus-5-5) aggregation, [OpenCode](https://opencode.ai/data/compare/anthropic/claude-fable-5-1/anthropic/claude-opus-5-5) catalog metadata, comparison/SEO benchmark reposts, and [Chudi](https://chudi.dev/blog/claude-opus-5-5-vs-fable-5-1) old-Opus transcript repricing were not counted as new independent experiments. The small [Wmedia fixture benchmark](https://wmedia.es/en/tips/claude-code-opus-5-5-vs-fable-5-1-vs-opus-5-benchmark) was too easy/ceiling-limited to decide these roles. Vendor-reported external copies remain labelled as such.
+
+This update used verified web-research evidence only. No provider inference, local Fable tests, gates, tests, linters, or formatters were run.
+
+[card]: https://www.anthropic.com/claude-opus-5-5-system-card
+[aa]: https://artificialanalysis.ai/articles/claude-opus-5-5
+[endor]: https://www.endorlabs.com/learn/opus-5-5-6x-cheaper-and-2x-faster-than-fable-5-1-but-memorization-keeps-it-off-the-top-spot
+[pricing]: https://platform.claude.com/docs/en/about-claude/pricing
