@@ -35,7 +35,7 @@
       ],
       "smol": [
         "openai-codex/gpt-6-luna",
-        "google-antigravity/gemini-3.8-flash",
+        "google-antigravity/gemini-3.5-flash-lite",
         "xai-oauth/grok-build"
       ],
       "slow": [
@@ -54,7 +54,7 @@
         "xai-oauth/grok-build"
       ],
       "designer": [
-        "anthropic/claude-sonnet-5-5",
+        "anthropic/claude-opus-5-5",
         "openai-codex/gpt-6.1-sol",
         "google-antigravity/gemini-3.8-flash"
       ],
@@ -64,9 +64,9 @@
         "xai-oauth/grok-4.7"
       ],
       "commit": [
+        "xai-oauth/grok-build",
         "openai-codex/gpt-6-luna",
-        "google-antigravity/gemini-3.8-flash",
-        "xai-oauth/grok-build"
+        "google-antigravity/gemini-3.5-flash-lite"
       ],
       "advisor": [
         "anthropic/claude-haiku-5-5:low",
@@ -75,8 +75,8 @@
       ],
       "tiny": [
         "openai-codex/gpt-6-luna",
-        "google-antigravity/gemini-3.8-flash",
-        "xai-oauth/grok-build"
+        "google-antigravity/gemini-3.5-flash-lite",
+        "xai-oauth/grok-composer-2.5-fast"
       ],
       "architect": [
         "openai-codex/gpt-6.1-sol",
@@ -94,12 +94,12 @@
         "xai-oauth/grok-4.7"
       ],
       "critical": [
-        "google-antigravity/gemini-3.1-pro",
+        "google-antigravity/gemini-3.8-flash",
         "xai-oauth/grok-4.7"
       ],
       "fast_worker": [
         "openai-codex/gpt-6-luna",
-        "google-antigravity/gemini-3.8-flash",
+        "google-antigravity/gemini-3.5-flash-lite",
         "xai-oauth/grok-build"
       ],
       "good_worker": [

@@ -1,6 +1,18 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-10-08 · Snapshot version: 32
+## Generated: 2026-10-14 · Snapshot version: 33
 ## Stale? See research/RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
+##
+## v33: Anthropic-heavy allocation aligned with Claude Max 5x, ChatGPT Plus, Google AI Pro, and X Premium.
+##   - task, good_worker, smol, review, security -> anthropic/claude-sonnet-5-5 leveraging 5x Max capacity.
+##   - slow, plan, architect, sage -> anthropic/claude-opus-5-5 for deep reasoning and design reviews.
+##   - critical -> openai-codex/gpt-6.1-sol for strict cross-provider independent provenance against
+##     Anthropic producers; fallbacks strictly non-Anthropic (Gemini 3.8 Flash, Grok 4.7).
+##   - designer fallback promoted to anthropic/claude-opus-5-5 (superior visual/aesthetic judgment;
+##     Fable excluded to protect weekly allowance).
+##   - Aligned lightweight fallbacks: updated tiny, fast_worker, and commit fallbacks to Google's
+##     latest google-antigravity/gemini-3.5-flash-lite, preserving full 3.8 Flash quota.
+##   - Excluded disabled Google Gemini 4 Argon (unsupported under Google AI Pro in Antigravity)
+##     and external API tiers (OpenRouter, NVIDIA) to fit within the 4 paid subscription mix.
 ##
 ## v32: bounded Haiku 5.5 adoption on the direct Claude Pro subscription.
 ##   - commit primary -> anthropic/claude-haiku-5-5:low; Grok Build retained as first fallback.
@@ -179,34 +191,31 @@
 ## "architect"|"critical", ...) dispatch targets. See research/ARCHITECT-CRITICAL-AGENTS.md.
 ##
 ## Assumes these logins exist on the target machine:
-##   - anthropic        (Claude Pro, $20/mo — reserve for sage/critical; bounded Haiku commit exception)
-##   - openai-codex      (ChatGPT Pro, $100/mo, 5x quota — heavy roles: task/smol/slow/plan/
-##     architect/review/security/good_worker; quota varies, check omp usage)
-##   - google-antigravity (free preview; Google lane weekly metered, Anthropic proxy lane separately metered)
-##   - xai-oauth         (X Premium $8/mo bundled SuperGrok credits — small, weekly reset, use sparingly)
-##   - nvidia             (free NIM catalog — unmetered $0 floor; use nvidia/nemotron-3-super-120b-a12b, 262K ctx, 262K out)
-##   - openrouter         (prepaid credit balance — high-capability tier & vision fallback)
+##   - anthropic        (Claude Max 5x, $100/mo — primary workhorse and depth pool: task/smol/slow/plan/architect/review/security/good_worker/sage)
+##   - openai-codex      (ChatGPT Plus, $20/mo — independent critical gate & tier-1 fallback: critical -> gpt-6.1-sol)
+##   - google-antigravity (Google AI Pro, ~$20/mo — everyday default/vision/advisor on 3.8 Flash; lightweight fallbacks on 3.5 Flash-Lite)
+##   - xai-oauth         (X Premium, $8/mo bundled SuperGrok credits — primary for designer; fast worker/fallback tiers)
 
 modelRoles:
   # --- Core Built-in Roles ---
   default: google-antigravity/gemini-3.8-flash
-  smol: openai-codex/gpt-6-luna
-  slow: openai-codex/gpt-6.1-sol
-  plan: openai-codex/gpt-6.1-sol
-  task: openai-codex/gpt-6.1-sol
+  smol: anthropic/claude-sonnet-5-5
+  slow: anthropic/claude-opus-5-5
+  plan: anthropic/claude-opus-5-5
+  task: anthropic/claude-sonnet-5-5
   designer: xai-oauth/grok-4.7
   vision: google-antigravity/gemini-3.8-flash
   commit: anthropic/claude-haiku-5-5:low
-  advisor: google-antigravity/claude-sonnet-5-5
-  tiny: xai-oauth/grok-composer-2.5-fast
+  advisor: google-antigravity/gemini-3.8-flash
+  tiny: anthropic/claude-haiku-5-5:low
 
-  # --- Workflow, Review & Architecture Roles (Strategy C) ---
-  architect: openai-codex/gpt-6.1-sol
-  review: openai-codex/gpt-6.1-sol
-  security: openai-codex/gpt-6.1-sol
-  critical: anthropic/claude-opus-5-5
-  fast_worker: xai-oauth/grok-build
-  good_worker: openai-codex/gpt-6.1-sol
+  # --- Workflow, Review & Architecture Roles ---
+  architect: anthropic/claude-opus-5-5
+  review: anthropic/claude-sonnet-5-5
+  security: anthropic/claude-sonnet-5-5
+  critical: openai-codex/gpt-6.1-sol
+  fast_worker: anthropic/claude-haiku-5-5:low
+  good_worker: anthropic/claude-sonnet-5-5
   sage: anthropic/claude-opus-5-5
 
 task:
@@ -219,98 +228,83 @@ task:
 retry:
   fallbackChains:
     default:
+      - anthropic/claude-sonnet-5-5
       - openai-codex/gpt-6.1-sol
-      - openrouter/z-ai/glm-5.3-flash
-      - nvidia/nvidia/nemotron-3-super-120b-a12b
+      - xai-oauth/grok-build
     smol:
+      - openai-codex/gpt-6-luna
       - google-antigravity/gemini-3.5-flash-lite
-      - xai-oauth/grok-composer-2.5-fast
-      - nvidia/nvidia/nemotron-3-super-120b-a12b
+      - xai-oauth/grok-build
     slow:
-      - anthropic/claude-opus-5-5
+      - openai-codex/gpt-6.1-sol
       - google-antigravity/claude-opus-5-5
-      - google-antigravity/claude-sonnet-5-5
       - xai-oauth/grok-4.7
-      - openrouter/z-ai/glm-5.3-flash
     plan:
-      - anthropic/claude-opus-5-5
+      - openai-codex/gpt-6.1-sol
       - google-antigravity/claude-opus-5-5
-      - google-antigravity/claude-sonnet-5-5
       - xai-oauth/grok-4.7
-      - openrouter/z-ai/glm-5.3-flash
     task:
-      - google-antigravity/gemini-3.8-flash
-      - openrouter/z-ai/glm-5.3-flash
-      - nvidia/nvidia/nemotron-3-super-120b-a12b
-    designer:
       - openai-codex/gpt-6.1-sol
       - google-antigravity/gemini-3.8-flash
-      - openrouter/z-ai/glm-5.3-flash
+      - xai-oauth/grok-build
+    designer:
+      - anthropic/claude-opus-5-5
+      - openai-codex/gpt-6.1-sol
+      - google-antigravity/gemini-3.8-flash
     vision:
-      - openrouter/google/gemini-3.8-flash
+      - anthropic/claude-sonnet-5-5
       - openai-codex/gpt-6.1-sol
       - xai-oauth/grok-4.7
     commit:
       - xai-oauth/grok-build
       - openai-codex/gpt-6-luna
-      - nvidia/nvidia/nemotron-3-super-120b-a12b
+      - google-antigravity/gemini-3.5-flash-lite
     advisor:
-      - openai-codex/gpt-6.1-sol
-      - nvidia/nvidia/nemotron-3-super-120b-a12b
+      - anthropic/claude-haiku-5-5:low
+      - openai-codex/gpt-6-luna
+      - xai-oauth/grok-build
     tiny:
-      - google-antigravity/gemini-3.1-flash-lite
-      - nvidia/nvidia/nemotron-3-super-120b-a12b
+      - openai-codex/gpt-6-luna
+      - google-antigravity/gemini-3.5-flash-lite
+      - xai-oauth/grok-composer-2.5-fast
     architect:
-      - google-antigravity/claude-opus-5-5
-      - anthropic/claude-opus-5-5
-      - google-antigravity/claude-sonnet-5-5
-      - xai-oauth/grok-4.7
-      - openrouter/z-ai/glm-5.3-flash
-    review:
-      - anthropic/claude-opus-5-5
-      - google-antigravity/claude-opus-5-5
-      - google-antigravity/claude-sonnet-5-5
-      - xai-oauth/grok-4.7
-      - openrouter/z-ai/glm-5.3-flash
-    security:
-      - anthropic/claude-opus-5-5
-      - google-antigravity/claude-opus-5-5
-      - google-antigravity/claude-sonnet-5-5
-      - xai-oauth/grok-4.7
-      - openrouter/z-ai/glm-5.3-flash
-    critical:
-      - google-antigravity/claude-opus-5-5
-      - google-antigravity/claude-sonnet-5-5
-      - openrouter/z-ai/glm-5.3-flash
       - openai-codex/gpt-6.1-sol
+      - google-antigravity/claude-opus-5-5
+      - xai-oauth/grok-4.7
+    review:
+      - openai-codex/gpt-6.1-sol
+      - google-antigravity/claude-opus-5-5
+      - xai-oauth/grok-4.7
+    security:
+      - openai-codex/gpt-6.1-sol
+      - google-antigravity/claude-opus-5-5
+      - xai-oauth/grok-4.7
+    critical:
+      - google-antigravity/gemini-3.8-flash
       - xai-oauth/grok-4.7
     fast_worker:
-      - google-antigravity/gemini-3.1-flash-lite
-      - nvidia/nvidia/nemotron-3-super-120b-a12b
+      - openai-codex/gpt-6-luna
+      - google-antigravity/gemini-3.5-flash-lite
+      - xai-oauth/grok-build
     good_worker:
-      - google-antigravity/gemini-3.8-flash
-      - openrouter/z-ai/glm-5.3-flash
-      - nvidia/nvidia/nemotron-3-super-120b-a12b
-    sage:
-      - google-antigravity/claude-opus-5-5
-      - openai-codex/gpt-6-astra
       - openai-codex/gpt-6.1-sol
-      - google-antigravity/claude-sonnet-5-5
+      - google-antigravity/gemini-3.8-flash
+      - xai-oauth/grok-build
+    sage:
+      - openai-codex/gpt-6.1-sol
+      - google-antigravity/claude-opus-5-5
       - xai-oauth/grok-4.7
-      - openrouter/z-ai/glm-5.3-flash
     anthropic/claude-fable-5-1:
       - anthropic/claude-opus-5-5
       - openai-codex/gpt-6.1-sol
       - google-antigravity/claude-opus-5-5
       - google-antigravity/claude-sonnet-5-5
-      - openrouter/z-ai/glm-5.3-flash
       - xai-oauth/grok-4.7
     anthropic/claude-fable-5:
       - anthropic/claude-opus-5-5
       - openai-codex/gpt-6.1-sol
       - google-antigravity/claude-opus-5-5
       - google-antigravity/claude-sonnet-5-5
-      - openrouter/z-ai/glm-5.3-flash
       - xai-oauth/grok-4.7
   usageAwareFallback: true
   usageReservePolicy: "auto"
@@ -322,5 +316,4 @@ cycleOrder:
   - architect
   - sage
 
-# Owner-approved shared policy for the $100 OpenAI account; see README evidence.
 extendedContext: true
