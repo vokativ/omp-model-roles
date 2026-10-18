@@ -1,6 +1,17 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-10-14 · Snapshot version: 33
+## Generated: 2026-10-18 · Snapshot version: 34
 ## Stale? See research/RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
+##
+## v34: integrated Google Gemini 4 Argon across critical gate and reasoning fallback tiers.
+##   - critical fallback tier 1 upgraded: replaced lightweight google-antigravity/gemini-3.8-flash
+##     with google-antigravity/gemini-4-argon (1M context, 66K output, high thinking).
+##     Preserves strict cross-provider independent provenance against both Anthropic producers
+##     and OpenAI Sol primary/fallbacks; operates safely within weekly WTU meter.
+##   - slow, plan, architect, sage, review, security fallbacks: inserted google-antigravity/gemini-4-argon
+##     as tier 2 reasoning fallback behind openai-codex/gpt-6.1-sol and ahead of Antigravity Claude Opus.
+##     Provides true multi-provider frontier depth (Anthropic -> OpenAI -> Google -> xAI) on failover.
+##   - Verified live Google AI Pro quota: gemini-argon-wtu-weekly meter active (13.2% used / 86.8% left);
+##     native 66K max-out requires no models-overlay.yml adjustment.
 ##
 ## v33: Anthropic-heavy allocation aligned with Claude Max 5x, ChatGPT Plus, Google AI Pro, and X Premium.
 ##   - task, good_worker, smol, review, security -> anthropic/claude-sonnet-5-5 leveraging 5x Max capacity.
@@ -13,7 +24,6 @@
 ##     latest google-antigravity/gemini-3.5-flash-lite, preserving full 3.8 Flash quota.
 ##   - Excluded disabled Google Gemini 4 Argon (unsupported under Google AI Pro in Antigravity)
 ##     and external API tiers (OpenRouter, NVIDIA) to fit within the 4 paid subscription mix.
-##
 ## v32: bounded Haiku 5.5 adoption on the direct Claude Pro subscription.
 ##   - commit primary -> anthropic/claude-haiku-5-5:low; Grok Build retained as first fallback.
 ##   - Native OMP 18.8.3 catalog, OAuth tool replay, and actual commit dry-run verified.
@@ -237,10 +247,12 @@ retry:
       - xai-oauth/grok-build
     slow:
       - openai-codex/gpt-6.1-sol
+      - google-antigravity/gemini-4-argon
       - google-antigravity/claude-opus-5-5
       - xai-oauth/grok-4.7
     plan:
       - openai-codex/gpt-6.1-sol
+      - google-antigravity/gemini-4-argon
       - google-antigravity/claude-opus-5-5
       - xai-oauth/grok-4.7
     task:
@@ -269,18 +281,21 @@ retry:
       - xai-oauth/grok-composer-2.5-fast
     architect:
       - openai-codex/gpt-6.1-sol
+      - google-antigravity/gemini-4-argon
       - google-antigravity/claude-opus-5-5
       - xai-oauth/grok-4.7
     review:
       - openai-codex/gpt-6.1-sol
+      - google-antigravity/gemini-4-argon
       - google-antigravity/claude-opus-5-5
       - xai-oauth/grok-4.7
     security:
       - openai-codex/gpt-6.1-sol
+      - google-antigravity/gemini-4-argon
       - google-antigravity/claude-opus-5-5
       - xai-oauth/grok-4.7
     critical:
-      - google-antigravity/gemini-3.8-flash
+      - google-antigravity/gemini-4-argon
       - xai-oauth/grok-4.7
     fast_worker:
       - openai-codex/gpt-6-luna
@@ -292,6 +307,7 @@ retry:
       - xai-oauth/grok-build
     sage:
       - openai-codex/gpt-6.1-sol
+      - google-antigravity/gemini-4-argon
       - google-antigravity/claude-opus-5-5
       - xai-oauth/grok-4.7
     anthropic/claude-fable-5-1:
