@@ -1,6 +1,6 @@
 # OMP model-role setup — import instructions
 
-**Snapshot: 2026-10-18 · v34.** Stale after ~4-6 weeks, or immediately if any subscription
+**Snapshot: 2026-10-20 · v35.** Stale after ~4-6 weeks, or immediately if any subscription
 changed — check `research/RESEARCH-PLAYBOOK.md`'s staleness check before importing this blind.
 
 `model-roles.yml` is a config **overlay**: `modelRoles`, `task.agentModelOverrides`,
@@ -32,6 +32,7 @@ research/
   FABLE-EVALUATION.md         <- 2026-10-08: web-only Fable 5.1 vs Opus 5.5 for plan/architect; historical local metrics withdrawn
   THINKING-PARTNER-ROLE.md   <- 2026-09-04 · v19: Thinking Partner (`sage`) architecture, debate, and allocation
   SAGE-CREATIVE-INSTRUCTIONS.md <- 2026-09-04 · v19.1: cognitive divergence, anti-slop catalogs, and subtractive taste
+  SAGE-FABLE-ASTRA-EVALUATION.md <- 2026-10-20: Astra vs Sol and Fable vs Opus for sage; probes, blinded A/B with caveats, adversarial review
 ```
 
 Just importing the config? You need the two `.yml` files, `agents/`, and the import steps below —
@@ -44,7 +45,7 @@ Google, and SpaceX/xAI/X plans, prices and caveats. The single selection behavio
 contract is [instructions/SELECT-MODEL-MIX.md](instructions/SELECT-MODEL-MIX.md):
 **instructions for OMP to follow, not a standalone program**.
 It includes an **Anthropic-heavy alternative** (Max 5x $100 + ChatGPT Plus $20,
-optionally Google AI Pro and X Premium), not a replacement for the v32 overlay.
+optionally Google AI Pro and X Premium), not a replacement for the current overlay.
 The source notes distinguish native subscription allowances from permitted OMP/API
 use: Max's newly offered monthly API credits must be claimed after seven days and
 used through an allowed API-key route. Existing OAuth remains untouched.
@@ -79,10 +80,14 @@ Fable remains a credible conditional choice, with correctness/rubric counterevid
 not a promised upgrade or an excluded family; no direct controlled OMP plan/read-only
 architect comparison was found in the reviewed sources. Historical local Fable
 speed/depletion metrics are withdrawn because those runs fell back to OpenAI.
-No Fable access is available now, and this preview authorizes no Fable or selected-model
-trial calls. **No Max trial or alternative quality/quota benchmark is claimed.**
+Fable 5.1 access itself was probe-verified on 2026-10-20 (delivered model ids checked
+from events): accepted via Max 5x OAuth with no `credits_required`, unlike the
+2026-09-04 Claude Pro 429. That does not change the FABLE-EVALUATION.md conclusion
+(provisional Opus 5.5 for `plan`/`architect`); `sage` is the one role on Fable in v35
+(below). The preview prompt above still authorizes no Fable or selected-model trial
+calls. **No Max trial or alternative quality/quota benchmark is claimed.**
 The current setup and its evidence below stay unchanged; subscription planning alone
-does not bump Snapshot 32.
+does not by itself bump the snapshot version.
 
 ## Design rationale (why these specific models, not just "the best ones")
 
@@ -91,34 +96,45 @@ subscription capacity, confirmed via `omp usage` on the source machine:
 
 | Login | Plan | Capacity signal | Treat as |
 |---|---|---|---|
-| `anthropic` | Claude Max 5x, $100/mo | Primary workhorse pool; 5x Pro native allowance; 2026-10-14 reading: **100% remaining** across 5h, 7d, and 7d (Fable) | **heavy workhorse and depth pool** — `task`, `good_worker`, `smol`, `review`, and `security` on Sonnet 5.5; `slow`, `plan`, `architect`, and `sage` on Opus 5.5; `commit`, `tiny`, and `fast_worker` on Haiku 5.5:low |
-| `openai-codex` | ChatGPT Plus, $20/mo | Plus quota (~15-160 Sol messages/5h); 2026-10-14 reading: **88%** (5h) / **69%** (7d) remaining (`omp usage`) | **independent critical reviewer & tier-1 fallback** — `critical` on Sol 6.1 guarantees independent model-family provenance against Anthropic producers; Sol 6.1 / Luna serve as tier-1 fallbacks |
-| `google-antigravity` | Google AI Pro, ~$20/mo | 2026-10-18 reading: Gemini 5h **99%** / weekly Flash **99% remaining**; Gemini 4 Argon (`gemini-argon-wtu-weekly`) **87% remaining**; Claude proxy 0% used | **primary everyday lane, vision, critical fallback, & lightweight fallbacks** — `default`, `vision`, and `advisor` primary on Gemini 3.8 Flash; `critical` tier-1 fallback upgraded to Gemini 4 Argon (1M ctx, 66K out, high thinking); reasoning depth fallbacks (`slow`, `plan`, `architect`, `sage`, `review`, `security`) backed by Gemini 4 Argon behind Sol; lightweight fallbacks on 3.5 Flash-Lite |
-| `xai-oauth` | X Premium, $8/mo (bundled SuperGrok credits) | Small weekly credit pool; 2026-10-14 reading: **37% remaining** | **primary for `designer` and fast-worker lanes** — `designer` on Grok 4.7 (Opus 5.5, Sol 6.1, Gemini Flash fallbacks); `grok-build` and `grok-composer` fast fallbacks |
-Consequences baked into this file:
-- **`default` stays primary on `google-antigravity/gemini-3.8-flash`** (fastest measured model and user daily preference), falling back to `openai-codex/gpt-6.1-sol` $\to$ `openrouter/z-ai/glm-5.3-flash` $\to$ `nvidia/nvidia/nemotron-3-super-120b-a12b`. With `retry.usageAwareFallback: true`, OMP automatically hops to Sol when the Google daily/weekly meter fills.
-- **`openrouter/z-ai/glm-5.3-flash` added as the capability tier across 8 chains**: Tested #1 on OpenRouter's Tau2-Bench Airline/Agentic benchmark (58.2 agentic, 71.5 coding), with 1.31M context, 131K output, and fast tool calling at $0.075/$0.25 per million tokens.
-- **`nvidia/nvidia/nemotron-3-super-120b-a12b` replaces dead MiniMax M3**: Provides an unmetered zero-cost floor in 8 chains (262K context, 262K native max-out, sub-second TTFT). Unlike MiniMax M3, it has no 16K server-side token cap and supports the full thinking ladder and tool calling. Deliberately excluded from depth roles (`slow`, `plan`, `architect`, `review`, `security`, `critical`) and `vision` to reserve them for flagship reasoning and multimodal models.
-- **`vision`** retains `google-antigravity/gemini-3.8-flash` primary, with `openrouter/google/gemini-3.8-flash` (2026-08-22 A/B winner) as first fallback, followed by `openai-codex/gpt-6.1-sol` and `grok-4.7`.
-- **`critical` keeps strict cross-provider independent provenance**: primary `openai-codex/gpt-6.1-sol` on ChatGPT Plus, followed by `google-antigravity/gemini-4-argon` as tier-1 fallback (frontier reasoning, 1M context, 66K output, high thinking) and `xai-oauth/grok-4.7` as tier-2. Guarantees non-Anthropic, non-colliding independent review whether producers run on Anthropic or fail over to Sol.
-- **`anthropic/claude-sonnet-5` and `grok-4.6` dropped from `default`**: Preserves scarce Anthropic 5h quotas for `sage`/`critical` and avoids Grok tool-churn latency on daily turns.
-- `slow`/`plan` remain on `openai-codex/gpt-6.1-sol` falling back to `anthropic/claude-opus-5-5` $\to$ `google-antigravity/claude-opus-5-5` $\to$ `google-antigravity/claude-sonnet-5-5` $\to$ `xai-oauth/grok-4.7` $\to$ `openrouter/z-ai/glm-5.3-flash`.
-- `advisor` points at `google-antigravity/claude-sonnet-5-5` — Claude access via the main paid Google AI Pro account, separate from the direct Anthropic subscription.
-- **`architect` moves to `openai-codex/gpt-6.1-sol` in v29** for frequent technical reviews as well as architecture decisions. Its read-only agent returns proportional Markdown rather than a mandatory RFC-shaped JSON object. The installed catalog lists Sol at $2/$10 per million input/output tokens versus Astra at $10/$50; cached input is $0.10 versus $1. These are catalog prices, not measured subscription-quota multipliers or proof of review-quality parity. Its fallbacks are now Antigravity Opus 5.5 → direct Opus 5.5 → Antigravity Sonnet 5.5 → Grok 4.7 → GLM. Astra remains available by explicit model selection and in Sage's existing fallback chain.
-- **`sage` (Thinking Partner)** stays on `anthropic/claude-opus-5-5` for provider diversity, backed by `google-antigravity/claude-opus-5-5` $\to$ `openai-codex/gpt-6-astra` $\to$ `openai-codex/gpt-6.1-sol` $\to$ `google-antigravity/claude-sonnet-5-5` $\to$ `xai-oauth/grok-4.7` $\to$ `openrouter/z-ai/glm-5.3-flash`. Emits no rigid JSON schema.
-- **`task` / `good_worker` use `openai-codex/gpt-6.1-sol`**: $2/M input, $0.10/M cached input, $10/M output, and 128K max output in the installed catalog. The shared v29 overlay enables extended context, giving Codex Sol an effective **922K** window; turning it off would cap it at **272K**.
-- **`designer` and fallback chains upgraded to `xai-oauth/grok-4.7`**: Grok 4.7 (released 2026-09-21) delivers higher benchmark performance (DeepSWE 71.0% vs 65.2%, Terminal-Bench 37.6% vs 20.3%) and improved presentation/document design at identical pricing ($2/$6), operating within the existing X Premium SuperGrok credit pool. `fast_worker` remains on `xai-oauth/grok-build` and `tiny` on `xai-oauth/grok-composer-2.5-fast`; `commit` now uses Haiku 5.5, retaining Grok Build as first fallback.
-- **`tiny` and `fast_worker` (sonic) moved off retired `openai-codex/gpt-5.3-codex-spark` in v24** to `xai-oauth/grok-composer-2.5-fast` and `xai-oauth/grok-build` respectively: OpenAI retired Spark the week of 2026-09-13 (confirmed via `omp models find gpt-5.3-codex-spark` returning zero catalog hits, plus community reports of it vanishing from the Codex CLI selector while its dedicated quota meter stayed visible). Both roles now run on healthy `xai-oauth` capacity (9% of the weekly SuperGrok pool used) and each promotes its former tier-1 fallback to primary, dropping the now-dead leading fallback entry.
+| `anthropic` | Claude Max 5x, $100/mo | Primary workhorse pool. 2026-10-20 reading: 5h **8%** used, 7d **41%** used (resets 2026-10-23 16:00Z), Fable 7d meter **13%** used — a sub-cap inside the shared weekly pool (up to 50% of it); so far moved only by Claude Code usage, not OMP | **heavy workhorse and depth pool** — `task`, `good_worker`, `smol`, `review`, and `security` on Sonnet 5.5; `slow`, `plan`, and `architect` on Opus 5.5; `sage` on Fable 5.1 (v35); `commit`, `tiny`, and `fast_worker` on Haiku 5.5:low |
+| `openai-codex` | ChatGPT Plus, $20/mo | OpenAI rate card: ~15-160 Sol 6.1 local messages per 5h (Astra 5-45). One chat 5h + one 7d meter shared by Sol, Astra, and Luna (`omp usage`, plan: plus). 2026-10-20 15:35 reading: 5h **0%** / 7d **0%** used — both windows had just reset (reset time ≈ fetch time + full window; inference), so this is not a headroom signal | **independent critical reviewer & first fallback of most chains** — `critical` on Sol 6.1 guarantees independent provenance against Anthropic producers; Sol 6.1 / Luna are the first fallbacks of most chains. The only OpenAI-primary role |
+| `google-antigravity` | Google AI Pro, ~$20/mo | 2026-10-20 reading: Gemini 5h **99.6%** remaining; weekly Flash **87%** remaining; Gemini 4 Argon weekly meter **100% used (exhausted) until ~2026-10-24**; shared Claude & GPT weekly pool **2.3%** used (one pool for Antigravity Claude and Antigravity GPT) | **primary everyday lane, vision, advisor** — `default`, `vision`, and `advisor` primary on Gemini 3.8 Flash; Antigravity Opus 5.5 is a depth fallback and sage's second hop; Argon is `critical`'s first fallback and a middle hop in `slow`/`plan`/`architect`/`review`/`security` (those hops are wasted until the meter resets); Gemini 3.5 Flash-Lite / 3.8 Flash as lightweight fallbacks |
+| `xai-oauth` | X Premium, $8/mo (bundled SuperGrok credits) | Small weekly credit pool; 2026-10-20 reading: **1%** used (99% remaining) | **primary for `designer`; last-tier fallback** — `designer` on Grok 4.7; Grok 4.7 ends depth/vision/critical chains; `grok-build` and `grok-composer-2.5-fast` end the cheap chains |
 
-### Haiku 5.5: bounded subscription adoption (v32)
+**Binding constraint: the OpenAI Plus 5h window, not the 7d window.** Plus's 5h meter hit
+100% five times between 2026-10-17 and 2026-10-19, with 26 `usage_limit_reached` errors on
+Sol (10-17: 6, 10-18: 17, 10-19: 3). `critical` accounts for 135 of ~182 task dispatches
+(74%) over 2026-10-06..10-20, mostly PR-review swarms. The weekly pools (Anthropic 41%
+used, Antigravity 2.3%, xAI 1%) are not the bottleneck; bursts on Plus are. Chain order
+therefore avoids sending routine fallback traffic to Sol where a different pool is idle
+(see `sage` below). The 2026-10-20 Plus 0% reading is a fresh-window snapshot and does not
+contradict this. Percent meters are whole-percent and point-in-time.
 
-`commit` now uses `anthropic/claude-haiku-5-5:low`, followed by Grok Build → Luna →
-Nemotron. It is infrequent, bounded summarization work, not general implementation.
-Keep `smol`, `tiny`, `fast_worker`, `advisor`, general workers, vision/design, and
-every depth chain unchanged: automatic fallback traffic can become sustained load
-on the same Claude Pro allowance used by `sage` and `critical`.
+Consequences baked into this file (chains verified against `model-roles.yml`, 2026-10-20):
+- **`default` stays primary on `google-antigravity/gemini-3.8-flash`** (fastest measured model and user daily preference), falling back to `anthropic/claude-sonnet-5-5` $\to$ `openai-codex/gpt-6.1-sol` $\to$ `xai-oauth/grok-build`. With `retry.usageAwareFallback: true`, OMP hops automatically when the Google daily/weekly meter fills.
+- **No `openrouter` or `nvidia` model appears in any role or chain.** v33 excluded external API tiers (OpenRouter GLM 5.3 Flash, NVIDIA Nemotron) to fit the four paid subscriptions; earlier GLM/Nemotron floors are historical (see the v17-v23 log in `model-roles.yml`).
+- **`vision`** keeps `google-antigravity/gemini-3.8-flash` primary, falling back to `anthropic/claude-sonnet-5-5` $\to$ `openai-codex/gpt-6.1-sol` $\to$ `xai-oauth/grok-4.7`. (The 2026-08-22 OpenRouter Gemini 3.8 Flash A/B winner is no longer in the chain.)
+- **`critical` keeps strict cross-provider independent provenance**: primary `openai-codex/gpt-6.1-sol`, then `google-antigravity/gemini-4-argon`, then `xai-oauth/grok-4.7`. Independence holds against Anthropic producers; if a producer has failed over to Sol, the producer/reviewer collision must be caught by `critical`'s own provenance check. Argon's weekly meter is exhausted until ~2026-10-24, so a Sol failure currently falls through to Grok 4.7 in practice.
+- **`slow` / `plan` run on `anthropic/claude-opus-5-5`**, falling back to `openai-codex/gpt-6.1-sol` $\to$ `google-antigravity/gemini-4-argon` $\to$ `google-antigravity/claude-opus-5-5` $\to$ `xai-oauth/grok-4.7`. `architect`, `review`, and `security` use the same chain (primaries: Opus 5.5, Sonnet 5.5, Sonnet 5.5).
+- **`advisor`** is `google-antigravity/gemini-3.8-flash`, falling back to `anthropic/claude-haiku-5-5:low` $\to$ `openai-codex/gpt-6-luna` $\to$ `xai-oauth/grok-build`.
+- **`architect` is on `anthropic/claude-opus-5-5`** (v33 superseded the v29 move to Sol). Its read-only agent returns proportional Markdown rather than a mandatory RFC-shaped JSON object. Fable 5.1 vs Opus 5.5 for `architect` stays provisional-Opus per `research/FABLE-EVALUATION.md`, unchanged by the 2026-10-20 probe. Astra is excluded from the chain (next bullets).
+- **`sage` (Thinking Partner) is on `anthropic/claude-fable-5-1` since v35 — provisional and reversible.** Failover is Opus 5.5 $\to$ Antigravity Opus 5.5 $\to$ Sol 6.1 $\to$ Gemini 4 Argon $\to$ Grok 4.7, owned by the **model-level** `anthropic/claude-fable-5-1` / `claude-fable-5` chains: OMP checks exact model-key chains before role-key chains (`omp://settings.md`; also seen in the binary strings), so the role-level `sage` chain (Antigravity Opus 5.5 $\to$ Sol 6.1 $\to$ Argon $\to$ Grok 4.7) applies only if `sage` reverts to Opus. Antigravity Opus precedes Sol so `sage` does not drain the Plus 5h window that `critical` swarms exhaust; Argon stays late because its weekly meter is exhausted until ~2026-10-24. Emits no rigid JSON schema. **Revert:** set `modelRoles.sage` back to `anthropic/claude-opus-5-5`.
+- **Why Fable for `sage`, and what is not proven.** Access: 2026-10-20 probes accepted Fable 5.1 via Max OAuth. Quality is **unresolved**: a blind A/B (3 sage-style prompts × 4 models, one answer per model per prompt, thinking high, delivered ids verified) gave mean rubric scores (1-10) that depend on the judge's family — Sonnet 5.5 ×3: Fable 8.19, Opus 7.98, Astra 6.61, Sol 6.30; Grok 4.7 (neutral): Fable 8.43, Opus 8.13, Astra 7.85, Sol 7.74; Sol 6.1: Astra 8.83, Sol 8.70, Fable 6.35, Opus 6.28. Judge-family self-preference dominates; prompt P1 leaked first-person model identity, and excluding P1 Sonnet's Fable–Opus gap vanishes (8.14 vs 8.19); n = 3 prompts, not 9. Chosen anyway on low volume (4 sessions in 14 days, ~2 completed dispatches/week, all on Opus: $4.50 API-equivalent, ~$1.12/dispatch), the best published pushback evidence (AA-PersonalityBench: Fable #1 of 36 on "constructively pushes back"; Arena creative writing Opus 5.5 #1, Fable 5.1 #9, Sol 6.1 #30, Astra #38), and decorrelation from the Opus-based `plan`/`architect`/`slow` (inference). **Estimates:** Fable ~2.4x cost and ~1.6x latency per answer in the batch (≈$2.6/dispatch, roughly +1.6 weekly-pool points vs Opus at 2 dispatches/week; the $185 ≈ 100% weekly calibration is rough).
+- **Fable operational caveats.** Fable reasoning blocks are readable only by Fable/Mythos: a mid-session Fable → Opus failover drops that reasoning, and OMP may skip same-provider fallback when signed thinking history exists (fresh dispatches are unaffected). Fable always thinks, and safeguard classifiers can substitute Opus 4.8/Opus 5 server-side (`providers.anthropic.serverSideFallback` defaults to false). It draws the shared Max weekly pool faster, no published multiplier. Policy risk: OMP presents as Claude Code over Max OAuth (can1357/oh-my-pi issue 12487); Anthropic's 2026-10-07 update says subscription limits remain usable with third-party apps. Max's $100/mo API credits cover API-key use, not OAuth.
+- **Astra (`openai-codex/gpt-6-astra`) is in no role and no chain.** Probe-verified accepted on Plus on 2026-10-20, but it draws the same Plus 5h/7d meter as Sol (no failover resilience when Plus saturates); list price is ~5x Sol 6.1 ($10/$50 vs $2/$10 per M tokens; Artificial Analysis cost/task $3.26 vs $0.72) for an Intelligence Index of 53 vs 52, with Coding Agent Index within 1-2 points; Arena creative writing ranks it #38 vs Opus 5.5 #1. A coarse burn probe saw 13.8K Astra tokens = +1 meter point = 40.8K Sol tokens (whole-percent granularity: hypothesis ~3-5x, not a measured ratio). Use only as an explicit one-off — `--model openai-codex/gpt-6-astra` — when stuck and Plus has headroom. Earlier README text placing Astra in sage's fallback chain no longer applies.
+- **`task` / `good_worker` run on `anthropic/claude-sonnet-5-5`**, falling back to `openai-codex/gpt-6.1-sol` $\to$ `google-antigravity/gemini-3.8-flash` $\to$ `xai-oauth/grok-build`. Sol 6.1 ($2/M input, $0.10/M cached, $10/M output, 128K max output in the installed catalog) serves as `critical` primary and first fallback; the shared overlay enables extended context, giving Codex Sol an effective **922K** window; turning it off would cap it at **272K**.
+- **`designer` runs on `xai-oauth/grok-4.7`**, falling back to `anthropic/claude-opus-5-5` $\to$ `openai-codex/gpt-6.1-sol` $\to$ `google-antigravity/gemini-3.8-flash`. Grok 4.7 (released 2026-09-21) delivers higher benchmark performance than 4.6 (DeepSWE 71.0% vs 65.2%, Terminal-Bench 37.6% vs 20.3%) and improved presentation/document design at identical pricing ($2/$6), inside the existing X Premium SuperGrok credit pool.
+- **`smol` runs on `anthropic/claude-sonnet-5-5`** (chain: Luna $\to$ Gemini 3.5 Flash-Lite $\to$ Grok Build). **`tiny` and `fast_worker` (sonic) run on `anthropic/claude-haiku-5-5:low`** since v33 (chains: Luna $\to$ Gemini 3.5 Flash-Lite $\to$ `grok-composer-2.5-fast` for `tiny`, $\to$ `grok-build` for `fast_worker`). History: v24 moved them off OpenAI's retired `gpt-5.3-codex-spark` (retired the week of 2026-09-13; `omp models find gpt-5.3-codex-spark` returned zero catalog hits) onto Grok; v33 moved them onto Haiku.
 
-Claude Pro OAuth access and native OMP 18.8.3 tool replay were exercised with model
+### Haiku 5.5: bounded subscription adoption (v32, widened in v33)
+
+`commit` uses `anthropic/claude-haiku-5-5:low`, followed by Grok Build → Luna →
+Gemini 3.5 Flash-Lite. It is infrequent, bounded summarization work, not general
+implementation. v33 also moved `tiny` and `fast_worker` to Haiku 5.5:low and made it
+`advisor`'s first fallback; automatic fallback traffic can become sustained load
+on the same Claude allowance (now Max 5x) used by every Anthropic-primary role.
+
+At v32, Claude Pro OAuth access and native OMP 18.8.3 tool replay were exercised with model
 and usage-aware fallback disabled. No Haiku was listed by any of the five
 authenticated Antigravity inventories. OpenRouter lists it as a separately billed
 API model, not subscription capacity. No custom model definition is needed.
@@ -149,13 +165,13 @@ the account's Claude pool; they are not independent quota reservoirs.
 Both `google-antigravity/claude-opus-5-5` and `google-antigravity/claude-sonnet-5-5`
 completed OMP requests at `thinking: high` with retries and model/usage-aware
 fallback switching disabled. Both also completed a `read` tool round trip and
-returned the file contents with LSP disabled. The updated `@advisor` alias resolved
-to Sonnet 5.5, and `@default` completed on Gemini 3.8 Flash without falling back.
+returned the file contents with LSP disabled. The then-updated `@advisor` alias resolved
+to Sonnet 5.5 (advisor has since moved to Gemini 3.8 Flash, v33), and `@default` completed on Gemini 3.8 Flash without falling back.
 The earlier 404 probes no longer describe current access. Free-account 4.6
 availability is inventory evidence, not a new inference test.
 
-Do not import the main overlay unchanged on a free-only setup: keep the existing
-non-Google depth fallbacks and use Sol for `advisor` rather than assuming 5.5 access.
+Do not import the main overlay unchanged on a free-only setup: its depth chains and sage's
+Fable chain include Antigravity Opus 5.5, which free accounts do not expose; keep non-Google fallbacks.
 The low-capacity free Google accounts can still supplement eligible Gemini models;
 they do not provide extra Claude 5.5 capacity. No account-specific routing policy
 or credential pinning is added by this overlay.
@@ -171,6 +187,9 @@ everywhere: `extendedContext: true`**. This supersedes both the initial off tria
 and the interim machine-local proposal. The portable overlay and CLI import
 commands now enable it explicitly. The Ubuntu development server was already on;
 the Mac was subsequently enabled to match. No separate profile is necessary.
+
+(Sol 6.1 is now `critical`'s primary and the first fallback of most chains; the analysis
+below predates the Anthropic-heavy v33 allocation, when Codex served more roles.)
 
 Evidence: streamed 604 local and 1,022 server session JSONL files, then analyzed
 dated usage from 2026-09-02 through the scan on 2026-10-02 (~07:21 UTC). The table
@@ -240,7 +259,7 @@ The server and Mac both use extended context under this owner-approved policy.
 | Need | Normal choice |
 |---|---|
 | Small, clear change or everyday conversation | `omp`; stay on the default model |
-| Build/fix with a useful exploration phase and routine implementation | Sol → Luna prewalk, explicitly opted in |
+| Build/fix with a useful exploration phase and routine implementation | Opus 5.5 → Sonnet 5.5 prewalk (`@slow` → `@smol`), explicitly opted in |
 | Hard reasoning remains throughout implementation | Stay on `@slow`; no forced downgrade |
 | Review a design, implementation, plan, or configuration | Ask for the `architect` agent; define the question and scope |
 | Focused code defects / security issues | Bundled `reviewer` / `security-reviewer` |
@@ -249,10 +268,11 @@ The server and Mac both use extended context under this owner-approved policy.
 | Human approval required before any implementation | `/plan`; prewalk is not an approval boundary |
 
 **Roles select models; agents select instructions.** `/model @architect` or
-Ctrl+P selects Sol, not `agents/architect.md`'s read-only review contract.
-Request "use the architect agent to review X" for that contract. `slow`,
-`architect`, `review`, and implementation workers currently share Sol; `sage` and
-`critical` share Opus. Different prompts can help but are not independent model votes.
+Ctrl+P selects Opus 5.5, not `agents/architect.md`'s read-only review contract.
+Request "use the architect agent to review X" for that contract. `slow`, `plan`, and
+`architect` share Opus 5.5; `review`, `security`, `smol`, and the workers use Sonnet 5.5;
+`sage` is on Fable 5.1; `critical` is the only Sol-primary role. Different prompts on one
+model, or direct and Antigravity Opus 5.5, are not independent model votes.
 Keep reviews targeted; do not run all four by habit. Retain `critical`'s structured
 verdict/provenance schema; architect's schema was removed for human usability, not
 because its performance overhead was measured.
@@ -265,7 +285,7 @@ Start a new implementation session:
 omp --model @slow --prewalk-into @smol "Implement X; preserve Y; verify Z."
 ```
 
-This starts on Sol and targets Luna with the current role mappings (fallbacks may
+This starts on Opus 5.5 and targets Sonnet 5.5 with the current role mappings (fallbacks may
 change the concrete models). Plain `omp --prewalk` instead starts on the default
 Gemini model; it does **not** automatically select `@plan`, `@slow`, or `@architect`.
 
@@ -302,7 +322,7 @@ explicit ownership or worktrees—not more prompts.
 - [Prewalk](https://stencil.so/blog/prewalk): a trajectory handoff outperformed
   read-only plan → executor on the article's tested tasks/models. This does not
   invalidate RFCs, human approval, independent review, or complex-task orchestration.
-  Its reported costs/pass rates are not measurements of our Sol/Luna pair.
+  Its reported costs/pass rates are not measurements of our Opus/Sonnet pair.
 - [Harness Playbook](https://stencil.so/blog/harness-playbook): small stable tool
   surfaces and explicit state/policy matter. Its permanent-tool grammar results
   do not prove our architect output schema caused latency or constrained reasoning.
@@ -315,8 +335,8 @@ explicit ownership or worktrees—not more prompts.
 
 ## Prerequisite: auth
 
-The mapping references six providers: `anthropic`, `openai-codex`, `google-antigravity`,
-`xai-oauth`, `nvidia`, `openrouter`. Run `omp usage` on the target machine to confirm each provider
+The mapping references four providers: `anthropic`, `openai-codex`, `google-antigravity`,
+`xai-oauth`. Run `omp usage` on the target machine to confirm each provider
 is logged in.
 
 ## Installation
@@ -328,17 +348,17 @@ overrides and custom agents still use the installation steps below.
 ### Option A — merge into the global config (affects every project on that machine)
 1. Run `omp config path`, then open `config.yml` in the printed agent directory.
 2. Merge all top-level keys from `model-roles.yml` into `config.yml`, including `task`, `cycleOrder`, and `extendedContext: true`, preserving unrelated settings.
-3. In the same directory, open `models.yml` (create if missing) and copy in `models-overlay.yml`'s `providers:` block.
-4. Copy `agents/*.md` (`architect.md`, `critical.md`, and `sage.md`) into `~/.omp/agent/agents/`.
+3. In the same directory, open `models.yml` (create if missing) and copy in `models-overlay.yml`'s `providers:` block. (It only sets an OpenRouter `maxTokens` override; no current chain references OpenRouter, so it is inert until one does — inference.)
+4. Copy `agents/*.md` (`architect.md`, `critical.md`, and `sage.md`) into `~/.omp/agent/agents/`. The agents bind to role aliases (`@architect`, `@critical`, `@sage`), so `sage.md` runs on whatever `modelRoles.sage` is — Fable 5.1 after import.
 5. Restart any running `omp` session.
 
 Equivalent CLI commands for `config.yml`:
 ```bash
-omp config set modelRoles '{"default":"google-antigravity/gemini-3.8-flash","smol":"anthropic/claude-sonnet-5-5","slow":"anthropic/claude-opus-5-5","plan":"anthropic/claude-opus-5-5","task":"anthropic/claude-sonnet-5-5","designer":"xai-oauth/grok-4.7","vision":"google-antigravity/gemini-3.8-flash","commit":"anthropic/claude-haiku-5-5:low","advisor":"google-antigravity/gemini-3.8-flash","tiny":"anthropic/claude-haiku-5-5:low","architect":"anthropic/claude-opus-5-5","review":"anthropic/claude-sonnet-5-5","security":"anthropic/claude-sonnet-5-5","critical":"openai-codex/gpt-6.1-sol","fast_worker":"anthropic/claude-haiku-5-5:low","good_worker":"anthropic/claude-sonnet-5-5","sage":"anthropic/claude-opus-5-5"}'
+omp config set modelRoles '{"default":"google-antigravity/gemini-3.8-flash","smol":"anthropic/claude-sonnet-5-5","slow":"anthropic/claude-opus-5-5","plan":"anthropic/claude-opus-5-5","task":"anthropic/claude-sonnet-5-5","designer":"xai-oauth/grok-4.7","vision":"google-antigravity/gemini-3.8-flash","commit":"anthropic/claude-haiku-5-5:low","advisor":"google-antigravity/gemini-3.8-flash","tiny":"anthropic/claude-haiku-5-5:low","architect":"anthropic/claude-opus-5-5","review":"anthropic/claude-sonnet-5-5","security":"anthropic/claude-sonnet-5-5","critical":"openai-codex/gpt-6.1-sol","fast_worker":"anthropic/claude-haiku-5-5:low","good_worker":"anthropic/claude-sonnet-5-5","sage":"anthropic/claude-fable-5-1"}'
 
 omp config set task.agentModelOverrides '{"security-reviewer":"@security","reviewer":"@review","sonic":"@fast_worker","task":"@good_worker"}'
 
-omp config set retry.fallbackChains '{"default":["anthropic/claude-sonnet-5-5","openai-codex/gpt-6.1-sol","xai-oauth/grok-build"],"smol":["openai-codex/gpt-6-luna","google-antigravity/gemini-3.5-flash-lite","xai-oauth/grok-build"],"slow":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","google-antigravity/claude-opus-5-5","xai-oauth/grok-4.7"],"plan":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","google-antigravity/claude-opus-5-5","xai-oauth/grok-4.7"],"task":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-3.8-flash","xai-oauth/grok-build"],"designer":["anthropic/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/gemini-3.8-flash"],"vision":["anthropic/claude-sonnet-5-5","openai-codex/gpt-6.1-sol","xai-oauth/grok-4.7"],"commit":["xai-oauth/grok-build","openai-codex/gpt-6-luna","google-antigravity/gemini-3.5-flash-lite"],"advisor":["anthropic/claude-haiku-5-5:low","openai-codex/gpt-6-luna","xai-oauth/grok-build"],"tiny":["openai-codex/gpt-6-luna","google-antigravity/gemini-3.5-flash-lite","xai-oauth/grok-composer-2.5-fast"],"architect":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","google-antigravity/claude-opus-5-5","xai-oauth/grok-4.7"],"review":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","google-antigravity/claude-opus-5-5","xai-oauth/grok-4.7"],"security":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","google-antigravity/claude-opus-5-5","xai-oauth/grok-4.7"],"critical":["google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"],"fast_worker":["openai-codex/gpt-6-luna","google-antigravity/gemini-3.5-flash-lite","xai-oauth/grok-build"],"good_worker":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-3.8-flash","xai-oauth/grok-build"],"sage":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","google-antigravity/claude-opus-5-5","xai-oauth/grok-4.7"],"anthropic/claude-fable-5-1":["anthropic/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/claude-opus-5-5","google-antigravity/claude-sonnet-5-5","xai-oauth/grok-4.7"],"anthropic/claude-fable-5":["anthropic/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/claude-opus-5-5","google-antigravity/claude-sonnet-5-5","xai-oauth/grok-4.7"]}'
+omp config set retry.fallbackChains '{"default":["anthropic/claude-sonnet-5-5","openai-codex/gpt-6.1-sol","xai-oauth/grok-build"],"smol":["openai-codex/gpt-6-luna","google-antigravity/gemini-3.5-flash-lite","xai-oauth/grok-build"],"slow":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","google-antigravity/claude-opus-5-5","xai-oauth/grok-4.7"],"plan":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","google-antigravity/claude-opus-5-5","xai-oauth/grok-4.7"],"task":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-3.8-flash","xai-oauth/grok-build"],"designer":["anthropic/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/gemini-3.8-flash"],"vision":["anthropic/claude-sonnet-5-5","openai-codex/gpt-6.1-sol","xai-oauth/grok-4.7"],"commit":["xai-oauth/grok-build","openai-codex/gpt-6-luna","google-antigravity/gemini-3.5-flash-lite"],"advisor":["anthropic/claude-haiku-5-5:low","openai-codex/gpt-6-luna","xai-oauth/grok-build"],"tiny":["openai-codex/gpt-6-luna","google-antigravity/gemini-3.5-flash-lite","xai-oauth/grok-composer-2.5-fast"],"architect":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","google-antigravity/claude-opus-5-5","xai-oauth/grok-4.7"],"review":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","google-antigravity/claude-opus-5-5","xai-oauth/grok-4.7"],"security":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","google-antigravity/claude-opus-5-5","xai-oauth/grok-4.7"],"critical":["google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"],"fast_worker":["openai-codex/gpt-6-luna","google-antigravity/gemini-3.5-flash-lite","xai-oauth/grok-build"],"good_worker":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-3.8-flash","xai-oauth/grok-build"],"sage":["google-antigravity/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"],"anthropic/claude-fable-5-1":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"],"anthropic/claude-fable-5":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"]}'
 
 omp config set retry.usageAwareFallback true
 omp config set retry.usageReservePolicy auto
@@ -348,13 +368,10 @@ omp config set extendedContext true
 
 ## Verify
 ```bash
-omp config get modelRoles --json
+omp config get modelRoles --json       # sage must be anthropic/claude-fable-5-1
 omp config get retry.fallbackChains --json
 omp config get extendedContext --json  # true on every machine
 omp models find gpt-6.1-sol --json      # Codex contextWindow: 922000
-omp models find openrouter/google/gemini-3.8-flash  # must show `google/gemini-3.8-flash` with 66K max-out
-omp models find nemotron-3-super
-omp models find openrouter/z-ai/glm-5.3-flash
 omp usage
 ```
 

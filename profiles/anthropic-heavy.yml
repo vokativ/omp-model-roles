@@ -16,7 +16,7 @@
     "critical": "openai-codex/gpt-6.1-sol",
     "fast_worker": "anthropic/claude-haiku-5-5:low",
     "good_worker": "anthropic/claude-sonnet-5-5",
-    "sage": "anthropic/claude-opus-5-5"
+    "sage": "anthropic/claude-fable-5-1"
   },
   "task": {
     "agentModelOverrides": {
@@ -113,9 +113,23 @@
         "xai-oauth/grok-build"
       ],
       "sage": [
+        "google-antigravity/claude-opus-5-5",
         "openai-codex/gpt-6.1-sol",
         "google-antigravity/gemini-4-argon",
+        "xai-oauth/grok-4.7"
+      ],
+      "anthropic/claude-fable-5-1": [
+        "anthropic/claude-opus-5-5",
         "google-antigravity/claude-opus-5-5",
+        "openai-codex/gpt-6.1-sol",
+        "google-antigravity/gemini-4-argon",
+        "xai-oauth/grok-4.7"
+      ],
+      "anthropic/claude-fable-5": [
+        "anthropic/claude-opus-5-5",
+        "google-antigravity/claude-opus-5-5",
+        "openai-codex/gpt-6.1-sol",
+        "google-antigravity/gemini-4-argon",
         "xai-oauth/grok-4.7"
       ]
     },

@@ -1,5 +1,7 @@
 # Thinking Partner (`sage`) Role & Allocation Architecture — 2026-09-04 · v19
 
+> **Note (2026-10-20):** the body below is the v19 design (2026-09-04), kept as history. The current config is in `../model-roles.yml`; see section 5 for the v35 update.
+
 *In `research/`. Bare filenames such as `model-roles.yml` and `README.md` refer to the repo root, one level up.*
 
 ---
@@ -94,3 +96,16 @@ In interactive dialogue (`/model @sage`), conversational interaction is unconstr
 3. `modelRoles.fable` and `retry.fallbackChains.fable` are replaced by `sage`.
 4. `anthropic/claude-fable-5-1` and `anthropic/claude-fable-5` model-level fallback entries are retained to prevent any explicit `--model` invocation from hitting Terra.
 5. `cycleOrder` includes `sage`: `[smol, default, slow, architect, sage]`.
+
+---
+
+## 5. v35 update (2026-10-20)
+
+Sections 1–4 are the v19 design and stay as written; where they conflict with this section, this section and `model-roles.yml` win. Evidence and caveats: [SAGE-FABLE-ASTRA-EVALUATION.md](SAGE-FABLE-ASTRA-EVALUATION.md); Fable-vs-Opus web evidence for `plan`/`architect`: [FABLE-EVALUATION.md](FABLE-EVALUATION.md).
+
+- **Primary:** `sage: anthropic/claude-fable-5-1`, provisional and reversible. The 2026-09-04 `credits_required` 429 no longer applies: 2026-10-20 probes were accepted on Claude Max 5x OAuth with the delivered model id verified. Chosen on cost (~2 sage dispatches/week; est. +1.6 weekly-pool points vs Opus, a rough estimate), published pushback evidence, and decorrelation from the Opus-based `plan`/`architect`/`slow`. **Fable-vs-Opus quality for `sage` is UNRESOLVED:** blind A/B was n = 3 prompts, judge-family self-preference dominated, and P1 leaked model identity.
+- **Current failover (model-level chain on `anthropic/claude-fable-5-1`, same on `claude-fable-5`):** `anthropic/claude-opus-5-5` $\to$ `google-antigravity/claude-opus-5-5` $\to$ `openai-codex/gpt-6.1-sol` $\to$ `google-antigravity/gemini-4-argon` $\to$ `xai-oauth/grok-4.7`.
+- **Why model-level chains own the order:** OMP checks exact model-key chains before role-key chains. With `sage` on Fable, the `anthropic/claude-fable-5-1` chain is sage's failover; the role-level `sage` chain (`google-antigravity/claude-opus-5-5` $\to$ Sol 6.1 $\to$ Argon $\to$ Grok 4.7) applies only if `sage` reverts to Opus. Antigravity Opus precedes Sol so sage does not drain the Plus 5h window that `critical` swarms exhaust. Argon stays late because its weekly meter was exhausted until ~2026-10-24.
+- **Caveats:** a mid-session Fable $\to$ Opus failover drops Fable's reasoning (fresh dispatches unaffected). Fable draws from the shared Max 7d pool (sub-cap up to 50%).
+- **Astra:** `openai-codex/gpt-6-astra` is in no role and no chain (v20 put it in sage's fallback; that no longer holds). Explicit `--model` use only.
+- **Revert:** set `modelRoles.sage` back to `anthropic/claude-opus-5-5`; the role-level chain then takes over.

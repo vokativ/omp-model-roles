@@ -1,12 +1,31 @@
 # Wiring `architect`/`critical` into real subagent dispatch — 2026-08-26
 
+## Update — v35, 2026-10-20
+
+The v29 model assignments below, and the older Opus-critical sections after them, are
+historical. Current `model-roles.yml` (v35): `architect` is `anthropic/claude-opus-5-5`
+(chain Sol 6.1 → Gemini 4 Argon → Antigravity Opus 5.5 → Grok 4.7), moved off Sol in
+v33; `critical` is `openai-codex/gpt-6.1-sol` (chain Argon → Grok 4.7), so the
+architect/critical pairing is now cross-provider rather than the same-Opus collision
+recorded below; `sage` is `anthropic/claude-fable-5-1` since v35 (provisional).
+Sol serves `critical` as primary and is the first fallback of most chains, not the
+shared primary of architect/slow/review/workers. Check resolved identities after
+fallback: an Opus architect that falls back to Sol collides with Sol-based `critical`.
+
+Astra (`openai-codex/gpt-6-astra`) is in no role and no chain in v35, and was not in
+the live `retry.fallbackChains`; older prose (including the `model-roles.yml` v29
+header) saying it stayed in sage's fallback chain is stale. It is reachable on Plus
+(2026-10-20 probe) for an explicit `--model` one-off. The Astra/Sol price figures
+below remain a dated v29 rationale, not a quality-parity or savings claim.
+
 ## Current contract — v29, 2026-10-02
 
 This section supersedes the model assignments and architect output contract in the
 historical investigation below. The original dispatch/containment observations
 remain dated evidence, not claims about all later OMP releases.
 
-- `architect` now runs on `openai-codex/gpt-6.1-sol`, with `thinking: high`.
+- `architect` ran on `openai-codex/gpt-6.1-sol` in v29 (superseded in v33, see the
+  v35 update above), with `thinking: high`.
   The owner uses it for frequent technical reviews as well as architecture decisions.
   The duplicate Sol fallback was removed; cross-provider fallbacks remain.
 - Its mandatory nine-field JSON schema is gone. Reviews return an assessment,
@@ -18,9 +37,10 @@ remain dated evidence, not claims about all later OMP releases.
   The allowlist and prompt are still not a sandbox.
 - `critical` keeps its machine-readable verdict and provenance guard. `sage` keeps
   its exploratory remit. Neither is a mandatory follow-on to an architect review.
-- Sol is now shared by architect, slow, regular review, and implementation workers.
-  This is a workflow distinction, not model diversity. Opus is shared by sage and
-  critical. Check resolved identities after fallback rather than counting roles.
+- (v29, superseded by the v35 update) Sol was then shared by architect, slow, regular
+  review, and implementation workers; Opus by sage and critical. This is a workflow
+  distinction, not model diversity. Check resolved identities after fallback rather
+  than counting roles.
 - `/model @architect` selects a model only; it does not install the custom agent's
   prompt or restrictions. Dispatch the named agent to get this contract.
 

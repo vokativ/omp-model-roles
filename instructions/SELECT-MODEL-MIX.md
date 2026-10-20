@@ -25,7 +25,7 @@ provider session/trial, install anything, change authentication or billing, clai
 credits, enable top-ups, edit root overlays/custom agents, or commit/push unless
 separately and explicitly requested. Reading a proposal does not authorize any
 new route or spend. Do not send additional selected-model probes, benchmarks, or
-provider trial requests; with no Fable access, send **no Fable requests**.
+provider trial requests; send **no Fable requests** from a preview.
 An ordinary planning reply from the existing OMP session uses its already-selected
 model and may consume that session's existing allowance; it is not a selected-model
 trial or verification of the proposed routes.
@@ -125,7 +125,7 @@ overlay is not runnable/covered/permitted merely because its config is well form
      or it reliably solves a demanding design problem on which tuned Opus falls short.
    Either change requires an authorized, funded route and exact installed catalog
    identity. Official API list prices/latency evidence are not native-quota ratios
-   or a user's budget measurement. No Fable access is available now: keep this
+   or a user's budget measurement. Do not assume Fable access (an owner-account OMP probe on 2026-10-20 accepted `claude-fable-5-1` via Max 5x OAuth; that does not establish it for other accounts): keep this
    comparison web-only, without demanding local tests, probing, inventing a selector,
    or binding Fable by default. Describe future permission/catalog/credit prerequisites.
    If Opus is also ineligible, choose an eligible depth route and explain why.

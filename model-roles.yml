@@ -1,6 +1,24 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-10-18 · Snapshot version: 34
+## Generated: 2026-10-20 · Snapshot version: 35
 ## Stale? See research/RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
+##
+## v35: sage -> anthropic/claude-fable-5-1 (provisional, reversible); Astra stays out of every role/chain.
+##   - sage failover: Fable -> direct Opus 5.5 -> Antigravity Opus 5.5 -> Sol 6.1 -> Argon -> Grok 4.7.
+##     The model-level anthropic/claude-fable-5-1 / -5 chains OWN this order (OMP checks exact model
+##     keys before role keys); the role-level sage chain only applies if sage reverts to Opus.
+##     Antigravity Opus (idle Claude/GPT pool) now precedes Sol so sage does not drain the Plus
+##     5h window that critical swarms exhaust; Argon kept late (weekly meter exhausted until ~10-24).
+##   - Evidence: 2026-10-20 probes accepted Fable 5.1 via Max OAuth (no credits_required). Blind A/B of
+##     3 sage prompts was family-biased (Sonnet judges favored Claude, Sol judge favored OpenAI; Grok
+##     neutral: Fable 8.43 > Opus 8.13 > Astra 7.85 > Sol 7.74) and P1 leaked model identity, so
+##     Fable vs Opus is UNRESOLVED on quality. Chosen for low cost (~2 dispatches/week, est. +1.6
+##     weekly-pool points vs Opus), best published pushback evidence, and decorrelation from the
+##     Opus-based plan/architect/slow. Revert = set sage back to anthropic/claude-opus-5-5.
+##   - Astra: no role, no chain. Same Plus 5h/7d meter as Sol (no fallback resilience), ~5x list
+##     price per token, AA Intelligence Index 53 vs Sol 6.1's 52, Arena creative #38 vs Opus 5.5 #1.
+##     Use explicitly via --model openai-codex/gpt-6-astra only when stuck and Plus has headroom.
+##   - Fable runs reasoning that Opus cannot read: a mid-session Fable -> Opus failover drops that
+##     reasoning (fresh dispatches unaffected). Fable draws from the shared Max 7d pool (<=50% sub-cap).
 ##
 ## v34: integrated Google Gemini 4 Argon across critical gate and reasoning fallback tiers.
 ##   - critical fallback tier 1 upgraded: replaced lightweight google-antigravity/gemini-3.8-flash
@@ -226,7 +244,7 @@ modelRoles:
   critical: openai-codex/gpt-6.1-sol
   fast_worker: anthropic/claude-haiku-5-5:low
   good_worker: anthropic/claude-sonnet-5-5
-  sage: anthropic/claude-opus-5-5
+  sage: anthropic/claude-fable-5-1
 
 task:
   agentModelOverrides:
@@ -306,21 +324,23 @@ retry:
       - google-antigravity/gemini-3.8-flash
       - xai-oauth/grok-build
     sage:
+      # Active only while sage's primary is Opus; a Fable primary uses the model-level chain below.
+      - google-antigravity/claude-opus-5-5
       - openai-codex/gpt-6.1-sol
       - google-antigravity/gemini-4-argon
-      - google-antigravity/claude-opus-5-5
       - xai-oauth/grok-4.7
+    # Model-level chains outrank role chains in OMP: with sage on Fable, THIS chain is sage's failover.
     anthropic/claude-fable-5-1:
       - anthropic/claude-opus-5-5
-      - openai-codex/gpt-6.1-sol
       - google-antigravity/claude-opus-5-5
-      - google-antigravity/claude-sonnet-5-5
+      - openai-codex/gpt-6.1-sol
+      - google-antigravity/gemini-4-argon
       - xai-oauth/grok-4.7
     anthropic/claude-fable-5:
       - anthropic/claude-opus-5-5
-      - openai-codex/gpt-6.1-sol
       - google-antigravity/claude-opus-5-5
-      - google-antigravity/claude-sonnet-5-5
+      - openai-codex/gpt-6.1-sol
+      - google-antigravity/gemini-4-argon
       - xai-oauth/grok-4.7
   usageAwareFallback: true
   usageReservePolicy: "auto"

@@ -6,6 +6,15 @@ terms, catalog, or account eligibility changes. This is not a new root snapshot:
 No Max account or alternative mix was exercised against a provider. No local
 quality, throughput, or quota benchmark was performed for this planning work.
 
+**Updated 2026-10-20:** the live root `model-roles.yml` is now snapshot v35 (not
+v32): `sage` runs on `anthropic/claude-fable-5-1` (provisional, reversible) and
+`openai-codex/gpt-6-astra` is in no role and no chain. The 17-role map below is the
+static Anthropic-heavy alternative (sage on Opus), not the live v35 allocation. Also
+on 2026-10-20, two OMP access probes (delivered model ids verified from events) were
+accepted: Astra on a ChatGPT Plus account and Fable 5.1 via Max 5x OAuth. That
+supersedes "no Max account was exercised" and "no Fable access" for the owner's own
+accounts only; it is a reachability observation, not a permission or quota guarantee.
+
 The goal is to choose which pool should carry general work, reserve deeper models
 for harder work, and retain a genuinely different model family for critical review.
 Selection follows [../instructions/SELECT-MODEL-MIX.md](../instructions/SELECT-MODEL-MIX.md),
@@ -32,16 +41,16 @@ It gives these prices and developer entitlements:
 |---|---|---|
 | Free | $0 | Luna Standard in desktop, rollout-dependent; not the full CLI entitlement assumed by this planning example |
 | Go | $8/month | Lightweight desktop Luna, rollout-dependent; not a substitute for Plus CLI access |
-| Plus | $20/month | Full Codex web/CLI/IDE/iOS access, Sol and Luna; modest general-work pool |
+| Plus | $20/month | Full Codex web/CLI/IDE/iOS access, Sol and Luna, plus limited Astra (Help Center and Codex pricing; the learn.chatgpt.com Plus card lists only Sol/Luna, see the 2026-10-20 note below); modest general-work pool |
 | Pro $100 | $100/month | Bulk-work starting tier; lower allowances than higher Pro options |
 | Pro $200 | $200/month | Higher Pro tier; choose on observed usage, not an inferred fixed task multiplier |
-| Pro $500 | $500/month | Highest listed Pro tier; Astra Ultrafast access, not required by the example role map |
+| Pro $500 | $500/month | Highest listed Pro tier; Ultrafast (8x burn, applies to Sol 6.1 as well as Astra) is Pro $500/Enterprise only, not required by the example role map |
 | Business | $25/user/month monthly; $20/user/month annually, minimum two users | Codex plus organization controls; shared workspace/credit terms need administrator review |
 | Enterprise / Edu | Contact sales | Flexible credit-based or contracted per-seat limits; not a personal Pro alias |
 
-Plus/Standard Business estimates are **15–160 Sol 6.1** or **350–3,000 Luna** local
-messages per five hours, not guaranteed caps. Local and cloud work share allowances;
-weekly caps may apply. Pro currently has no five-hour limit, **not unlimited use**.
+Plus/Standard Business estimates are **5–45 Astra**, **15–160 Sol 6.1** (Sol 6:
+15–150), or **350–3,000 Luna** local messages per five hours, not guaranteed caps.
+Local and cloud work share allowances; weekly caps may apply. Pro currently has no five-hour limit, **not unlimited use**.
 Context, reasoning, tools, retrieval, caching, and speed mode affect consumption.
 ChatGPT Work shares Codex usage. The source's subscription-credit rates are distinct
 from API token rates; do not convert catalog dollars into subscription tasks.
@@ -50,8 +59,22 @@ Current [Pro-tier help][o-pro] also warns that Pro $200 allowances are lower tha
 the historical tier: eligible grandfathered September 22–29 accounts retain their
 previous allowance only through **2026-10-29**. Historical 5x/20x claims or existing
 v32 usage readings cannot predict a new subscription's quota. Fast mode consumes
-2.5x the included allowance and Astra Ultrafast 8x in the pricing table; these are
-consumption rates, not speed guarantees.
+2.5x the included allowance and is available on Plus; Ultrafast consumes 8x, applies
+to Sol 6.1 as well as Astra, and needs Pro $500/Enterprise. These are consumption
+rates in the pricing table, not speed guarantees.
+
+**Updated 2026-10-20, Plus and Astra:** OpenAI's Help Center and Codex pricing say Plus
+"includes limited GPT-6 Astra usage"; the learn.chatgpt.com Plus card lists only Sol
+and Luna, so the sources are inconsistent. The pricing-table subscription-credit
+rates per million tokens (input/cached/output) are Astra 250/25/1250, Sol 6.1
+50/2.5/250, Luna 2.5/0.25/12.5 (API list: Astra $10/$50, Sol 6.1 $2/$10, Luna
+$0.10/$0.50). A 2026-10-20 probe showed OMP's Codex OAuth route accepts
+`openai-codex/gpt-6-astra` on a Plus account (delivered id verified). `omp usage`
+shows one 5h and one 7d chat meter (plan: plus) with no Astra-specific meter, so
+Astra shares the Plus meter with Sol. A coarse burn probe saw 13.8K Astra tokens
+move the meter one point, the same as 40.8K Sol tokens; at whole-percent granularity
+that supports only a hypothesis of roughly 3-5x per token, not a measured ratio.
+Plus is the binding burst pool: its 5h window hit 100% five times 2026-10-17..19.
 
 ChatGPT subscriptions and developer API billing are [separate][o-billing]. An API
 key has its own billed usage and model availability; Codex API-key access lacks
@@ -92,7 +115,17 @@ alternative keeps Sonnet, Opus, and Haiku: **Opus 5.5 remains the provisional
 not a categorically excluded family. See the
 [2026-10-08 web comparison](FABLE-EVALUATION.md) and the role-specific decision below.
 Historical Pro/Fable failures establish neither current quality nor future Max
-access/quota economics. The user has no Fable access; this work sends no Fable requests.
+access/quota economics. **Updated 2026-10-20:** the 2026-10-08 premise that the user
+has no Fable access is superseded. An OMP probe (`omp -p --no-session --no-tools`,
+delivered id verified) was accepted for `anthropic/claude-fable-5-1` via Max 5x
+OAuth with no `credits_required`, unlike the 2026-09-04 Claude Pro 429. Metering
+facts above still hold: Fable has its own 7d sub-meter (13% on 2026-10-20) inside
+the shared weekly pool (7d 41% used, resets 2026-10-23 16:00Z), up to 50% of the
+weekly limit, with no published multiplier; its movement so far came from Claude
+Code usage (522 messages), not OMP. Acceptance shows the route is reachable, not that
+third-party-harness use is sanctioned (see the login-policy sources below and
+OMP issue 12487); Max's $100 API credit covers API-key use, not OAuth. Planning
+previews in this repo still send no Fable requests.
 
 #### New Max/Team monthly API credits: actionable route, not OAuth entitlement
 
@@ -332,6 +365,13 @@ default bindings absent justified public/task evidence and those prerequisites.
 Same-provider Opus/Fable switching would be capability escalation, not a
 cross-provider quota fallback; it does not change the ordered chains below.
 
+**Updated 2026-10-20:** the Fable/Opus question for `sage` was resolved provisionally
+in favor of Fable 5.1 in the live config (v35), not for `plan`/`architect`, which
+stay on Opus 5.5. The supporting blind A/B (3 sage-style prompts, n=3, not 9) was
+judge-family biased and the first prompt leaked model identity, so Fable versus Opus
+quality is unresolved; the choice rests on low volume (~2 dispatches/week), cost
+(estimate: ~2.4x Opus per dispatch), published pushback evidence, and decorrelation.
+
 ### Anthropic-heavy full primary and fallback role map
 
 These are **OMP 18.8.4 local catalog selectors**, not public SKU/model identifiers or
@@ -379,6 +419,11 @@ the selected heavy provider/model family, **not from every possible resolved wor
 a producer that already fell back to Sol needs another genuinely independent review.
 Record actual model provenance before counting independent evidence. With only one
 authorized/available model family, explicitly disclose that critical cannot be independent.
+
+Live v35 differs from this static map: `critical` is Sol with chain Argon → Grok 4.7;
+`sage` is Fable 5.1 with model-level chain Opus → Google Opus → Sol → Argon → Grok 4.7
+(Opus chain `Google Opus → Sol → Argon → Grok 4.7` applies only if sage reverts to
+Opus); Astra appears in no role or chain.
 
 The static overlay includes all 17 roles and all 17 role-keyed chains, plus
 `task.agentModelOverrides` of `reviewer: @review`,

@@ -1,12 +1,21 @@
 # Fable 5.1 versus Opus 5.5 — `plan` and `architect`
 
-**Web-evidence review: 2026-10-08.** This replaces the contradictory September evaluation. It is selection guidance, not a selector program, a local benchmark, or evidence of this user's Fable access. Sources below distinguish vendor measurements, vendor-reported external results, and independently retrieved evaluator reports. Living pages were observed on 2026-10-08; that is not an invented publication date.
+**Web-evidence review: 2026-10-08.** This replaces the contradictory September evaluation. It is selection guidance, not a selector program or a local benchmark, and by itself is not evidence of this user's Fable access (that was probed separately on 2026-10-20; see update below). Sources below distinguish vendor measurements, vendor-reported external results, and independently retrieved evaluator reports. Living pages were observed on 2026-10-08; that is not an invented publication date.
+
+## 2026-10-20 update — access probed, `sage` moved to Fable (v35)
+
+Supersedes every "no Fable access / Fable unavailable / no Fable calls authorized" statement below, which describe the 2026-10-08 state only.
+
+- **Access (observed 2026-10-20):** `omp -p --no-session --no-tools --mode json` probes with `anthropic/claude-fable-5-1` were accepted via Claude Max 5x OAuth, delivered model id verified from the events, no `credits_required` (unlike the 2026-09-04 Claude Pro 429). Probes are valid because of delivered-id verification, not because the `retry.fallbackChains: {}` overlay disabled fallback (it does not; `retry.modelFallback` does).
+- **Metering:** Fable is a sub-cap inside the shared weekly Max pool (up to 50% of the weekly limit; draws the pool faster; no published multiplier). The Fable 7d meter read 13% (shared 7d 41%, resets 2026-10-23 16:00Z) and has so far moved only with Claude Code usage (522 `claude-fable-5-1` messages), not OMP. Whole-percent meter; estimates only.
+- **Config (v35):** `sage` -> `anthropic/claude-fable-5-1` on cost/diversity grounds (~2 dispatches/week; est. +1.6 weekly-pool points vs Opus, a rough estimate) and decorrelation from the Opus-based roles. **Fable-vs-Opus quality for `sage` is UNRESOLVED** (n = 3 prompts, judge-family bias, one prompt leaked model identity). `plan` and `architect` stay on Opus 5.5; the conclusion in this note is unchanged. Details and caveats: [SAGE-FABLE-ASTRA-EVALUATION.md](SAGE-FABLE-ASTRA-EVALUATION.md); current routes in `../model-roles.yml`.
+- **Remaining access boundary:** the `plan`/`architect` reversal criteria below still need role-relevant evidence; access and identity are no longer the blocker. Policy risk of OMP presenting as Claude Code over Max OAuth is unchanged.
 
 ## Decision and withdrawn evidence
 
 **[INFERENCE] Retain Opus 5.5 provisionally for both `plan` and `architect` in the existing Anthropic-heavy alternative.** Public engineering/workflow and professional-analysis proxies generally support that choice at lower API list prices. Fable 5.1 remains a meaningful conditional candidate: its independent rubric-completeness and memorization-discounted coding-correctness results challenge any categorical Opus quality claim. Neither model is a demonstrated OMP role winner.
 
-The existing alternative is unchanged as an evidence-based decision, not because Fable was ignored. This review does not change the current root configuration, models, agents, authentication, or provider routes. **The user has no Fable access: no Fable calls, probes, or local tests were made or are authorized by this note.** Preserve the independent OpenAI `critical` allocation; switching between two Anthropic models does not add model-family independence against an Anthropic producer.
+The existing alternative is unchanged as an evidence-based decision, not because Fable was ignored. This review does not change the current root configuration, models, agents, authentication, or provider routes. **As of 2026-10-08 this note's author had no Fable access, and no Fable calls, probes, or local tests were made or authorized by it; superseded on 2026-10-20 (see below).** Preserve the independent OpenAI `critical` allocation; switching between two Anthropic models does not add model-family independence against an Anthropic producer.
 
 **Withdrawn local claims:** the historical **7.36s / 7.45s** and **<0.1% quota** figures were not Fable measurements. The attempted Fable requests failed and fell back to OpenAI; outputs attributed to Fable therefore did not establish Fable identity. Those invalidated September records are the source of these quoted figures, not a new observation. The former local architecture table, “crisper/faster” conclusion, negligible-quota claim, and validated-local-architect recommendation are withdrawn, not qualified by a footnote. Historical Opus 5 comparisons cannot decide the present **Opus 5.5 versus Fable 5.1** question. Old quota snapshots and fallback configuration examples are not current evidence.
 
@@ -111,11 +120,11 @@ The [card §2.3.3, pp35–36][card] (2026-09-22) documents architect-relevant Op
 
 ## Scope of conclusion and exclusions
 
-**No direct head-to-head OMP `plan` or `architect` comparison was found in the reviewed primary and independent sources/searches.** This is a bounded finding, not a claim that none exists anywhere. A future role-specific comparison would need the same repository evidence, prompts/instructions, verified identities, repeat counts, effort/resource limits, fallback policy, blinded correctness rubrics, and cost/latency per accepted plan/design. Fable is unavailable now; that comparison was not run.
+**No direct head-to-head OMP `plan` or `architect` comparison was found in the reviewed primary and independent sources/searches.** This is a bounded finding, not a claim that none exists anywhere. A future role-specific comparison would need the same repository evidence, prompts/instructions, verified identities, repeat counts, effort/resource limits, fallback policy, blinded correctness rubrics, and cost/latency per accepted plan/design. That comparison was not run (Fable was not accessible on 2026-10-08; access was established on 2026-10-20, but the `plan`/`architect` comparison is still outstanding).
 
 [LLM Stats](https://llm-stats.com/models/compare/claude-fable-5-1-vs-claude-opus-5-5) aggregation, [OpenCode](https://opencode.ai/data/compare/anthropic/claude-fable-5-1/anthropic/claude-opus-5-5) catalog metadata, comparison/SEO benchmark reposts, and [Chudi](https://chudi.dev/blog/claude-opus-5-5-vs-fable-5-1) old-Opus transcript repricing were not counted as new independent experiments. The small [Wmedia fixture benchmark](https://wmedia.es/en/tips/claude-code-opus-5-5-vs-fable-5-1-vs-opus-5-benchmark) was too easy/ceiling-limited to decide these roles. Vendor-reported external copies remain labelled as such.
 
-This update used verified web-research evidence only. No provider inference, local Fable tests, gates, tests, linters, or formatters were run.
+The 2026-10-08 review used verified web-research evidence only; no provider inference, local Fable tests, gates, tests, linters, or formatters were run for it. Local probes made afterwards are in the 2026-10-20 update above.
 
 [card]: https://www.anthropic.com/claude-opus-5-5-system-card
 [aa]: https://artificialanalysis.ai/articles/claude-opus-5-5
