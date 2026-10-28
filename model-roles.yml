@@ -20,6 +20,11 @@
 ##     eliminating the duplicate Opus stop in Ctrl+P cycling while keeping the consultant agent intact.
 ##   - Retained critical as a dedicated role & agent: verified as the sole cross-provider independent
 ##     adversarial gate (Sol 6.1 vs Anthropic producers) with structured GO/NO-GO enforcement.
+##   - Consolidation: deleted fast_worker and good_worker roles/chains. Bundled task already uses @task
+##     (same Sonnet 5.5 primary and chain as good_worker), so its override is gone. Bundled sonic defaults
+##     to @smol (Sonnet 5.5); one override, sonic: "@tiny", keeps Vibe/fast workers on Haiku 5.5:low with
+##     tiny's Luna -> Flash-Lite -> Composer chain. A bare model selector is avoided on purpose: a
+##     role-less pin falls back through the default chain (Sonnet first), not a cheaper tier.
 ##
 ## v35: sage -> anthropic/claude-fable-5-1 (provisional, reversible); Astra stays out of every role/chain.
 ##   - sage failover: Fable -> direct Opus 5.5 -> Antigravity Opus 5.5 -> Sol 6.1 -> Argon -> Grok 4.7.
@@ -238,10 +243,10 @@
 ## "architect"|"critical", ...) dispatch targets. See research/ARCHITECT-CRITICAL-AGENTS.md.
 ##
 ## Assumes these logins exist on the target machine:
-##   - anthropic        (Claude Max 5x, $100/mo — primary workhorse and depth pool: task/smol/slow/plan/architect/review/security/good_worker/sage)
+##   - anthropic        (Claude Max 5x, $100/mo — primary workhorse and depth pool: task/smol/slow/plan/review/security/sage; Haiku for tiny/commit/widget/sonic)
 ##   - openai-codex      (ChatGPT Plus, $20/mo — independent critical gate & tier-1 fallback: critical -> gpt-6.1-sol)
 ##   - google-antigravity (Google AI Pro, ~$20/mo — everyday default/vision/advisor on 3.8 Flash; lightweight fallbacks on 3.5 Flash-Lite)
-##   - xai-oauth         (X Premium, $8/mo bundled SuperGrok credits — primary for designer; fast worker/fallback tiers)
+##   - xai-oauth         (X Premium, $8/mo bundled SuperGrok credits — last-tier fallbacks; Grok Build/Composer end the cheap chains)
 
 modelRoles:
   # --- Core Built-in Chat Roles ---
@@ -263,15 +268,12 @@ modelRoles:
   review: anthropic/claude-sonnet-5-5
   security: anthropic/claude-sonnet-5-5
   critical: openai-codex/gpt-6.1-sol
-  fast_worker: anthropic/claude-haiku-5-5:low
-  good_worker: anthropic/claude-sonnet-5-5
   sage: anthropic/claude-fable-5-1
 task:
   agentModelOverrides:
     security-reviewer: "@security"
     reviewer: "@review"
-    sonic: "@fast_worker"
-    task: "@good_worker"
+    sonic: "@tiny"
 
 retry:
   fallbackChains:
@@ -333,14 +335,6 @@ retry:
     critical:
       - google-antigravity/gemini-4-argon
       - xai-oauth/grok-4.7
-    fast_worker:
-      - openai-codex/gpt-6-luna
-      - google-antigravity/gemini-3.5-flash-lite
-      - xai-oauth/grok-build
-    good_worker:
-      - openai-codex/gpt-6.1-sol
-      - google-antigravity/gemini-3.8-flash
-      - xai-oauth/grok-build
     sage:
       # Active only while sage's primary is Opus; a Fable primary uses the model-level chain below.
       - google-antigravity/claude-opus-5-5

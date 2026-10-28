@@ -1,8 +1,9 @@
 # Select an alternative OMP model mix
 
-**Instruction updated: 2026-10-08. Source baseline: 2026-10-08; recheck by
-2026-10-15**, or immediately after a plan, permission, price, catalog, or eligibility
-change. This is a prompt for OMP to follow, not a program or an installation step.
+**Instruction updated: 2026-10-28 (role contract: OMP 18.13.2, snapshot v36). Source
+baseline: 2026-10-08; recheck by 2026-11-11**, or immediately after a plan, permission,
+price, catalog, eligibility, or OMP role/agent change. This is a prompt for OMP to
+follow, not a program or an installation step.
 
 ## How to use
 
@@ -32,7 +33,10 @@ trial or verification of the proposed routes.
 
 Scope is exactly the four requested provider groups: **OpenAI, Anthropic, Google,
 and SpaceX/xAI/X**. Do not allocate to other providers or change their existing
-logins/settings unless the user explicitly extends the scope.
+logins/settings unless the user explicitly extends the scope. One exception: the
+model-kind `judge` role may keep an **already logged-in** native judgment route
+(currently TypeSafe Jev). Label it as separately funded API-key use outside the four
+subscriptions; never add or fund such a route from a preview.
 
 Read [subscription research](../research/SUBSCRIPTION-MIXES.md), the
 [research playbook](../research/RESEARCH-PLAYBOOK.md), and
@@ -53,7 +57,7 @@ requested scenario; do not repeat answered questions. Label other assumptions.
 
 Distinguish a **current verified allocation** from a **conditional future-plan
 preview**. For a requested future mix (for example, Max next week with unclaimed
-credits and no Fable access today), provide a complete conditional 17-role proposal,
+credits and no Fable access today), provide a complete conditional 15-role proposal,
 with per-route access/funding assumptions and prerequisites. Missing future claims,
 permission verification, or account availability are risks to expose, not reasons
 to silently substitute today's OpenAI setup or refuse the preview. A conditional
@@ -98,7 +102,10 @@ overlay is not runnable/covered/permitted merely because its config is well form
    off. If headroom is unknown, give a provisional choice and its assumptions; do
    not extrapolate current accounts' readings to an unowned tier. Recommend upgrades
    only for a stated need supported by actual usage, not invented quota ratios.
-5. **Evaluate Fable 5.1 versus Opus 5.5 separately for `plan` and `architect`.**
+5. **Evaluate Fable 5.1 versus Opus 5.5 separately for `plan` and `slow`.** `slow`
+   also serves the `architect` consultant agent (`agents/architect.md` binds to
+   `@slow`; there is no separate `architect` role since v36), so the architect
+   evaluation below decides `slow`.
    The [2026-10-08 web evaluation](../research/FABLE-EVALUATION.md) supports
    **Opus 5.5 provisionally for both depth roles in the Anthropic-heavy alternative**,
    not a proven role-specific winner. Public analytical/workflow and long-horizon
@@ -118,7 +125,7 @@ overlay is not runnable/covered/permitted merely because its config is well form
      and actionable sequencing. Favor Fable if representative evidence shows materially
      fewer missed requirements, incorrect dependencies, or unusable handoffs at
      acceptable cost/latency after reasonable Opus effort tuning.
-   - **Architect:** retain Opus provisionally for source-grounded trade-offs/design
+   - **Architect (`slow`):** retain Opus provisionally for source-grounded trade-offs/design
      review, while guarding its documented narrow-feedback and self-authored-requirement
      failure modes. Favor Fable if task-relevant, preferably blind comparisons show
      fewer missed constraints/hazards or better root-cause reasoning and maintainability,
@@ -139,32 +146,40 @@ overlay is not runnable/covered/permitted merely because its config is well form
 
 ## Complete role and routing contract
 
-Cover these **17 roles**, with a primary and an ordered fallback chain for each:
+Cover these **15 roles**, with a primary and an ordered fallback chain for each:
 
-| Role | Work to account for |
-|---|---|
-| `default` | Every-turn general work and reader-facing output |
-| `smol` | High-volume dispatch/classification and opted-in implementation |
-| `slow` | Difficult full-task reasoning/prewalk |
-| `plan` | Planning before implementation; explicit Fable/Opus decision |
-| `task` | General delegated work |
-| `designer` | Design/image review; image-input-capable routes only |
-| `vision` | Image understanding; image-input-capable routes only |
-| `commit` | Infrequent commit-message work |
-| `advisor` | Per-turn advice; count its added pool load |
-| `tiny` | Small low-stakes work |
-| `architect` | Frequent technical/architecture review; explicit Fable/Opus decision |
-| `review` | Code review |
-| `security` | Security review |
-| `critical` | Adversarial independent final review |
-| `fast_worker` | Fast, bounded delegated work |
-| `good_worker` | General implementation work |
-| `sage` | Deep thinking/ideation |
+| Role | Kind | Work to account for |
+|---|---|---|
+| `default` | built-in chat | Every-turn general work and reader-facing output |
+| `smol` | built-in chat | High-volume dispatch/classification, `scout`, prewalk target, opted-in implementation |
+| `slow` | built-in chat | Difficult full-task reasoning/prewalk; also the `architect` agent; explicit Fable/Opus decision |
+| `plan` | built-in chat | Planning before implementation; explicit Fable/Opus decision |
+| `task` | built-in chat | General delegated work; bundled `task` agent and Vibe `good` tier bind to it directly |
+| `vision` | built-in chat | Image understanding; image-input-capable routes only |
+| `commit` | built-in chat | Infrequent commit-message work |
+| `advisor` | built-in chat | Per-turn advice; count its added pool load |
+| `tiny` | built-in chat | Small low-stakes work (titles, memory); also bundled `sonic` / Vibe `fast` tier via override |
+| `widget` | built-in chat | One request per background job to author its status widget; cheap tier only |
+| `judge` | built-in model-kind | Native judgments: `find`, typed eval judgments, auto-thinking |
+| `review` | custom | Code review (bundled `reviewer` via override) |
+| `security` | custom | Security review (bundled `security-reviewer` via override) |
+| `critical` | custom | Adversarial independent final review (`agents/critical.md`) |
+| `sage` | custom | Deep thinking/ideation (`agents/sage.md`) |
+
+Do not reintroduce roles that duplicate a built-in binding: `architect` (use `@slow`),
+`good_worker` (bundled `task` already binds `@task`), `fast_worker` (route `sonic`
+to `@tiny`), or `designer` (no OMP consumer; select a model directly). Add a custom
+role only when an agent or override needs a model that differs from every built-in.
 
 Use exact catalog selectors eligible for the verified allocation or explicitly
 conditional future scenario, including supported reasoning suffixes.
-Every `vision`/`designer` primary **and fallback** must accept image input; text-only
-Composer is not an image route. Check companion model overrides if a route needs
+Every `vision` primary **and fallback** must accept image input; text-only
+Composer is not an image route. `judge` must keep at least one native judgment
+model first for `find` to be enabled (`find.enabled: auto`); once a native judge
+resolves, OMP drops prompted chat candidates from that chain. In OMP 18.13.2 the
+widget author resolves `@widget` but does not walk `retry.fallbackChains.widget`;
+keep that chain for forward compatibility, not as delivered resilience.
+Check companion model overrides if a route needs
 one; do not silently inherit unrelated models or settings.
 
 Chains must exclude the primary's entire routing provider, deduplicate selectors,
@@ -201,7 +216,7 @@ Return all of the following, without writing/applying files:
    exposure, and any unresolved material prerequisites. Mark each future route's
    assumptions and unmet prerequisites; distinguish them from verified facts.
    Never invent missing prices.
-3. **A 17-row role table:** exact primary, ordered fallbacks, and brief allocation
+3. **A 15-row role table:** exact primary, ordered fallbacks, and brief allocation
    rationale. Explain single-provider and image constraints and actual-provenance
    requirements for critical review.
 4. **One full valid OMP overlay**, JSON or YAML, matching the table. Label it
@@ -209,16 +224,17 @@ Return all of the following, without writing/applying files:
    config structure is not verified access. For the requested future mix, supply
    the complete conditional alternative rather than reverting to current routing.
    `modelRoles`
-   contains all 17 roles; `retry.fallbackChains` contains all 17 role keys, including
+   contains all 15 roles; `retry.fallbackChains` contains all 15 role keys, including
    empty arrays as needed, with no inherited wildcard or exact-model legacy chains.
-   Include `task.agentModelOverrides` with `security-reviewer: "@security"`,
-   `reviewer: "@review"`, `sonic: "@fast_worker"`, and `task: "@good_worker"`;
-   `retry.usageAwareFallback: true`; `retry.usageReservePolicy: auto`;
-   `cycleOrder: [smol, default, slow, architect, sage]`; and
+   Include `task.agentModelOverrides` with exactly `security-reviewer: "@security"`,
+   `reviewer: "@review"`, and `sonic: "@tiny"` (no `task` override: the bundled
+   `task` agent binds `@task`; route `sonic` through a role, never a bare model, so
+   its failover is not the `default` chain); `retry.usageAwareFallback: true`;
+   `retry.usageReservePolicy: auto`; `cycleOrder: [smol, default, slow, sage]`; and
    `extendedContext: true`. Keep current custom agents unchanged; model bindings do
    not install their instruction contracts. List any required companion model
    override separately, without editing it or claiming a runtime check occurred.
-5. **Fable decision and limits:** separate conclusions for plan and architect,
+5. **Fable decision and limits:** separate conclusions for `plan` and `slow` (architect agent),
    exact compared versions, evidence strength, access/budget prerequisites, why
    Fable or provisional Opus was chosen, and what could overturn the decision.
 

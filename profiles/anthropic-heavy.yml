@@ -14,16 +14,13 @@
     "review": "anthropic/claude-sonnet-5-5",
     "security": "anthropic/claude-sonnet-5-5",
     "critical": "openai-codex/gpt-6.1-sol",
-    "fast_worker": "anthropic/claude-haiku-5-5:low",
-    "good_worker": "anthropic/claude-sonnet-5-5",
     "sage": "anthropic/claude-fable-5-1"
   },
   "task": {
     "agentModelOverrides": {
       "security-reviewer": "@security",
       "reviewer": "@review",
-      "sonic": "@fast_worker",
-      "task": "@good_worker"
+      "sonic": "@tiny"
     }
   },
   "retry": {
@@ -99,16 +96,6 @@
       "critical": [
         "google-antigravity/gemini-4-argon",
         "xai-oauth/grok-4.7"
-      ],
-      "fast_worker": [
-        "openai-codex/gpt-6-luna",
-        "google-antigravity/gemini-3.5-flash-lite",
-        "xai-oauth/grok-build"
-      ],
-      "good_worker": [
-        "openai-codex/gpt-6.1-sol",
-        "google-antigravity/gemini-3.8-flash",
-        "xai-oauth/grok-build"
       ],
       "sage": [
         "google-antigravity/claude-opus-5-5",
