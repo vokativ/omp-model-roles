@@ -13,7 +13,13 @@
 ##     agent.db. Activates natural-language search (find) in architect and other agents under OMP's
 ##     find.enabled: auto policy, and enables native System One judgments for typed eval judgments.
 ##     Fallback chain: typesafe/jev-latest -> typesafe/jev-preview -> gemini-3.5-flash-lite.
-##   - Role taxonomy cleanup: moved designer to Custom Roles (OMP has no built-in designer role/agent).
+##   - Consolidation: deleted dead-weight designer role/chain (OMP has no designer agent/subsystem;
+##     invoke xai-oauth/grok-4.7 directly via /model if needed).
+##   - Consolidation: collapsed architect role into @slow (agents/architect.md now sets model: "@slow");
+##     removed redundant architect from modelRoles, fallbackChains, and cycleOrder ([smol, default, slow, sage]),
+##     eliminating the duplicate Opus stop in Ctrl+P cycling while keeping the consultant agent intact.
+##   - Retained critical as a dedicated role & agent: verified as the sole cross-provider independent
+##     adversarial gate (Sol 6.1 vs Anthropic producers) with structured GO/NO-GO enforcement.
 ##
 ## v35: sage -> anthropic/claude-fable-5-1 (provisional, reversible); Astra stays out of every role/chain.
 ##   - sage failover: Fable -> direct Opus 5.5 -> Antigravity Opus 5.5 -> Sol 6.1 -> Argon -> Grok 4.7.
@@ -254,8 +260,6 @@ modelRoles:
   judge: typesafe/jev-1.14.0
 
   # --- Custom Workflow, Review & Architecture Roles ---
-  designer: xai-oauth/grok-4.7
-  architect: anthropic/claude-opus-5-5
   review: anthropic/claude-sonnet-5-5
   security: anthropic/claude-sonnet-5-5
   critical: openai-codex/gpt-6.1-sol
@@ -293,10 +297,6 @@ retry:
       - openai-codex/gpt-6.1-sol
       - google-antigravity/gemini-3.8-flash
       - xai-oauth/grok-build
-    designer:
-      - anthropic/claude-opus-5-5
-      - openai-codex/gpt-6.1-sol
-      - google-antigravity/gemini-3.8-flash
     vision:
       - anthropic/claude-sonnet-5-5
       - openai-codex/gpt-6.1-sol
@@ -320,11 +320,6 @@ retry:
       - typesafe/jev-latest
       - typesafe/jev-preview
       - google-antigravity/gemini-3.5-flash-lite
-    architect:
-      - openai-codex/gpt-6.1-sol
-      - google-antigravity/gemini-4-argon
-      - google-antigravity/claude-opus-5-5
-      - xai-oauth/grok-4.7
     review:
       - openai-codex/gpt-6.1-sol
       - google-antigravity/gemini-4-argon
@@ -372,7 +367,6 @@ cycleOrder:
   - smol
   - default
   - slow
-  - architect
   - sage
 
 extendedContext: true

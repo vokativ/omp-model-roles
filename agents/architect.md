@@ -5,7 +5,7 @@ description: >-
   implementations, plans, and configuration. Identifies consequential weaknesses
   and recommends a concrete improvement; adapts depth to the question.
   Read-only consultant, not an implementer or release gate.
-model: "@architect"
+model: "@slow"
 thinking: high
 tools: [read, grep, glob, find, web_search]
 spawns: []

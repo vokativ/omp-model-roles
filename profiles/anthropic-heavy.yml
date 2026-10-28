@@ -5,12 +5,12 @@
     "slow": "anthropic/claude-opus-5-5",
     "plan": "anthropic/claude-opus-5-5",
     "task": "anthropic/claude-sonnet-5-5",
-    "designer": "xai-oauth/grok-4.7",
     "vision": "google-antigravity/gemini-3.8-flash",
     "commit": "anthropic/claude-haiku-5-5:low",
     "advisor": "google-antigravity/gemini-3.8-flash",
+    "widget": "anthropic/claude-haiku-5-5:low",
+    "judge": "typesafe/jev-1.14.0",
     "tiny": "anthropic/claude-haiku-5-5:low",
-    "architect": "anthropic/claude-opus-5-5",
     "review": "anthropic/claude-sonnet-5-5",
     "security": "anthropic/claude-sonnet-5-5",
     "critical": "openai-codex/gpt-6.1-sol",
@@ -55,11 +55,6 @@
         "google-antigravity/gemini-3.8-flash",
         "xai-oauth/grok-build"
       ],
-      "designer": [
-        "anthropic/claude-opus-5-5",
-        "openai-codex/gpt-6.1-sol",
-        "google-antigravity/gemini-3.8-flash"
-      ],
       "vision": [
         "anthropic/claude-sonnet-5-5",
         "openai-codex/gpt-6.1-sol",
@@ -80,11 +75,14 @@
         "google-antigravity/gemini-3.5-flash-lite",
         "xai-oauth/grok-composer-2.5-fast"
       ],
-      "architect": [
-        "openai-codex/gpt-6.1-sol",
-        "google-antigravity/gemini-4-argon",
-        "google-antigravity/claude-opus-5-5",
-        "xai-oauth/grok-4.7"
+      "widget": [
+        "google-antigravity/gemini-3.5-flash-lite",
+        "xai-oauth/grok-composer-2.5-fast"
+      ],
+      "judge": [
+        "typesafe/jev-latest",
+        "typesafe/jev-preview",
+        "google-antigravity/gemini-3.5-flash-lite"
       ],
       "review": [
         "openai-codex/gpt-6.1-sol",
@@ -140,7 +138,6 @@
     "smol",
     "default",
     "slow",
-    "architect",
     "sage"
   ],
   "extendedContext": true
