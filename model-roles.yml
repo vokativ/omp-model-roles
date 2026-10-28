@@ -25,6 +25,9 @@
 ##     to @smol (Sonnet 5.5); one override, sonic: "@tiny", keeps Vibe/fast workers on Haiku 5.5:low with
 ##     tiny's Luna -> Flash-Lite -> Composer chain. A bare model selector is avoided on purpose: a
 ##     role-less pin falls back through the default chain (Sonnet first), not a cheaper tier.
+##   - review -> openai-codex/gpt-6.1-sol (bundled reviewer = PR review). Producers are mostly Claude, so
+##     the reviewer is cross-family; chain Argon -> Grok 4.7 -> Antigravity Opus 5.5 (same family, last).
+##     PR review moves off critical, which is narrowed to irreversible/operational go/no-go decisions.
 ##
 ## v35: sage -> anthropic/claude-fable-5-1 (provisional, reversible); Astra stays out of every role/chain.
 ##   - sage failover: Fable -> direct Opus 5.5 -> Antigravity Opus 5.5 -> Sol 6.1 -> Argon -> Grok 4.7.
@@ -265,7 +268,7 @@ modelRoles:
   judge: typesafe/jev-1.14.0
 
   # --- Custom Workflow, Review & Architecture Roles ---
-  review: anthropic/claude-sonnet-5-5
+  review: openai-codex/gpt-6.1-sol
   security: anthropic/claude-sonnet-5-5
   critical: openai-codex/gpt-6.1-sol
   sage: anthropic/claude-fable-5-1
@@ -323,10 +326,9 @@ retry:
       - typesafe/jev-preview
       - google-antigravity/gemini-3.5-flash-lite
     review:
-      - openai-codex/gpt-6.1-sol
       - google-antigravity/gemini-4-argon
-      - google-antigravity/claude-opus-5-5
       - xai-oauth/grok-4.7
+      - google-antigravity/claude-opus-5-5
     security:
       - openai-codex/gpt-6.1-sol
       - google-antigravity/gemini-4-argon

@@ -161,9 +161,9 @@ Cover these **15 roles**, with a primary and an ordered fallback chain for each:
 | `tiny` | built-in chat | Small low-stakes work (titles, memory); also bundled `sonic` / Vibe `fast` tier via override |
 | `widget` | built-in chat | One request per background job to author its status widget; cheap tier only |
 | `judge` | built-in model-kind | Native judgments: `find`, typed eval judgments, auto-thinking |
-| `review` | custom | Code review (bundled `reviewer` via override) |
+| `review` | custom | PR/diff review (bundled `reviewer` via override); primary from a different model family than the main producers (`task`/`smol`/`slow`), same-family routes last |
 | `security` | custom | Security review (bundled `security-reviewer` via override) |
-| `critical` | custom | Adversarial independent final review (`agents/critical.md`) |
+| `critical` | custom | Adversarial go/no-go before irreversible/operational actions (`agents/critical.md`); not routine PR review |
 | `sage` | custom | Deep thinking/ideation (`agents/sage.md`) |
 
 Do not reintroduce roles that duplicate a built-in binding: `architect` (use `@slow`),

@@ -11,7 +11,7 @@
     "widget": "anthropic/claude-haiku-5-5:low",
     "judge": "typesafe/jev-1.14.0",
     "tiny": "anthropic/claude-haiku-5-5:low",
-    "review": "anthropic/claude-sonnet-5-5",
+    "review": "openai-codex/gpt-6.1-sol",
     "security": "anthropic/claude-sonnet-5-5",
     "critical": "openai-codex/gpt-6.1-sol",
     "sage": "anthropic/claude-fable-5-1"
@@ -82,10 +82,9 @@
         "google-antigravity/gemini-3.5-flash-lite"
       ],
       "review": [
-        "openai-codex/gpt-6.1-sol",
         "google-antigravity/gemini-4-argon",
-        "google-antigravity/claude-opus-5-5",
-        "xai-oauth/grok-4.7"
+        "xai-oauth/grok-4.7",
+        "google-antigravity/claude-opus-5-5"
       ],
       "security": [
         "openai-codex/gpt-6.1-sol",

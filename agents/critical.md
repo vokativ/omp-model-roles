@@ -1,10 +1,11 @@
 ---
 name: critical
 description: >-
-  Use as an adversarial final implementation or operational gate before
-  high-risk commits, releases, migrations, cutovers, or destructive actions.
-  Establishes provenance, seeks disconfirming evidence, and returns a
-  machine-consumable GO, NO-GO, or GO-WITH-CONDITIONS advisory verdict.
+  Use only as an adversarial go/no-go gate before an irreversible or operational
+  action: release, deployment, migration, cutover, data change, or destructive
+  command. Not for routine PR or diff review; use `reviewer` for that and pass its
+  findings here as evidence. Establishes provenance, seeks disconfirming evidence,
+  and returns a machine-consumable GO, NO-GO, or GO-WITH-CONDITIONS advisory verdict.
 model: "@critical"
 thinking: high
 structured: true
