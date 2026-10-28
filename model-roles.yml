@@ -1,6 +1,19 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-10-20 · Snapshot version: 35
+## Generated: 2026-10-28 · Snapshot version: 36
 ## Stale? See research/RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
+##
+## v36: OMP 18.13.2 harness alignment, missing roles integration, and custom agent hardening.
+##   - critical: added structured: true to agents/critical.md frontmatter, repairing the silent contract
+##     break introduced in OMP 18.10.2+ where subagents spawned by task defaulted to unstructured plain
+##     text (missing the yield tool and schema validation). Also added read-summarize: false to critical.
+##   - widget: added built-in chat role (introduced in OMP 18.12.3) mapped to anthropic/claude-haiku-5-5:low.
+##     Defuses the silent quota trap where unassigned widget fell back to smol (Sonnet 5.5) on every
+##     background job status-line render. Fallback chain: gemini-3.5-flash-lite -> grok-composer-2.5-fast.
+##   - judge: added model-kind role mapped to typesafe/jev-1.14.0 using stored TypeSafe credentials in
+##     agent.db. Activates natural-language search (find) in architect and other agents under OMP's
+##     find.enabled: auto policy, and enables native System One judgments for typed eval judgments.
+##     Fallback chain: typesafe/jev-latest -> typesafe/jev-preview -> gemini-3.5-flash-lite.
+##   - Role taxonomy cleanup: moved designer to Custom Roles (OMP has no built-in designer role/agent).
 ##
 ## v35: sage -> anthropic/claude-fable-5-1 (provisional, reversible); Astra stays out of every role/chain.
 ##   - sage failover: Fable -> direct Opus 5.5 -> Antigravity Opus 5.5 -> Sol 6.1 -> Argon -> Grok 4.7.
@@ -225,19 +238,23 @@
 ##   - xai-oauth         (X Premium, $8/mo bundled SuperGrok credits — primary for designer; fast worker/fallback tiers)
 
 modelRoles:
-  # --- Core Built-in Roles ---
+  # --- Core Built-in Chat Roles ---
   default: google-antigravity/gemini-3.8-flash
   smol: anthropic/claude-sonnet-5-5
   slow: anthropic/claude-opus-5-5
   plan: anthropic/claude-opus-5-5
   task: anthropic/claude-sonnet-5-5
-  designer: xai-oauth/grok-4.7
   vision: google-antigravity/gemini-3.8-flash
   commit: anthropic/claude-haiku-5-5:low
   advisor: google-antigravity/gemini-3.8-flash
   tiny: anthropic/claude-haiku-5-5:low
+  widget: anthropic/claude-haiku-5-5:low
 
-  # --- Workflow, Review & Architecture Roles ---
+  # --- Model-Kind Roles ---
+  judge: typesafe/jev-1.14.0
+
+  # --- Custom Workflow, Review & Architecture Roles ---
+  designer: xai-oauth/grok-4.7
   architect: anthropic/claude-opus-5-5
   review: anthropic/claude-sonnet-5-5
   security: anthropic/claude-sonnet-5-5
@@ -245,7 +262,6 @@ modelRoles:
   fast_worker: anthropic/claude-haiku-5-5:low
   good_worker: anthropic/claude-sonnet-5-5
   sage: anthropic/claude-fable-5-1
-
 task:
   agentModelOverrides:
     security-reviewer: "@security"
@@ -297,6 +313,13 @@ retry:
       - openai-codex/gpt-6-luna
       - google-antigravity/gemini-3.5-flash-lite
       - xai-oauth/grok-composer-2.5-fast
+    widget:
+      - google-antigravity/gemini-3.5-flash-lite
+      - xai-oauth/grok-composer-2.5-fast
+    judge:
+      - typesafe/jev-latest
+      - typesafe/jev-preview
+      - google-antigravity/gemini-3.5-flash-lite
     architect:
       - openai-codex/gpt-6.1-sol
       - google-antigravity/gemini-4-argon

@@ -7,6 +7,8 @@ description: >-
   machine-consumable GO, NO-GO, or GO-WITH-CONDITIONS advisory verdict.
 model: "@critical"
 thinking: high
+structured: true
+read-summarize: false
 tools: [read, grep, glob, bash, web_search]
 spawns: []
 output:
