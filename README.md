@@ -1,6 +1,6 @@
 # OMP model-role setup — import instructions
 
-**Snapshot: 2026-11-03 · v37.2.** Stale after ~4-6 weeks, or immediately if any subscription
+**Snapshot: 2026-11-03 · v38.** Stale after ~4-6 weeks, or immediately if any subscription
 changed — check `research/RESEARCH-PLAYBOOK.md`'s staleness check before importing this blind.
 
 `model-roles.yml` is a config **overlay**: `modelRoles`, `task.agentModelOverrides`,
@@ -34,6 +34,7 @@ research/
   SAGE-CREATIVE-INSTRUCTIONS.md <- 2026-09-04 · v19.1: cognitive divergence, anti-slop catalogs, and subtractive taste
   SAGE-FABLE-ASTRA-EVALUATION.md <- 2026-10-20: Astra vs Sol and Fable vs Opus for sage; probes, blinded A/B with caveats, adversarial review
   MISTRAL-EVALUATION.md      <- 2026-11-03: Mistral EDU plan, model evaluation, OMP probes, judge regression
+  DEFAULT-ROLE-EVALUATION.md    <- 2026-11-03: default-role usage forensics, OMP latency probe, cost model
 ```
 
 Just importing the config? You need the two `.yml` files, `agents/`, and the import steps below —
@@ -99,9 +100,9 @@ subscription capacity, confirmed via `omp usage` on the source machine:
 |---|---|---|---|
 | `anthropic` | Claude Max 5x, $100/mo | Primary workhorse pool. 2026-11-03 reading: 5h **8%** used, 7d **43%** used, Fable 7d meter **3%** used — a sub-cap inside the shared weekly pool (up to 50% of it); so far moved only by Claude Code usage, not OMP | **heavy workhorse and depth pool** — `task`, `smol`, `review`, and `security` on Sonnet 5.5; `slow` and `plan` (plus the `architect` agent) on Opus 5.5; `sage` on Fable 5.1 (v35); `commit`, `tiny`, `widget`, and Vibe/`sonic` workers on Haiku 5.5:low |
 | `openai-codex` | ChatGPT Plus, $20/mo | OpenAI rate card: ~15-160 Sol 6.1 local messages per 5h (Astra 5-45). One chat 5h + one 7d meter shared by Sol, Astra, and Luna (`omp usage`, plan: plus). 2026-11-03 reading: 5h **16%** / 7d **78%** used, 3 saved resets | **independent critical reviewer & first fallback of most chains** — `critical` on Sol 6.1 guarantees independent provenance against Anthropic producers; Sol 6.1 / Luna are the first fallbacks of most chains (Luna is now second behind Mistral's GLM-5.3 Flash in `smol`/`tiny`, v37). The only OpenAI-primary role. The 7d meter is the tight one now |
-| `google-antigravity` | Google AI Pro, ~$20/mo | 2026-11-03 reading, main account: shared Claude & GPT weekly pool **92.9%** used (one pool for Antigravity Claude and Antigravity GPT); Gemini 4 Argon weekly **37.2%** used (no longer exhausted); Gemini weekly **4.5%** used; Gemini 5h **4.2%** used. Four other accounts ~0% | **primary everyday lane, vision, advisor** — `default`, `vision`, and `advisor` primary on Gemini 3.8 Flash; Antigravity Opus 5.5 is a depth fallback and sage's second hop, effectively unavailable until the shared pool resets (inference: 92.9% is inside OMP's 10% usage reserve); Argon is `critical`'s first fallback and a middle hop in `slow`/`plan`/`review`/`security` and is usable again; Gemini 3.5 Flash-Lite / 3.8 Flash as lightweight fallbacks |
+| `google-antigravity` | Google AI Pro, ~$20/mo | 2026-11-03 reading, main account: shared Claude & GPT weekly pool **92.9%** used (one pool for Antigravity Claude and Antigravity GPT); Gemini 4 Argon weekly **37.2%** used (no longer exhausted); Gemini weekly **4.5%** used; Gemini 5h **4.2%** used. Four other accounts ~0% | **vision and advisor primary, and `default`'s first fallback** (v38: no longer the default primary) — `vision` and `advisor` primary on Gemini 3.8 Flash; first hop of `default`'s chain after `mistral/zai-glm-5-3` (and where it lands when Mistral returns HTTP 402), before Sonnet 5.5; Antigravity Opus 5.5 is a depth fallback and sage's second hop, effectively unavailable until the shared pool resets (inference: 92.9% is inside OMP's 10% usage reserve); Argon is `critical`'s first fallback and a middle hop in `slow`/`plan`/`review`/`security` and is usable again; Gemini 3.5 Flash-Lite / 3.8 Flash as lightweight fallbacks |
 | `xai-oauth` | X Premium, $8/mo (bundled SuperGrok credits) | Small weekly credit pool; 2026-11-03 reading: **1%** used (99% remaining) | **last-tier fallback** — Grok 4.7 ends depth/vision/critical chains; `grok-build` and `grok-composer-2.5-fast` end the cheap chains; select Grok 4.7 directly for one-off design work |
-| `mistral` | Mistral Education (student Pro), $5.99/mo list (owner reports ~$5/mo; max 12 months) | Monthly usage allowance shared across Mistral Vibe CLI, Studio, and API; size unpublished (pricing card: "$15/mo in API credits"; ~$15/mo at API prices is an inference). Resets with the billing period; no 5h/weekly windows; **no `omp usage` meter** (live meter only in the Mistral console). Exhaustion returns HTTP 402 `billing_vibe_budget_exhausted` | **bounded fallback hops only, no primaries** (v37, vision added v37.2) — `zai-glm-5-3-flash` ahead of Luna in `smol`/`tiny`; `zai-glm-5-3` in `task` (third hop) and `review` (before the same-family Opus hop); `mistral-large-4` in `vision` (after Sol 6.1, before Grok 4.7). Small, unmetered pool shared with the owner's Mistral Vibe CLI use |
+| `mistral` | Mistral Education (student Pro), $5.99/mo list (owner reports ~$5/mo; max 12 months) | Two separate included monthly allowances (admin.mistral.ai, 2026-11-03): **$150 Vibe Code** ($5.35 used) and **$15 API/Studio** ($0 used); each resets on the 1st of each calendar month, independent of renewal. OMP's vibe-scope key most likely draws the $150 Vibe Code one [inference: API usage read $0 after a day of OMP calls], shared with Mistral Vibe CLI, the Ubuntu server, and every Mistral hop. Pay-as-you-go is off for both. No 5h/weekly windows; **no `omp usage` meter** (live meter only in the Mistral console). Exhaustion returns HTTP 402 `billing_vibe_budget_exhausted` | **`default` primary (v38) plus bounded fallback hops** — `zai-glm-5-3` is the `default` primary (the only Mistral primary) and `task`'s third hop and `review`'s hop before the same-family Opus hop; `zai-glm-5-3-flash` ahead of Luna in `smol`/`tiny`; `mistral-large-4` in `vision` (after Sol 6.1, before Grok 4.7). Exhaustion walks `default` to Gemini 3.8 Flash. Pool shared with the owner's Mistral Vibe CLI use and the Ubuntu server |
 | `typesafe` | API key, prepaid credit (console.typesafe.ai; separate balance from OpenRouter) | No `omp usage` meter. `typesafe/jev-1.14.0`: $0.042/M input, output free (same price as via OpenRouter). Verified 2026-11-03 (omp 18.16.0): discovery lists `jev-1.14.0`, `jev-latest`, `jev-preview`; a fresh process judged via `typesafe/jev-1.14.0` (P=0.98, ~4 s whole run) | **judge primary** (v37.1) — direct native TypeSafe Jev judgments; no chat model routes through it |
 | `openrouter` | API key, prepaid credit (~$7.5 left, 2026-11-03; separate balance from TypeSafe) | No `omp usage` meter. `typesafe/jev-1.14`: $0.042/M input, output free; 164 judgments cost $0.012 over 2026-09-28..10-28 | **judge fallbacks only** (v37.1; was the judge primary in v37) — Jev via OpenRouter, then Liquid d1.1; no chat model routes through it |
 
@@ -125,8 +126,13 @@ Mistral hops in `smol`/`tiny` put a separately metered pool ahead of Luna to tak
 (see the Mistral section below).
 
 Consequences baked into this file (chains verified against `model-roles.yml`, 2026-11-03):
-- **`default` stays primary on `google-antigravity/gemini-3.8-flash`** (fastest measured model and user daily preference), falling back to `anthropic/claude-sonnet-5-5` $\to$ `openai-codex/gpt-6.1-sol` $\to$ `xai-oauth/grok-build`. With `retry.usageAwareFallback: true`, OMP hops automatically when the Google daily/weekly meter fills.
-- **No `openrouter` or `nvidia` chat model appears in any role or chain; `typesafe` and `openrouter` serve the `judge` role only.** v33 excluded external API tiers (OpenRouter GLM 5.3 Flash, NVIDIA Nemotron) to fit the four paid subscriptions; earlier GLM/Nemotron floors are historical (see the v17-v23 log in `model-roles.yml`). v37 added two logins beyond those four: `mistral` (plan key, fallback hops only) and `openrouter` (prepaid API credit, native judgment routes only); v37.1 adds a seventh, `typesafe` (prepaid API key, judge primary), and demotes `openrouter` to judge fallbacks.
+- **`default` runs on `mistral/zai-glm-5-3`** (v38, owner decision 2026-11-03; v37.2 and earlier: `google-antigravity/gemini-3.8-flash`), falling back to `google-antigravity/gemini-3.8-flash` $\to$ `anthropic/claude-sonnet-5-5` (was Sonnet $\to$ Sol 6.1 $\to$ Grok Build). Full evidence: [research/DEFAULT-ROLE-EVALUATION.md](research/DEFAULT-ROLE-EVALUATION.md).
+  - **Why.** Gemini 3.8 Flash lost its speed case. In the OMP tool-task probe (2026-11-03) it took a median 21.6 s at `low` / 34.6 s at `high` (TTFT 2.7 / 3.3 s) vs GLM-5.3 7.6 s (TTFT 0.64 s) and Sonnet 5.5 ~9 s. GLM-5.3 also scores AA Index v5.0 31.7 vs 30.5 and Terminal-Bench 4.0 41.9% vs 19.7%, with a 1M context. Usage forensics on this Mac (30 days): every main session starts on Gemini 3.8 Flash but only 15% of turns stay there (Opus 53%, Sol 15%, Sonnet 8%, Grok 4.7 7%); 10 of 16 sessions switched away within 6 minutes.
+  - **Owner priority: keep the default off the Claude Max pool**, so Sonnet 5.5 is last. Sol 6.1 and Grok Build leave the chain (Plus 7d meter 78% used; Grok Build has a 512K window and 5 edit errors in 11 calls). Thinking for `default` stays on `defaultThinkingLevel` auto (judge-driven); the owner rejected pinning Gemini to `:low`.
+  - **Allowance and 402 behaviour.** GLM-5.3 draws the Mistral EDU monthly allowance, most likely the $150 Vibe Code one (see the Mistral section), shared with Mistral Vibe CLI, the Ubuntu server (same global config), and the Mistral fallback hops; Mistral pay-as-you-go is off. Repriced at Mistral rates (GLM-5.3 $1.4 / $0.14 cached / $4.4 per M tokens), this Mac's current default-only turns (279 in 30 days) cost ~$4.65/mo (~3% of $150); running every main turn on GLM-5.3 would cost ~$92/mo, which fits inside $150 on this Mac alone but leaves ~$58 for the server, Mistral Vibe CLI, and the hops [inference: repricing, not a measured meter]. Exhaustion returns HTTP 402 and `retry.fallbackOn` walks the chain to Gemini 3.8 Flash (= the v37 default). There is no `omp usage` meter for Mistral, so `retry.usageAwareFallback` cannot skip a depleted primary in advance.
+  - **Image caveat.** GLM-5.3 is text-only: an image pasted into a default session is not seen (verified 2026-11-03: the model replied it cannot see image input). Switch model with `/model`, or ask the agent to `read <image>?q=...`, which uses the `vision` role (Gemini 3.8 Flash).
+  - **Ctrl+P `cycleOrder` is unchanged** (`smol`, `default`, `slow`, `sage`). **Revert:** set `modelRoles.default` back to `google-antigravity/gemini-3.8-flash` and `retry.fallbackChains.default` to `["anthropic/claude-sonnet-5-5","openai-codex/gpt-6.1-sol","xai-oauth/grok-build"]`.
+- **No `openrouter` or `nvidia` chat model appears in any role or chain; `typesafe` and `openrouter` serve the `judge` role only.** v33 excluded external API tiers (OpenRouter GLM 5.3 Flash, NVIDIA Nemotron) to fit the four paid subscriptions; earlier GLM/Nemotron floors are historical (see the v17-v23 log in `model-roles.yml`). v37 added two logins beyond those four: `mistral` (plan key; fallback hops, and since v38 also the `default` primary) and `openrouter` (prepaid API credit, native judgment routes only); v37.1 adds a seventh, `typesafe` (prepaid API key, judge primary), and demotes `openrouter` to judge fallbacks.
 - **`vision`** keeps `google-antigravity/gemini-3.8-flash` primary, falling back to `anthropic/claude-sonnet-5-5` $\to$ `openai-codex/gpt-6.1-sol` $\to$ `mistral/mistral-large-4` $\to$ `xai-oauth/grok-4.7` (the Mistral hop is v37.2, owner decision 2026-11-03: Large 4 read the probe image correctly, the best vision result of the Mistral models, with the cleanest OMP tool run; 1M context, image input; public preview). It sits late because it only runs after Gemini 3.8 Flash, Sonnet, and Sol all fail. (The 2026-08-22 OpenRouter Gemini 3.8 Flash A/B winner is no longer in the chain.)
 - **`critical` keeps strict cross-provider independent provenance**: primary `openai-codex/gpt-6.1-sol`, then `google-antigravity/gemini-4-argon`, then `xai-oauth/grok-4.7`. Independence holds against Anthropic producers; if a producer has failed over to Sol, the producer/reviewer collision must be caught by `critical`'s own provenance check. Argon's weekly meter was exhausted until ~2026-10-24 and read 37.2% used on 2026-11-03, so a Sol failure now falls to Argon first. Since v36 it is scoped to irreversible/operational go/no-go decisions only; PR review moved to `reviewer` (next bullets), which removes the PR-review swarms that drove most `critical` dispatches. No Mistral model is in `critical` (hallucination robustness: Artificial Analysis Omniscience +6 for GLM-5.3 vs +42 for Sol and +46 for Argon).
 - **`slow` / `plan` run on `anthropic/claude-opus-5-5`**, falling back to `openai-codex/gpt-6.1-sol` $\to$ `google-antigravity/gemini-4-argon` $\to$ `google-antigravity/claude-opus-5-5` $\to$ `xai-oauth/grok-4.7`. `security` uses the same chain (primary: Sonnet 5.5).
@@ -197,7 +203,7 @@ Claude 5.5 to non-trial Pro/Ultra subscriptions and schedules Claude 4.6 and
 GPT-OSS-120B removal for **2026-11-02**. Historical research files retain their
 original 4.6 measurements; they are not the current main-setup allocation.
 
-### Mistral EDU plan: bounded fallback adoption (v37)
+### Mistral EDU plan: bounded adoption (v37; `default` primary added v38)
 
 Full evidence, probe tables, and sources: [research/MISTRAL-EVALUATION.md](research/MISTRAL-EVALUATION.md).
 
@@ -208,12 +214,19 @@ credits" per the pricing card. "Vibe" in this section means Mistral's product; e
 README `Vibe` means OMP's good/fast worker tiers.
 
 **Billing route.** OMP's `/login mistral` key is a "vibe"-scope plan key (Mistral Vibe's `whoami`
-reports `plan_name` EDU). Its usage draws the plan's monthly allowance, shared across Mistral Vibe CLI,
-Studio, and API, not PAYG credits. The allowance size is unpublished; ~$15/mo at API prices is an
-**inference**. It resets with the billing period; no 5h/weekly windows. The `has_paid_vibe_entitlement:
-false` in `~/.vibe`'s cache is a client default that only suppresses an upgrade prompt and is
-irrelevant to EDU. The owner's own Mistral Vibe CLI usage (default model GLM-5.3, hosted by Mistral)
-draws the same budget as OMP.
+reports `plan_name` EDU). The admin subscription page (admin.mistral.ai, owner screenshot 2026-11-03
+12:26) shows **two separate included monthly allowances**, each resetting on the first day of each
+calendar month independently of the subscription renewal: **Included API usage** (API/Studio) $0 used
+of $15, and **Included Vibe Code usage** $5.35 used of $150. "API pay-as-you-go" and "Pay-as-you-go
+for Vibe Code" both show an "Enable" button, i.e. both are off. **Inference:** OMP's vibe-scope key
+draws the $150 Vibe Code allowance, not the $15 API one: API usage read $0 after a day of OMP calls
+through that key, and the $5.35 includes that day's OMP research probes plus any Mistral Vibe CLI
+use. v37 had inferred ~$15/mo from the pricing card's API-credit line; that figure was wrong for OMP's
+key and is corrected here. The $150 allowance is shared across the owner's Mistral Vibe CLI, the Ubuntu
+server (same global config), and every OMP Mistral entry (the v38 `default` primary and all fallback
+hops). The `has_paid_vibe_entitlement: false` in `~/.vibe`'s cache is a client default that only
+suppresses an upgrade prompt and is irrelevant to EDU. The owner's own Mistral Vibe CLI usage (default
+model GLM-5.3, hosted by Mistral) draws the same budget as OMP.
 
 **Probe matrix (omp 18.16.0, 2026-11-03).** Each model ran the same tool task (run a failing test, fix
 the planted bug with `edit`, create and run two new files), a vision prompt, a commit-message prompt,
@@ -234,8 +247,9 @@ List-price spend for the whole session was under $0.30.
 OMP accepted every thinking level on every model; the effect is weak and non-monotonic, and `off`
 sends the lowest effort rather than disabling reasoning on GLM-5.3. Chain entries are bare ids.
 
-**Chosen hops** (one `mistral/*` entry per chain, fallback only, no primaries; `vision` added in v37.2):
+**Chosen entries** (one `mistral/*` entry per chain; fallback hops except `default`, the one primary, added in v38; `vision` added in v37.2):
 
+- `default` (primary, v38): `mistral/zai-glm-5-3` $\to$ Gemini 3.8 Flash $\to$ Sonnet 5.5
 - `smol`: `mistral/zai-glm-5-3-flash` $\to$ Luna $\to$ Gemini 3.5 Flash-Lite $\to$ Grok Build
 - `tiny`: `mistral/zai-glm-5-3-flash` $\to$ Luna $\to$ Gemini 3.5 Flash-Lite $\to$ `grok-composer-2.5-fast`
 - `task`: Sol 6.1 $\to$ Gemini 3.8 Flash $\to$ `mistral/zai-glm-5-3` $\to$ Grok Build
@@ -244,7 +258,7 @@ sends the lowest effort rather than disabling reasoning on GLM-5.3. Chain entrie
 
 GLM-5.3 Flash (AA Intelligence v5.0 27.8, Terminal-Bench 4.0 32.8%, vision, 1M context, $0.15/$0.5)
 precedes Luna (AA 21.4). GLM-5.3 (AA 31.7, Terminal-Bench 4.0 41.9% vs Gemini 3.8 Flash's 19.7%, 1M
-context, text-only, $1.4/$4.4) is `task`'s third hop and a cross-family reviewer before the
+context, text-only, $1.4/$4.4) is the `default` primary (v38), `task`'s third hop, and a cross-family reviewer before the
 same-family Opus hop. Large 4 (AA 26.0, 1M context, image input, catalog `maxTokens` 262,144; OMP list price $1.36/$4.18 vs Mistral's own $0.70/$2.10) had the cleanest OMP tool run (5 turns, 10.8 s, 0 edit errors) and read the probe image correctly, the best vision result of the Mistral models. It is `vision`'s third hop, after Sol and before Grok 4.7, so it only runs when Gemini 3.8 Flash, Sonnet, and Sol all fail. Its Terminal-Bench 4.0 score is 24.7% in a neutral harness (41% in Mistral's own Vibe harness), which is why it is a vision-only hop. Only one entry per chain, because two entries on one routing provider share one pool.
 
 **Not adopted** (`mistral-large-4` is adopted for `vision` only; elsewhere it stays an explicit `/model` choice):
@@ -254,13 +268,20 @@ same-family Opus hop. Large 4 (AA 26.0, 1M context, image input, catalog `maxTok
 - `mistral-medium-3.5`: deprecated 2026-10-31, Terminal-Bench 4.0 0%, 3 of 4 malformed hashline edits (`mistral-medium-latest`).
 - Small 4 / Ministral: AA 4.3 / weak; `ministral-14b` failed 47 of 47 edits and looped for 115 s.
 - Alias ids (`mistral-medium-3.5`, `zai-glm-5`, `mistral-vibe-cli-*`): no OMP catalog metadata, so no thinking control, null context window, and zero cost accounting.
-- No Mistral model in `critical`, `slow`/`plan`/`security` (AA at most 32 vs the 50+ depth tier), `sage`, `judge` (Mistral has no native judgment API), or as any primary (small unmetered monthly pool). `vision` has `mistral/mistral-large-4` as a late fallback only (v37.2).
+- No Mistral model in `critical`, `slow`/`plan`/`security` (AA at most 32 vs the 50+ depth tier), `sage`, `judge` (Mistral has no native judgment API), or as a primary other than `default` (v38, owner choice; see below). `vision` has `mistral/mistral-large-4` as a late fallback only (v37.2).
+
+**v38 default exception.** The owner chose `mistral/zai-glm-5-3` as the `default` primary, the one
+exception to v37's "no primaries" rule: faster and stronger on the tool task than Gemini 3.8 Flash, and it
+keeps routine turns off the Claude Max pool. Rationale, usage forensics, probe numbers, and repricing:
+[research/DEFAULT-ROLE-EVALUATION.md](research/DEFAULT-ROLE-EVALUATION.md). GLM-5.3 is text-only (pasted
+images are not seen; use `/model` or `read <image>?q=...`). Pay-as-you-go is off, so exhaustion means HTTP
+402 and a walk to Gemini 3.8 Flash.
 
 **Risks.**
 
-- **Unmetered.** No `omp usage` meter, so `retry.usageAwareFallback` cannot skip a depleted Mistral hop in advance (inference: unknown usage fails open); a hop is discovered empty only when it errors.
-- **Shared pool.** Mistral Vibe CLI, Studio, and API draw the same monthly allowance; heavy Mistral Vibe CLI use shrinks what OMP fallbacks have. The allowance size is unpublished.
-- **Monthly reset.** Exhaustion lasts to the next billing period. It returns HTTP 402 `billing_vibe_budget_exhausted` (documented in mistral-vibe issue 1362 for a Free plan; not reproduced here); OMP's `retry.fallbackOn` default `any` walks the chain on it. Chain walking into the Mistral hop was verified with a forced runtime error (HTTP 410 on the `tiny` primary): the `sonic` subagent answered on `mistral/zai-glm-5-3-flash`.
+- **Unmetered.** No `omp usage` meter, so `retry.usageAwareFallback` cannot skip a depleted Mistral entry in advance (inference: unknown usage fails open); an entry is discovered empty only when it errors, which now includes the `default` primary on the first turn after exhaustion.
+- **Shared pool.** Mistral Vibe CLI, the Ubuntu server, and every OMP Mistral entry draw the same $150/mo Vibe Code allowance (inference for OMP's key; see Billing route); heavy Mistral Vibe CLI or server use shrinks what the `default` primary and the fallbacks have.
+- **Monthly reset.** Exhaustion lasts to the 1st of the next calendar month. It returns HTTP 402 `billing_vibe_budget_exhausted` (documented in mistral-vibe issue 1362 for a Free plan; not reproduced here); OMP's `retry.fallbackOn` default `any` walks the chain on it, so `default` lands on Gemini 3.8 Flash. Chain walking into the Mistral hop was verified with a forced runtime error (HTTP 410 on the `tiny` primary): the `sonic` subagent answered on `mistral/zai-glm-5-3-flash`.
 - **Preview and deprecated models.** The chosen GLM-5.3 models are not previews, but Large 4 (now the `vision` chain's third hop, v37.2) and DeepSeek V4.1 Flash are public previews, so Large 4's availability or behavior could change; DeepSeek is not in any chain; Medium 3.5 is deprecated. Re-check the catalog before widening.
 - **Provider vs family.** GLM-5.3 is a third-party model family served by Mistral; for independence, record both the routing provider and the family.
 - **Data and terms.** The pricing page lists "Model training: Opt-out" for Pro; that it applies to EDU is an inference and the opt-out setting was not checked. Third-party-harness terms for the student plan were not checked. The renewal price after the 12 months is not stated.
@@ -348,7 +369,7 @@ The server and Mac both use extended context under this owner-approved policy.
 
 | Need | Normal choice |
 |---|---|
-| Small, clear change or everyday conversation | `omp`; stay on the default model |
+| Small, clear change or everyday conversation | `omp`; stay on the default model (GLM-5.3 since v38; text-only, so for a pasted image `/model` to a vision model or ask the agent to `read <image>?q=...`) |
 | Build/fix with a useful exploration phase and routine implementation | Opus 5.5 → Sonnet 5.5 prewalk (`@slow` → `@smol`), explicitly opted in |
 | Hard reasoning remains throughout implementation | Stay on `@slow`; no forced downgrade |
 | Review a design, implementation, plan, or configuration | Ask for the `architect` agent; define the question and scope |
@@ -377,11 +398,11 @@ omp --model @slow --prewalk-into @smol "Implement X; preserve Y; verify Z."
 
 This starts on Opus 5.5 and targets Sonnet 5.5 with the current role mappings (fallbacks may
 change the concrete models). Plain `omp --prewalk` instead starts on the default
-Gemini model; it does **not** automatically select `@plan`, `@slow`, or `@architect`.
+GLM-5.3 model; it does **not** automatically select `@plan`, `@slow`, or `@architect`.
 
 In an existing session, first select `/model @slow`, then run `/prewalk`, then send
 the implementation request. `/prewalk` arms a one-shot handoff; it is not an
-always-on mode. `/prewalk restart` returns to `@default` (Gemini here), not `@slow`.
+always-on mode. `/prewalk restart` returns to `@default` (GLM-5.3 here), not `@slow`.
 
 The target inherits the conversation and todo state rather than just a prose plan.
 It still incurs input processing, can re-read files, and must validate the result.
@@ -430,9 +451,10 @@ The mapping references seven logins. Four are subscription logins: `anthropic`, 
 Three more were added in v37/v37.1 and **never appear in `omp usage`**:
 
 - `mistral`: run `/login mistral` on **each** machine (the key is per machine; the plan allowance is one
-  account-level pool, so load across machines adds up). It must be the Mistral Education/student Pro
-  plan key. Used only for the five fallback hops (`smol`, `tiny`, `task`, `review`, `vision`); without it, delete
-  those `mistral/*` entries before importing.
+  account-level pool, $150/mo Vibe Code, so load across machines adds up). It must be the Mistral
+  Education/student Pro plan key. Used as `default`'s primary (v38) and for the five fallback hops
+  (`smol`, `tiny`, `task`, `review`, `vision`); without it, restore the v37.2 `default` (Gemini 3.8 Flash
+  primary; chain Sonnet 5.5 → Sol 6.1 → Grok Build) and delete those `mistral/*` entries before importing.
 - `typesafe` (v37.1): run `/login typesafe` (API key from console.typesafe.ai; needs prepaid credit, no free
   tier). Used by the `judge` role as the primary (`typesafe/jev-1.14.0`). Without it, set `judge` to
   `openrouter/typesafe/jev-1.14` (the v37 setup) before importing.
@@ -458,11 +480,11 @@ overrides and custom agents still use the installation steps below.
 
 Equivalent CLI commands for `config.yml`:
 ```bash
-omp config set modelRoles '{"default":"google-antigravity/gemini-3.8-flash","smol":"anthropic/claude-sonnet-5-5","slow":"anthropic/claude-opus-5-5","plan":"anthropic/claude-opus-5-5","task":"anthropic/claude-sonnet-5-5","vision":"google-antigravity/gemini-3.8-flash","commit":"anthropic/claude-haiku-5-5:low","advisor":"google-antigravity/gemini-3.8-flash","tiny":"anthropic/claude-haiku-5-5:low","widget":"anthropic/claude-haiku-5-5:low","judge":"typesafe/jev-1.14.0","review":"openai-codex/gpt-6.1-sol","security":"anthropic/claude-sonnet-5-5","critical":"openai-codex/gpt-6.1-sol","sage":"anthropic/claude-fable-5-1"}'
+omp config set modelRoles '{"default":"mistral/zai-glm-5-3","smol":"anthropic/claude-sonnet-5-5","slow":"anthropic/claude-opus-5-5","plan":"anthropic/claude-opus-5-5","task":"anthropic/claude-sonnet-5-5","vision":"google-antigravity/gemini-3.8-flash","commit":"anthropic/claude-haiku-5-5:low","advisor":"google-antigravity/gemini-3.8-flash","tiny":"anthropic/claude-haiku-5-5:low","widget":"anthropic/claude-haiku-5-5:low","judge":"typesafe/jev-1.14.0","review":"openai-codex/gpt-6.1-sol","security":"anthropic/claude-sonnet-5-5","critical":"openai-codex/gpt-6.1-sol","sage":"anthropic/claude-fable-5-1"}'
 
 omp config set task.agentModelOverrides '{"security-reviewer":"@security","reviewer":"@review","sonic":"@tiny"}'
 
-omp config set retry.fallbackChains '{"default":["anthropic/claude-sonnet-5-5","openai-codex/gpt-6.1-sol","xai-oauth/grok-build"],"smol":["mistral/zai-glm-5-3-flash","openai-codex/gpt-6-luna","google-antigravity/gemini-3.5-flash-lite","xai-oauth/grok-build"],"slow":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","google-antigravity/claude-opus-5-5","xai-oauth/grok-4.7"],"plan":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","google-antigravity/claude-opus-5-5","xai-oauth/grok-4.7"],"task":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-3.8-flash","mistral/zai-glm-5-3","xai-oauth/grok-build"],"vision":["anthropic/claude-sonnet-5-5","openai-codex/gpt-6.1-sol","mistral/mistral-large-4","xai-oauth/grok-4.7"],"commit":["xai-oauth/grok-build","openai-codex/gpt-6-luna","google-antigravity/gemini-3.5-flash-lite"],"advisor":["anthropic/claude-haiku-5-5:low","openai-codex/gpt-6-luna","xai-oauth/grok-build"],"tiny":["mistral/zai-glm-5-3-flash","openai-codex/gpt-6-luna","google-antigravity/gemini-3.5-flash-lite","xai-oauth/grok-composer-2.5-fast"],"widget":["google-antigravity/gemini-3.5-flash-lite","xai-oauth/grok-composer-2.5-fast"],"judge":["openrouter/typesafe/jev-1.14","openrouter/typesafe/jev-1.13","openrouter/liquid/d1.1"],"review":["google-antigravity/gemini-4-argon","xai-oauth/grok-4.7","mistral/zai-glm-5-3","google-antigravity/claude-opus-5-5"],"security":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","google-antigravity/claude-opus-5-5","xai-oauth/grok-4.7"],"critical":["google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"],"sage":["google-antigravity/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"],"anthropic/claude-fable-5-1":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"],"anthropic/claude-fable-5":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"]}'
+omp config set retry.fallbackChains '{"default":["google-antigravity/gemini-3.8-flash","anthropic/claude-sonnet-5-5"],"smol":["mistral/zai-glm-5-3-flash","openai-codex/gpt-6-luna","google-antigravity/gemini-3.5-flash-lite","xai-oauth/grok-build"],"slow":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","google-antigravity/claude-opus-5-5","xai-oauth/grok-4.7"],"plan":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","google-antigravity/claude-opus-5-5","xai-oauth/grok-4.7"],"task":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-3.8-flash","mistral/zai-glm-5-3","xai-oauth/grok-build"],"vision":["anthropic/claude-sonnet-5-5","openai-codex/gpt-6.1-sol","mistral/mistral-large-4","xai-oauth/grok-4.7"],"commit":["xai-oauth/grok-build","openai-codex/gpt-6-luna","google-antigravity/gemini-3.5-flash-lite"],"advisor":["anthropic/claude-haiku-5-5:low","openai-codex/gpt-6-luna","xai-oauth/grok-build"],"tiny":["mistral/zai-glm-5-3-flash","openai-codex/gpt-6-luna","google-antigravity/gemini-3.5-flash-lite","xai-oauth/grok-composer-2.5-fast"],"widget":["google-antigravity/gemini-3.5-flash-lite","xai-oauth/grok-composer-2.5-fast"],"judge":["openrouter/typesafe/jev-1.14","openrouter/typesafe/jev-1.13","openrouter/liquid/d1.1"],"review":["google-antigravity/gemini-4-argon","xai-oauth/grok-4.7","mistral/zai-glm-5-3","google-antigravity/claude-opus-5-5"],"security":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","google-antigravity/claude-opus-5-5","xai-oauth/grok-4.7"],"critical":["google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"],"sage":["google-antigravity/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"],"anthropic/claude-fable-5-1":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"],"anthropic/claude-fable-5":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"]}'
 
 omp config set retry.usageAwareFallback true
 omp config set retry.usageReservePolicy auto

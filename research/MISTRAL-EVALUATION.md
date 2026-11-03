@@ -20,17 +20,22 @@ those reports and attributed to its source.
 
 ## Decision
 
-- **Adopted (v37): four fallback-only hops, one `mistral/*` entry per chain, no primaries.**
+- **Adopted (v37): four fallback-only hops, one `mistral/*` entry per chain, no primaries** (except the
+  v38 default, below).
   `smol` and `tiny`: `mistral/zai-glm-5-3-flash` ahead of Luna. `task` and `review`:
   `mistral/zai-glm-5-3` as third hop (before Grok Build; before same-family Antigravity Opus).
 - **Adopted (v37.2, 2026-11-03, owner decision): a fifth hop, `vision`.** `mistral/mistral-large-4`
   after Sol 6.1, before Grok 4.7 (chain: Sonnet 5.5 -> Sol 6.1 -> Large 4 -> Grok 4.7). Still one
   `mistral/*` entry per chain, fallback-only.
+- **Adopted (v38, 2026-11-03, owner decision): the sole Mistral primary.** `modelRoles.default` ->
+  `mistral/zai-glm-5-3`; `default` chain -> `google-antigravity/gemini-3.8-flash` ->
+  `anthropic/claude-sonnet-5-5`. Details and evidence: [DEFAULT-ROLE-EVALUATION.md](DEFAULT-ROLE-EVALUATION.md).
+  Still one `mistral/*` entry per chain (the primary is the entry; the `default` chain holds none).
 - **Why bounded.** Small monthly pool, unmetered in OMP, shared with the owner's own Mistral Vibe
-  CLI use. `retry.usageAwareFallback` excludes ordinary API keys, so it is an error-driven hop only.
+  CLI use (and, from v38, the default role). `retry.usageAwareFallback` excludes ordinary API keys, so it is an error-driven hop only.
 - **Not adopted:** DeepSeek V4.1 Flash 1017, Medium 3.5, Small 4, Ministral, every alias id. No
-  Mistral model in `critical`, `slow`/`plan`/`security`, `sage`, `judge`, or as any primary. (Large 4
-  was on this list in v37; v37.2 adopted it as the late `vision` hop only.)
+  Mistral model in `critical`, `slow`/`plan`/`security`, `sage`, `judge`, or as any primary except the
+  v38 `default`. (Large 4 was on this list in v37; v37.2 adopted it as the late `vision` hop only.)
 - **Judge fix (independent of Mistral).** v37: `judge` -> `openrouter/typesafe/jev-1.14`, chain
   `openrouter/typesafe/jev-1.13` -> `openrouter/liquid/d1.1`; v37.1 (after a TypeSafe login):
   `typesafe/jev-1.14.0` direct with `openrouter/typesafe/jev-1.14` -> `openrouter/typesafe/jev-1.13` ->
@@ -57,6 +62,18 @@ Observed 2026-11-03. **[INFERENCE]** marks anything not read directly from a sou
 | Meter | **Console UI only**: https://console.mistral.ai/codestral/cli ("View organization usage"); https://admin.mistral.ai/organization/usage; https://admin.mistral.ai/subscription (plan, usage, PAYG toggle); https://admin.mistral.ai/plateforme/limits. No usable API: `console.mistral.ai/api/vibe/{usage,quota,entitlements,account}` -> 401, `api.mistral.ai/v1/{usage,billing}` -> 404, Admin API Enterprise-only; Mistral Vibe CLI has no usage command (#1366) | live probes |
 | Training | Pro row "Model training: Opt-out"; plan key under consumer terms (legal.mistral.ai/terms). **[INFERENCE]** same for EDU | mistral.ai/pricing |
 
+**v38 correction (owner screenshot of admin.mistral.ai/subscription, 2026-11-03 12:26).** The page shows
+plan "Education — Pro plan with student discount" (Active) and **two separate included monthly
+allowances**, each reset on the first day of each calendar month, independently of the subscription
+renewal: **Included API usage (API/Studio) $0 used of $15** and **Included Vibe Code usage $5.35 used of
+$150**. Pay-as-you-go for the API and for Vibe Code both show an "Enable" button, i.e. both off.
+**[INFERENCE]** OMP's `/login mistral` key is a vibe-scope plan key and draws the **$150 Vibe Code**
+allowance, not the $15 API allowance: API usage read $0 after a day of OMP calls through that key; the
+$5.35 includes that day's OMP research probes plus any Mistral Vibe CLI use. v37 had inferred "$15/mo"
+from the pricing card's API-credit line; that figure and the "Reset: monthly (billing period)" row above
+are the v37 reading, superseded by this page. Where this document says "~$15/mo" below, it is that v37
+inference unless it cites the v38 correction.
+
 **Source conflict.** The 2026-08-12 help article says "API rate limits are not the same as your
 Vibe plan budget"; the undated docs say one pool is shared by Studio, API and Vibe Code. Issue
 #1362 shows the key type decides which pool is hit — consistent with the plan-key route.
@@ -66,7 +83,8 @@ here is GLM-5.3 (GrowthBook `vibe_cli_default_routing_model` = `glm-5-3`, experi
 `ml408-rollout-default-cli-ab-test`, announced 2026-09-21); Large 4 and GLM-5.3 Flash are extras.
 **[INFERENCE]** Large 4 is the likely next default.
 
-**What $15 would buy at API prices — [INFERENCE], scale only** (docs.mistral.ai/inference/pricing;
+**What $15 would have bought at API prices — [INFERENCE], scale only, v37 figure now superseded (the
+Vibe Code allowance is $150, so multiply by 10)** (docs.mistral.ai/inference/pricing;
 judge-size call = 4k in/300 out; agent session = 200k in, 80% cached, 12k out): `zai-glm-5-3`
 ($1.4/$0.14/$4.4 per M in/cached/out) about 2.2k calls or 114 sessions; `mistral-large-4`
 ($0.7/$0.07/$2.1) about 4.4k / 233; `deepseek-v4-1-flash-1017` ($0.3/$0.007/$1.2) about 9.6k / 545;
@@ -252,7 +270,7 @@ another machine or non-OMP use. Measure over a full reset cycle before widening 
 | `mistral-medium-3.5` / `-latest` | Deprecated 2026-10-31; Terminal-Bench 4.0 0.0%; Omniscience -38.7; malformed hashline edits (3 of 4 latest, 6 of 7 alias); wrong once at high on the sheep puzzle |
 | `mistral-small-2603`, Ministral | Small 4 AA 4.3 < Flash-Lite 11.7; got "401" wrong once, misread "HELLO7"; `ministral-14b` failed 47/47 edits in a 115 s loop |
 | Alias ids; Codestral, Leanstral, Magistral, Devstral, Large 3 | Aliases: no catalog metadata (no thinking control, null context, zero cost accounting). Others: FIM-only, specialised, deprecated, or retired |
-| Any Mistral primary; a second `mistral/*` entry per chain | Small unmetered pool; each failed hop burns a retry attempt with no preflight skip |
+| Any Mistral primary other than the v38 `default`; a second `mistral/*` entry per chain | Small unmetered pool; each failed hop burns a retry attempt with no preflight skip |
 
 ## Judge regression
 
@@ -371,10 +389,29 @@ benchmarks (AA 26.0; Terminal-Bench 4.0 24.7% vs 41% in Mistral's harness). It d
 allowance; the one-`mistral/*`-entry-per-chain rule still holds. The "No Mistral hop" `vision` verdict,
 the "four hops" wording and the Large 4 "Not adopted" row above are the v37 history.
 
+**v38 update (2026-11-03).** Owner decision: `mistral/zai-glm-5-3` becomes the `default` primary,
+replacing `google-antigravity/gemini-3.8-flash`, which moves to the head of a two-entry fallback chain
+(Gemini 3.8 Flash -> Sonnet 5.5; Sol 6.1 and Grok Build leave it). This is the one exception to the
+v37 "no Mistral primaries" rule, taken by owner choice with owner priority "keep the default off the
+Claude Max pool". Allowance impact, using the corrected $150/mo Vibe Code allowance (see the v38
+correction in Subscription facts; resets on the 1st of each calendar month): repriced at Mistral rates,
+this Mac's 279 default-only turns over 30 days cost about $4.65/mo, roughly 3% of $150; living on the
+default (all 1,870 main turns) would cost about $92/mo, which fits within $150 on this Mac alone but
+leaves about $58 for the Ubuntu server (same global config), Mistral Vibe CLI, and the five Mistral
+fallback hops. On exhaustion (HTTP 402) the chain walks to Gemini 3.8 Flash, i.e. the v37 default. The
+owner confirmed Mistral PAYG is off (both PAYG toggles show "Enable"), so there is no overage. GLM-5.3
+is text-only: a pasted image in a default session is not seen (verified 2026-11-03); switch model or
+ask the agent to `read <image>?q=...`, which uses the `vision` role. Full analysis, options and
+measurements: [DEFAULT-ROLE-EVALUATION.md](DEFAULT-ROLE-EVALUATION.md). The statements above that say
+"fallback hops only" and "no primaries" describe v37.
+
 ## Risks and open questions
 
-1. **Quota size unpublished.** About $15/mo at API prices is **[INFERENCE]**; no per-model
-   weighting documented; the owner's Mistral Vibe CLI (default GLM-5.3) draws the same budget.
+1. **Quota size.** The v37 "about $15/mo at API prices" was an inference from the pricing card; the
+   admin page (2026-11-03) shows $150/mo Vibe Code (what the OMP key draws, **[INFERENCE]**) and
+   $15/mo API, independent monthly resets on the 1st. No per-model weighting documented; the owner's
+   Mistral Vibe CLI (default GLM-5.3) draws the same budget, and since v38 so does the `default` role on
+   every machine using this config (the Ubuntu server included).
 2. **No meter in OMP.** `omp usage` shows no Mistral or OpenRouter section; exhaustion is learned
    only from a 402 (`billing_vibe_budget_exhausted`, shape from #1362). OMP's default
    `retry.fallbackOn: any` walks the chain on every provider error (`omp://settings.md`). Verified
@@ -417,12 +454,18 @@ the "four hops" wording and the Large 4 "Not adopted" row above are the v37 hist
   verify with `omp config get`, bump the snapshot version. To drop only the v37.2 hop, delete
   `mistral/mistral-large-4` from the `vision` chain. The `mistral` login can stay: with no
   role or chain referencing it, it is inert.
+- **Revert the v38 default:** set `modelRoles.default` back to `google-antigravity/gemini-3.8-flash` and
+  `retry.fallbackChains.default` back to `anthropic/claude-sonnet-5-5` -> `openai-codex/gpt-6.1-sol` ->
+  `xai-oauth/grok-build` in `model-roles.yml` and `profiles/anthropic-heavy.yml` (re-apply with
+  `omp config set modelRoles.default ...` and `omp config set retry.fallbackChains '{...}'`, verify
+  with `omp config get`, bump the snapshot version). The five fallback hops stay valid on their own.
 - **Judge:** do not return to v36 (no working native route). To use TypeSafe direct, log in and
   switch to the alternative config above.
 
 ## What would change this answer
 
-- A published allowance size or per-model weighting, or `omp usage` gaining a Mistral meter.
+- Per-model weighting of the $150 Vibe Code allowance being published, a measured Vibe Code counter delta from OMP calls (confirming the key draws it), or `omp usage` gaining a Mistral meter.
+- Sustained default-role use pushing the $150 allowance toward exhaustion (the v38 default would then need a cheaper model, e.g. GLM-5.3 Flash, or a Gemini-first order).
 - A live exhaustion test showing OMP walking (or failing to walk) the chain on a 402.
 - Large 4 leaving preview with an OMP-harness Terminal-Bench 4.0 near Mistral Vibe's 41%.
 - A local review-precision measurement for GLM-5.3, or evidence on whether DeepSeek/Ministral usage

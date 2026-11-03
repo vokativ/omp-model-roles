@@ -1,6 +1,6 @@
 {
   "modelRoles": {
-    "default": "google-antigravity/gemini-3.8-flash",
+    "default": "mistral/zai-glm-5-3",
     "smol": "anthropic/claude-sonnet-5-5",
     "slow": "anthropic/claude-opus-5-5",
     "plan": "anthropic/claude-opus-5-5",
@@ -26,9 +26,8 @@
   "retry": {
     "fallbackChains": {
       "default": [
-        "anthropic/claude-sonnet-5-5",
-        "openai-codex/gpt-6.1-sol",
-        "xai-oauth/grok-build"
+        "google-antigravity/gemini-3.8-flash",
+        "anthropic/claude-sonnet-5-5"
       ],
       "smol": [
         "mistral/zai-glm-5-3-flash",

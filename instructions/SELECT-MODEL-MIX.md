@@ -1,6 +1,6 @@
 # Select an alternative OMP model mix
 
-**Instruction updated: 2026-11-03 (snapshot v37.2; installed OMP 18.16.0, role contract
+**Instruction updated: 2026-11-03 (snapshot v38; installed OMP 18.16.0, role contract
 last derived on 18.13.2). Source baseline: 2026-10-08; recheck by 2026-11-11**, or
 immediately after a plan, permission, price, catalog, eligibility, or OMP role/agent
 change. This is a prompt for OMP to follow, not a program or an installation step.
@@ -43,23 +43,34 @@ either from a preview:
   `openrouter/typesafe/jev-1.13`, and `openrouter/liquid/d1.1` billed to OpenRouter
   prepaid credit). Label it as separately funded API-key use outside the four
   subscriptions.
-- **Mistral fallback hops:** an existing `mistral` plan login (currently the Mistral
-  Education plan key from `/login mistral`) may be kept as **bounded fallback hops
-  only**: never a primary, at most one `mistral/*` entry per chain, and canonical
+- **Mistral hops and the owner-chosen default primary:** an existing `mistral` plan login
+  (currently the Mistral Education plan key from `/login mistral`) may be kept as **bounded
+  fallback hops**: at most one `mistral/*` entry per chain, and canonical
   catalog ids only (for example `mistral/zai-glm-5-3` and `mistral/zai-glm-5-3-flash`),
   not alias ids that lack catalog metadata (`mistral-medium-3.5`, `zai-glm-5`,
-  `mistral-vibe-cli-*`). Label it as a small monthly plan allowance shared with
-  Mistral Vibe CLI, Studio, and API (not one of the four subscriptions), with no
+  `mistral-vibe-cli-*`). Label it as a monthly plan allowance (owner's admin page, 2026-11-03:
+  $150/mo Included Vibe Code usage, which the OMP key is inferred to draw, plus a separate $15/mo
+  API allowance; both reset on the 1st of the calendar month) shared with Mistral Vibe CLI and
+  every machine using the config (not one of the four subscriptions), with no
   `omp usage` meter and an HTTP 402 stop on exhaustion. Mistral has no native judgment
   API, so it never belongs in `judge`. The v37 and v37.1 snapshots use it only in `smol`,
   `tiny`, `task`, and `review`; v37.2 adds `vision` (`mistral/mistral-large-4`, an
   image-capable hop after Sol 6.1 and before Grok 4.7). It stays out of `critical`,
-  `slow`/`plan`/`security`, and `sage`.
+  `slow`/`plan`/`security`, and `sage`. It is **never a primary by default**; the single
+  exception is the owner-chosen v38 `default` primary `mistral/zai-glm-5-3`, allowed only
+  while all of these hold: (1) the `default` chain ends in non-Mistral models with a 1M-context
+  model reachable (v38: `google-antigravity/gemini-3.8-flash` -> `anthropic/claude-sonnet-5-5`);
+  (2) Mistral pay-as-you-go stays off, so exhaustion fails over (HTTP 402) instead of billing;
+  (3) the owner accepts that GLM-5.3 is text-only, so pasted images in a default session are
+  not seen (switch model or use `read <image>?q=...`, which uses the `vision` role). Do not
+  extend the exception to any other role or propose it without the owner's explicit choice.
+  Evidence: [default-role evaluation](../research/DEFAULT-ROLE-EVALUATION.md).
 
 Read [subscription research](../research/SUBSCRIPTION-MIXES.md), the
 [research playbook](../research/RESEARCH-PLAYBOOK.md),
-[Fable evaluation](../research/FABLE-EVALUATION.md), and
-[Mistral evaluation](../research/MISTRAL-EVALUATION.md), then current `model-roles.yml`,
+[Fable evaluation](../research/FABLE-EVALUATION.md),
+[Mistral evaluation](../research/MISTRAL-EVALUATION.md), and
+[default-role evaluation](../research/DEFAULT-ROLE-EVALUATION.md), then current `model-roles.yml`,
 `models-overlay.yml`, relevant agent bindings, and any supplied plans/usage notes.
 This instruction's **proposal-only** scope overrides the playbook's apply/ship
 workflow and historical executable-selector directions. Existing allocations,

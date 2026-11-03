@@ -29,6 +29,16 @@ See the [Mistral section](#mistral-education-plan-key-bounded-fallback-only) and
 recheck date has passed), and the 17-role map below was not revised for the 15-role
 contract.
 
+**Updated 2026-11-03 (v38):** the live root `model-roles.yml` is now snapshot v38, superseding the
+v37.1 reference above. The `default` role runs on `mistral/zai-glm-5-3` (owner decision; the one
+Mistral primary), with fallbacks `google-antigravity/gemini-3.8-flash` -> `anthropic/claude-sonnet-5-5`;
+the "never a primary" and four-role wording in the paragraph above describes v37.1. Rationale:
+[DEFAULT-ROLE-EVALUATION.md](DEFAULT-ROLE-EVALUATION.md). The owner's admin page that day shows two
+separate Education allowances, **$15/mo Included API usage** and **$150/mo Included Vibe Code
+usage** (both reset on the 1st of each calendar month; PAYG for both off); OMP's `/login mistral`
+key is inferred to draw the $150 Vibe Code allowance, which corrects the "$15" planning figure in the
+Mistral section below (v37 inferred it from the pricing card's API-credit line).
+
 The goal is to choose which pool should carry general work, reserve deeper models
 for harder work, and retain a genuinely different model family for critical review.
 Selection follows [../instructions/SELECT-MODEL-MIX.md](../instructions/SELECT-MODEL-MIX.md),
@@ -298,6 +308,13 @@ window is documented. **[INFERENCE]** the $15 is the allowance in API-priced dol
 input, 80% cached, 12k output) or 893 GLM-5.3 Flash sessions: a planning ratio, not a
 quota.
 
+**v38 correction (owner's admin.mistral.ai/subscription page, 2026-11-03).** The page shows two
+separate allowances, each resetting on the 1st of each calendar month: Included API usage ($0 of $15
+used) and Included Vibe Code usage ($5.35 of $150 used), with pay-as-you-go off for both. **[INFERENCE]**
+OMP's `/login mistral` key draws the $150 Vibe Code allowance (API usage stayed $0 after a day of OMP
+calls). The paragraph above, its "$15" planning figure, and the "billing period" reset wording are the
+v37 reading; use $150/mo and calendar-month reset. The planning ratios scale by 10.
+
 **Exhaustion.** With pay-as-you-go (PAYG) off, the default, Mistral Vibe stops until the
 next period ([key and profile notes][m-keys]). With PAYG on, usage past the plan draws
 prepaid credits and requests fail with **HTTP 402** at a zero balance; PAYG needs
@@ -365,9 +382,9 @@ the plan key falls under Mistral's [consumer terms][m-terms], and **[INFERENCE]*
 same applies to Education. OMP's provider docs describe `/login mistral` as minting a
 plan-tied key; Mistral's terms for use through a third-party harness were not reviewed.
 
-**Not verified:** the live meter reading, the allowance size and per-model weighting
-(the $15 equivalence is an inference), whether Education can enable PAYG, and the
-renewal price after the 12-month limit.
+**Not verified:** the live meter reading over time, per-model weighting of the allowance (the
+$150 Vibe Code draw by the OMP key is an inference), whether Education can enable PAYG (both PAYG
+toggles show "Enable", i.e. off, on 2026-11-03), and the renewal price after the 12-month limit.
 
 ## Recommended mixes by workload and paying tier
 

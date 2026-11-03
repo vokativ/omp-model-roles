@@ -1,6 +1,23 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-11-03 · Snapshot version: 37.2
+## Generated: 2026-11-03 · Snapshot version: 38
 ## Stale? See research/RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
+##
+## v38: default -> mistral/zai-glm-5-3 (owner decision); chain google-antigravity/gemini-3.8-flash -> anthropic/claude-sonnet-5-5.
+##   Evidence: research/DEFAULT-ROLE-EVALUATION.md. Gemini 3.8 Flash lost its speed case: in OMP probes it took 21.6 s
+##   (low) / 34.6 s (high) on the tool task vs GLM-5.3 7.6 s and Sonnet 5.5 ~9 s; TTFT 2.7-3.3 s per turn vs 0.64 s
+##   (GLM-5.3); 30-day main sessions on this Mac kept only 15% of turns on the default (10/16 sessions switched within
+##   6 min, mostly to Opus). GLM-5.3: AA Index 31.7 vs 30.5, Terminal-Bench 4.0 41.9% vs 19.7%, 1M context.
+##   Owner priority: keep the default off the Claude Max pool, so Sonnet is last. Thinking stays on defaultThinkingLevel
+##   auto (no :low pin on Gemini). Sol and Grok Build leave the default chain (Plus 7d meter 78%; Grok Build 512K
+##   context and 5/11 edit errors).
+##   Costs and limits: owner's admin.mistral.ai page (2026-11-03) shows two allowances, both resetting on the 1st of
+##   each calendar month: Included Vibe Code usage $150/mo ($5.35 used) and Included API usage $15/mo ($0 used); both
+##   pay-as-you-go toggles off. OMP's plan key draws the $150 Vibe Code allowance [inference: API read $0 after a day of
+##   OMP calls]. Repriced at Mistral rates, this Mac's default-only turns (279/30 d) cost ~$4.65/mo (~3%); living on the
+##   default would be ~$92/mo, which fits on this Mac alone but leaves ~$58 for the Ubuntu server (same config), Mistral
+##   Vibe CLI, and the five Mistral fallback hops. Exhaustion -> HTTP 402 -> chain walks to Gemini (= the v37 default).
+##   GLM-5.3 is text-only: pasted images in a default session are not seen (verified); switch model or ask for
+##   `read <image>?q=...`, which uses the vision role. Exception to v37's "no Mistral primaries" rule, by owner choice.
 ##
 ## v37.2: vision chain gains mistral/mistral-large-4 after Sol 6.1, before Grok 4.7 (owner decision). Large 4 had the
 ##   cleanest OMP tool run and read the vision probe image correctly (1M ctx, image input); it is a public-preview
@@ -22,8 +39,9 @@
 ##     credentialed native judge fails, OMP never tries a prompted chat tail. Billed to OpenRouter credit
 ##     ($0.042/M input, output free; 164 judgments cost $0.012 in Sep-Oct).
 ##   - mistral login = Mistral EDU (student Pro, $5.99/mo list) plan key: bills the plan's monthly usage
-##     allowance shared with Vibe CLI/Studio (~$15/mo at API prices, inferred; monthly reset; no omp usage
-##     meter; exhaustion = HTTP 402). Small, unmetered pool -> fallback hops only, one mistral entry per chain:
+##     allowance shared with Mistral Vibe CLI (v37 inferred ~$15/mo from the pricing card; corrected in v38: $150/mo
+##     Vibe Code allowance, reset on the 1st of each calendar month; no omp usage meter; exhaustion = HTTP 402).
+##     Unmetered pool -> fallback hops only (v37), one mistral entry per chain:
 ##       smol: mistral/zai-glm-5-3-flash ahead of Luna (relieves the Plus 7d meter; GLM-5.3 Flash AA 27.8 vs
 ##             Luna 21.4, vision, 0 edit-tool errors in OMP probes, $0.15/$0.5).
 ##       tiny: mistral/zai-glm-5-3-flash ahead of Luna (same reason).
@@ -282,15 +300,15 @@
 ## Assumes these logins exist on the target machine:
 ##   - anthropic        (Claude Max 5x, $100/mo — primary workhorse and depth pool: task/smol/slow/plan/review/security/sage; Haiku for tiny/commit/widget/sonic)
 ##   - openai-codex      (ChatGPT Plus, $20/mo — independent critical gate & tier-1 fallback: critical -> gpt-6.1-sol)
-##   - google-antigravity (Google AI Pro, ~$20/mo — everyday default/vision/advisor on 3.8 Flash; lightweight fallbacks on 3.5 Flash-Lite)
+##   - google-antigravity (Google AI Pro, ~$20/mo — vision/advisor on 3.8 Flash and default's first fallback; lightweight fallbacks on 3.5 Flash-Lite)
 ##   - xai-oauth         (X Premium, $8/mo bundled SuperGrok credits — last-tier fallbacks; Grok Build/Composer end the cheap chains)
-##   - mistral           (Mistral EDU/student Pro plan key via /login mistral — bounded fallback hops only: smol/tiny GLM-5.3 Flash, task/review GLM-5.3; no omp usage meter)
+##   - mistral           (Mistral EDU/student Pro plan key via /login mistral — default primary GLM-5.3 (v38) plus fallback hops: smol/tiny GLM-5.3 Flash, task/review GLM-5.3, vision Large 4; no omp usage meter)
 ##   - typesafe          (API key with prepaid credit via /login typesafe — judge primary: typesafe/jev-1.14.0)
 ##   - openrouter        (API key with prepaid credit — judge fallbacks only: Jev via OpenRouter Decisions, then Liquid d1.1)
 
 modelRoles:
   # --- Core Built-in Chat Roles ---
-  default: google-antigravity/gemini-3.8-flash
+  default: mistral/zai-glm-5-3
   smol: anthropic/claude-sonnet-5-5
   slow: anthropic/claude-opus-5-5
   plan: anthropic/claude-opus-5-5
@@ -318,9 +336,8 @@ task:
 retry:
   fallbackChains:
     default:
+      - google-antigravity/gemini-3.8-flash
       - anthropic/claude-sonnet-5-5
-      - openai-codex/gpt-6.1-sol
-      - xai-oauth/grok-build
     smol:
       - mistral/zai-glm-5-3-flash
       - openai-codex/gpt-6-luna
