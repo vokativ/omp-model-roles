@@ -9,7 +9,7 @@
     "commit": "anthropic/claude-haiku-5-5:low",
     "advisor": "google-antigravity/gemini-3.8-flash",
     "widget": "anthropic/claude-haiku-5-5:low",
-    "judge": "openrouter/typesafe/jev-1.14",
+    "judge": "typesafe/jev-1.14.0",
     "tiny": "anthropic/claude-haiku-5-5:low",
     "review": "openai-codex/gpt-6.1-sol",
     "security": "anthropic/claude-sonnet-5-5",
@@ -80,6 +80,7 @@
         "xai-oauth/grok-composer-2.5-fast"
       ],
       "judge": [
+        "openrouter/typesafe/jev-1.14",
         "openrouter/typesafe/jev-1.13",
         "openrouter/liquid/d1.1"
       ],

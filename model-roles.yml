@@ -1,6 +1,11 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-11-03 · Snapshot version: 37
+## Generated: 2026-11-03 · Snapshot version: 37.1
 ## Stale? See research/RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
+##
+## v37.1: judge -> typesafe/jev-1.14.0 (direct; TypeSafe API key now stored via /login typesafe);
+##   chain openrouter/typesafe/jev-1.14 -> openrouter/typesafe/jev-1.13 -> openrouter/liquid/d1.1. Same model and
+##   price ($0.042/M input) as v37; OpenRouter becomes the cross-route fallback. Direct jev-latest/jev-preview are
+##   omitted: same provider and endpoint as the primary (TypeSafe docs: both currently alias jev-1.14.0).
 ##
 ## v37: judge regression fix and bounded Mistral (EDU plan) adoption. Evidence: research/MISTRAL-EVALUATION.md.
 ##   - judge -> openrouter/typesafe/jev-1.14; chain openrouter/typesafe/jev-1.13 -> openrouter/liquid/d1.1.
@@ -275,7 +280,8 @@
 ##   - google-antigravity (Google AI Pro, ~$20/mo — everyday default/vision/advisor on 3.8 Flash; lightweight fallbacks on 3.5 Flash-Lite)
 ##   - xai-oauth         (X Premium, $8/mo bundled SuperGrok credits — last-tier fallbacks; Grok Build/Composer end the cheap chains)
 ##   - mistral           (Mistral EDU/student Pro plan key via /login mistral — bounded fallback hops only: smol/tiny GLM-5.3 Flash, task/review GLM-5.3; no omp usage meter)
-##   - openrouter        (API key with prepaid credit — judge only: native TypeSafe Jev judgments via OpenRouter Decisions)
+##   - typesafe          (API key with prepaid credit via /login typesafe — judge primary: typesafe/jev-1.14.0)
+##   - openrouter        (API key with prepaid credit — judge fallbacks only: Jev via OpenRouter Decisions, then Liquid d1.1)
 
 modelRoles:
   # --- Core Built-in Chat Roles ---
@@ -291,7 +297,7 @@ modelRoles:
   widget: anthropic/claude-haiku-5-5:low
 
   # --- Model-Kind Roles ---
-  judge: openrouter/typesafe/jev-1.14
+  judge: typesafe/jev-1.14.0
 
   # --- Custom Workflow, Review & Architecture Roles ---
   review: openai-codex/gpt-6.1-sol
@@ -352,6 +358,7 @@ retry:
       - xai-oauth/grok-composer-2.5-fast
     judge:
       # Natives only: once a credentialed native judge fails, OMP never falls back to a prompted chat model.
+      - openrouter/typesafe/jev-1.14
       - openrouter/typesafe/jev-1.13
       - openrouter/liquid/d1.1
     review:

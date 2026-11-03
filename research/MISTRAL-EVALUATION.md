@@ -28,9 +28,11 @@ those reports and attributed to its source.
 - **Not adopted:** Mistral Large 4, DeepSeek V4.1 Flash 1017, Medium 3.5, Small 4, Ministral, every
   alias id. No Mistral model in `critical`, `slow`/`plan`/`security`, `sage`, `vision`, `judge`, or
   as any primary.
-- **Judge fix (independent of Mistral).** `judge` -> `openrouter/typesafe/jev-1.14`, chain
-  `openrouter/typesafe/jev-1.13` -> `openrouter/liquid/d1.1`. v36's TypeSafe primary had no
-  credential; `find`, auto-prewalk and smart autoGraph were silently off since 2026-10-28.
+- **Judge fix (independent of Mistral).** v37: `judge` -> `openrouter/typesafe/jev-1.14`, chain
+  `openrouter/typesafe/jev-1.13` -> `openrouter/liquid/d1.1`; v37.1 (after a TypeSafe login):
+  `typesafe/jev-1.14.0` direct with `openrouter/typesafe/jev-1.14` -> `openrouter/typesafe/jev-1.13` ->
+  `openrouter/liquid/d1.1` as fallbacks. v36's TypeSafe primary had no credential; `find`, auto-prewalk
+  and smart autoGraph were silently off since 2026-10-28.
 
 ## Subscription facts
 
@@ -336,6 +338,23 @@ is not a timeout: with native-only fallthrough judgments and `find` fail rather 
 fail-open consumers (auto-thinking, auto-prewalk) continue without it. Not verified: a live
 `liquid/d1.1` fallback after a jev failure; OpenRouter's top-up fee; whether `jev-latest` is 1.13
 (OMP docs) or 1.14.0 (TypeSafe docs).
+
+**v37.1 update (2026-11-03, omp 18.16.0).** The owner stored a TypeSafe API key (`/login typesafe`;
+`agent.db` `auth_credentials` row `provider=typesafe`, `api_key`), so the alternative above is now the
+chosen config, extended with `liquid/d1.1`: `judge: typesafe/jev-1.14.0`, chain
+`openrouter/typesafe/jev-1.14` -> `openrouter/typesafe/jev-1.13` -> `openrouter/liquid/d1.1`. The tested
+configs table, the F config and its cost paragraph above are the v37 history. Evidence: TypeSafe
+discovery now lists `typesafe/jev-1.14.0`, `jev-latest` and `jev-preview` ($0.042/M input, output free);
+a fresh omp process judged via `typesafe/jev-1.14.0` (P=0.98, about 4 s for the whole run). Forced
+failover with a run-only overlay `judgment.attemptTimeoutMs: 1`: logs show `typesafe/jev-1.14.0`,
+`openrouter/typesafe/jev-1.14` and `openrouter/typesafe/jev-1.13` each `Aborted: The operation timed
+out.` and `openrouter/liquid/d1.1` answered (P=0.993), so the full chain walk is verified (this also
+closes the "live `liquid/d1.1` fallback" gap above). `find` with the v37.1 overlay: coverage complete, 4
+relevant hits, $0.0018. Direct `jev-latest` and `jev-preview` stay out of the chain: same provider and
+endpoint as the primary, and TypeSafe's docs say both currently alias `jev-1.14.0`. TypeSafe credit and
+OpenRouter credit are separate prepaid balances; OpenRouter is now fallback-only for `judge`.
+Sessions started before the login keep their cached OpenRouter judge
+route (one still judged via OpenRouter): restart OMP sessions to pick up the direct route.
 
 ## Risks and open questions
 

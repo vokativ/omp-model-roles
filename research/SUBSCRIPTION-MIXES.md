@@ -15,10 +15,13 @@ accepted: Astra on a ChatGPT Plus account and Fable 5.1 via Max 5x OAuth. That
 supersedes "no Max account was exercised" and "no Fable access" for the owner's own
 accounts only; it is a reachability observation, not a permission or quota guarantee.
 
-**Updated 2026-11-03:** the live root `model-roles.yml` is now snapshot v37, superseding
-the v35 references above. Two changes sit outside the four provider groups: the `judge`
-role runs on `openrouter/typesafe/jev-1.14` (a native judgment model billed to
-OpenRouter prepaid credit), and an existing `mistral` login (Mistral Education plan key)
+**Updated 2026-11-03:** the live root `model-roles.yml` is now snapshot v37.1 (v37 earlier the
+same day), superseding the v35 references above. Two changes sit outside the four provider
+groups: the `judge` role runs on `typesafe/jev-1.14.0` (a direct native judgment model billed
+to TypeSafe prepaid credit via an existing `/login typesafe` API key), with
+`openrouter/typesafe/jev-1.14`, `openrouter/typesafe/jev-1.13`, and `openrouter/liquid/d1.1`
+as native fallbacks billed to OpenRouter prepaid credit (v37 ran judge on OpenRouter first),
+and an existing `mistral` login (Mistral Education plan key)
 supplies bounded fallback hops in `smol`, `tiny`, `task`, and `review`, never a primary.
 See the [Mistral section](#mistral-education-plan-key-bounded-fallback-only) and
 [MISTRAL-EVALUATION.md](MISTRAL-EVALUATION.md). Only the Mistral section was checked on

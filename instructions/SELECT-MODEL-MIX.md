@@ -1,6 +1,6 @@
 # Select an alternative OMP model mix
 
-**Instruction updated: 2026-11-03 (snapshot v37; installed OMP 18.16.0, role contract
+**Instruction updated: 2026-11-03 (snapshot v37.1; installed OMP 18.16.0, role contract
 last derived on 18.13.2). Source baseline: 2026-10-08; recheck by 2026-11-11**, or
 immediately after a plan, permission, price, catalog, eligibility, or OMP role/agent
 change. This is a prompt for OMP to follow, not a program or an installation step.
@@ -38,7 +38,9 @@ exceptions, each limited to a login that **already exists**; never add, buy, or 
 either from a preview:
 
 - **`judge`:** the model-kind `judge` role may keep an already credentialed native
-  judgment route (currently `openrouter/typesafe/jev-1.14`, billed to OpenRouter
+  judgment route (currently direct `typesafe/jev-1.14.0` via an existing `/login typesafe`
+  API key, with native fallbacks `openrouter/typesafe/jev-1.14`,
+  `openrouter/typesafe/jev-1.13`, and `openrouter/liquid/d1.1` billed to OpenRouter
   prepaid credit). Label it as separately funded API-key use outside the four
   subscriptions.
 - **Mistral fallback hops:** an existing `mistral` plan login (currently the Mistral
@@ -49,8 +51,8 @@ either from a preview:
   `mistral-vibe-cli-*`). Label it as a small monthly plan allowance shared with
   Mistral Vibe CLI, Studio, and API (not one of the four subscriptions), with no
   `omp usage` meter and an HTTP 402 stop on exhaustion. Mistral has no native judgment
-  API, so it never belongs in `judge`. The v37 snapshot uses it only in `smol`, `tiny`,
-  `task`, and `review`, and keeps it out of `critical`, `slow`/`plan`/`security`,
+  API, so it never belongs in `judge`. The v37 and v37.1 snapshots use it only in `smol`,
+  `tiny`, `task`, and `review`, and keep it out of `critical`, `slow`/`plan`/`security`,
   `sage`, and `vision`.
 
 Read [subscription research](../research/SUBSCRIPTION-MIXES.md), the
@@ -195,8 +197,8 @@ Every `vision` primary **and fallback** must accept image input; text-only
 Composer and `mistral/zai-glm-5-3` are not image routes.
 
 `judge` must resolve **first to a credentialed native judgment model** (a native
-System One route such as `openrouter/typesafe/jev-1.14`; direct `typesafe/jev-*`
-requires a TypeSafe login) for `find` to be enabled (`find.enabled: auto`),
+System One route such as direct `typesafe/jev-1.14.0` with a TypeSafe login, or
+`openrouter/typesafe/jev-1.14`) for `find` to be enabled (`find.enabled: auto`),
 auto-prewalk, and smart `tui.autoGraph`. Keep the judge chain **natives only**: once a
 credentialed native judge fails, OMP never tries a prompted chat candidate, so a
 prompted chat tail is dead config. It answers only when every native entry is
