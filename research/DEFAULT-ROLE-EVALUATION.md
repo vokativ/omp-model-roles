@@ -275,11 +275,20 @@ window; Haiku below default capability).
 ## Risks
 
 1. **Text-only default (verified 2026-11-03).** GLM-5.3 as the active model given an attached image
-   replied that it cannot see image input ("the active model doesn't support image input"). OMP
-   passes images to text-only models without warning. Workaround: switch model (Ctrl+P to `smol`,
-   `slow`, or `/model`), or ask the agent to `read <image>?q=...`, which uses the `vision` role
-   (Gemini 3.8 Flash first). Because the default is where pasted screenshots land, this is the
-   most user-visible regression.
+   (`@file`) cannot see it; OMP passes images to text-only models without warning. Four prompt
+   variants were tried in a GLM-5.3 main session:
+   - Plain "What is in this image?": GLM cannot see the image and falls back to decoding pixels with
+     Python/OCR (slow, ~10 tool calls, unreliable for real screenshots).
+   - "Read the attached image with the vision model ...": **same fallback; does not work.**
+   - "Use the read tool on the attached image and tell me ...": works. GLM calls `read` on the
+     attachment (stored as `local://image-<hash>.webp`), gets the hint, then calls
+     `read <path>?q=<question>`, which the `vision` role (Gemini 3.8 Flash first) answers; correct answer.
+   - "Ask the vision model about shapes.png ...": also worked (3 reads).
+
+   In subagents GLM used `read` + `?q=` unprompted after reading the file (see
+   [TASK-ROLE-EVALUATION.md](TASK-ROLE-EVALUATION.md), item D). Alternative: switch model (Ctrl+P to
+   `smol`, `slow`, or `/model` to an image-capable model). Because the default is where attached
+   screenshots land, this is the most user-visible regression.
 2. **Allowance exhaustion starves the Mistral fallback hops for the month.** HTTP 402 ends the
    default's GLM hop and the five other Mistral hops until the 1st. Smol, tiny, task, review and
    vision keep working through their non-Mistral entries, with less depth. Headroom is large
@@ -320,8 +329,9 @@ window; Haiku below default capability).
   main session file marks an automatic hop; `~/.omp/logs` shows provider errors (402 /
   `billing_vibe_budget_exhausted`). Re-run the forensics over a full reset cycle with
   `/tmp/omp-default-analysis/` (not committed; scripts `extract.py`, `q1b.py`, `q2.py`).
-- **Notice images:** a reply saying the active model cannot see images means the session is on the
-  default; use the workaround in risk 1.
+- **Notice images:** a reply saying the active model cannot see images, or the agent decoding pixels
+  with Python/OCR, means the session is on the default; use the workaround in risk 1 ("Use the read
+  tool on the attached image and ...").
 
 ## How to revert
 

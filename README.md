@@ -35,6 +35,7 @@ research/
   SAGE-FABLE-ASTRA-EVALUATION.md <- 2026-10-20: Astra vs Sol and Fable vs Opus for sage; probes, blinded A/B with caveats, adversarial review
   MISTRAL-EVALUATION.md      <- 2026-11-03: Mistral EDU plan, model evaluation, OMP probes, judge regression
   DEFAULT-ROLE-EVALUATION.md    <- 2026-11-03: default-role usage forensics, OMP latency probe, cost model
+  TASK-ROLE-EVALUATION.md       <- 2026-11-03: task role Sonnet 5.5 vs GLM-5.3 vs Gemini 3.8 Flash; decided: keep Sonnet 5.5
 ```
 
 Just importing the config? You need the two `.yml` files, `agents/`, and the import steps below —
@@ -132,7 +133,7 @@ Consequences baked into this file (chains verified against `model-roles.yml`, 20
   - **Why.** Gemini 3.8 Flash lost its speed case. In the OMP tool-task probe (2026-11-03) it took a median 21.6 s at `low` / 34.6 s at `high` (TTFT 2.7 / 3.3 s) vs GLM-5.3 7.6 s (TTFT 0.64 s) and Sonnet 5.5 ~9 s. GLM-5.3 also scores AA Index v5.0 31.7 vs 30.5 and Terminal-Bench 4.0 41.9% vs 19.7%, with a 1M context. Usage forensics on this Mac (30 days): every main session starts on Gemini 3.8 Flash but only 15% of turns stay there (Opus 53%, Sol 15%, Sonnet 8%, Grok 4.7 7%); 10 of 16 sessions switched away within 6 minutes.
   - **Owner priority: keep the default off the Claude Max pool**, so Sonnet 5.5 is last. Sol 6.1 and Grok Build leave the chain (Plus 7d meter 78% used; Grok Build has a 512K window and 5 edit errors in 11 calls). Thinking for `default` stays on `defaultThinkingLevel` auto (judge-driven); the owner rejected pinning Gemini to `:low`.
   - **Allowance and 402 behaviour.** GLM-5.3 draws the Mistral EDU monthly allowance, most likely the $150 Vibe Code one (see the Mistral section), shared with Mistral Vibe CLI, the Ubuntu server (same global config), and the Mistral fallback hops; Mistral pay-as-you-go is off. Repriced at Mistral rates (GLM-5.3 $1.4 / $0.14 cached / $4.4 per M tokens), this Mac's current default-only turns (279 in 30 days) cost ~$4.65/mo (~3% of $150); running every main turn on GLM-5.3 would cost ~$92/mo, which fits inside $150 on this Mac alone but leaves ~$58 for the server, Mistral Vibe CLI, and the hops [inference: repricing, not a measured meter]. Exhaustion returns HTTP 402 and `retry.fallbackOn` walks the chain to Gemini 3.8 Flash (= the v37 default). There is no `omp usage` meter for Mistral, so `retry.usageAwareFallback` cannot skip a depleted primary in advance.
-  - **Image caveat.** GLM-5.3 is text-only: an image pasted into a default session is not seen (verified 2026-11-03: the model replied it cannot see image input). Switch model with `/model`, or ask the agent to `read <image>?q=...`, which uses the `vision` role (Gemini 3.8 Flash).
+  - **Image caveat.** GLM-5.3 is text-only: an image attached to a default session is not seen (verified 2026-11-03: plain "What is in this image?" made it fall back to decoding pixels with Python/OCR, ~10 tool calls, unreliable for real screenshots). Ask: "Use the read tool on the attached image and tell me ..." (or "use read on <file> and ..."); GLM calls `read`, gets the hint, then `read <path>?q=<question>`, which the `vision` role (Gemini 3.8 Flash) answers correctly. "Read the attached image with the vision model ..." alone did **not** work (same pixel-decoding fallback). `/model` to an image-capable model is the alternative.
   - **Ctrl+P `cycleOrder` is unchanged** (`smol`, `default`, `slow`, `sage`). **Revert:** set `modelRoles.default` back to `google-antigravity/gemini-3.8-flash` and `retry.fallbackChains.default` to `["anthropic/claude-sonnet-5-5","openai-codex/gpt-6.1-sol","xai-oauth/grok-build"]`.
 - **No `openrouter` or `nvidia` chat model appears in any role or chain; `typesafe` and `openrouter` serve the `judge` role only.** v33 excluded external API tiers (OpenRouter GLM 5.3 Flash, NVIDIA Nemotron) to fit the four paid subscriptions; earlier GLM/Nemotron floors are historical (see the v17-v23 log in `model-roles.yml`). v37 added two logins beyond those four: `mistral` (plan key; fallback hops, and since v38 also the `default` primary) and `openrouter` (prepaid API credit, native judgment routes only); v37.1 adds a seventh, `typesafe` (prepaid API key, judge primary), and demotes `openrouter` to judge fallbacks.
 - **`vision`** keeps `google-antigravity/gemini-3.8-flash` primary, falling back to `anthropic/claude-sonnet-5-5` $\to$ `openai-codex/gpt-6.1-sol` $\to$ `mistral/mistral-large-4` $\to$ `xai-oauth/grok-4.7` (the Mistral hop is v37.2, owner decision 2026-11-03: Large 4 read the probe image correctly, the best vision result of the Mistral models, with the cleanest OMP tool run; 1M context, image input; public preview). It sits late because it only runs after Gemini 3.8 Flash, Sonnet, and Sol all fail. (The 2026-08-22 OpenRouter Gemini 3.8 Flash A/B winner is no longer in the chain.)
@@ -275,8 +276,8 @@ same-family Opus hop. Large 4 (AA 26.0, 1M context, image input, catalog `maxTok
 **v38 default exception.** The owner chose `mistral/zai-glm-5-3` as the `default` primary, the one
 exception to v37's "no primaries" rule: faster and stronger on the tool task than Gemini 3.8 Flash, and it
 keeps routine turns off the Claude Max pool. Rationale, usage forensics, probe numbers, and repricing:
-[research/DEFAULT-ROLE-EVALUATION.md](research/DEFAULT-ROLE-EVALUATION.md). GLM-5.3 is text-only (pasted
-images are not seen; use `/model` or `read <image>?q=...`). Pay-as-you-go is off, so exhaustion means HTTP
+[research/DEFAULT-ROLE-EVALUATION.md](research/DEFAULT-ROLE-EVALUATION.md). GLM-5.3 is text-only (attached
+images are not seen; ask "Use the read tool on the attached image and ..." - "read it with the vision model" alone did not work in testing - or `/model` to an image-capable model). Pay-as-you-go is off, so exhaustion means HTTP
 402 and a walk to Gemini 3.8 Flash.
 
 **Risks.**
@@ -371,7 +372,7 @@ The server and Mac both use extended context under this owner-approved policy.
 
 | Need | Normal choice |
 |---|---|
-| Small, clear change or everyday conversation | `omp`; stay on the default model (GLM-5.3 since v38; text-only, so for a pasted image `/model` to a vision model or ask the agent to `read <image>?q=...`) |
+| Small, clear change or everyday conversation | `omp`; stay on the default model (GLM-5.3 since v38; text-only, so for an attached image ask "Use the read tool on the attached image and ..." (not just "read it with the vision model", which failed in testing), or `/model` to an image-capable model) |
 | Build/fix with a useful exploration phase and routine implementation | Opus 5.5 → Sonnet 5.5 prewalk (`@slow` → `@smol`), explicitly opted in |
 | Hard reasoning remains throughout implementation | Stay on `@slow`; no forced downgrade |
 | Review a design, implementation, plan, or configuration | Ask for the `architect` agent; define the question and scope |
