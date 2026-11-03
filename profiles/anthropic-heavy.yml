@@ -57,6 +57,7 @@
       "vision": [
         "anthropic/claude-sonnet-5-5",
         "openai-codex/gpt-6.1-sol",
+        "mistral/mistral-large-4",
         "xai-oauth/grok-4.7"
       ],
       "commit": [

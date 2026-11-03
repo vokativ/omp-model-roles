@@ -1,6 +1,6 @@
 # Select an alternative OMP model mix
 
-**Instruction updated: 2026-11-03 (snapshot v37.1; installed OMP 18.16.0, role contract
+**Instruction updated: 2026-11-03 (snapshot v37.2; installed OMP 18.16.0, role contract
 last derived on 18.13.2). Source baseline: 2026-10-08; recheck by 2026-11-11**, or
 immediately after a plan, permission, price, catalog, eligibility, or OMP role/agent
 change. This is a prompt for OMP to follow, not a program or an installation step.
@@ -52,8 +52,9 @@ either from a preview:
   Mistral Vibe CLI, Studio, and API (not one of the four subscriptions), with no
   `omp usage` meter and an HTTP 402 stop on exhaustion. Mistral has no native judgment
   API, so it never belongs in `judge`. The v37 and v37.1 snapshots use it only in `smol`,
-  `tiny`, `task`, and `review`, and keep it out of `critical`, `slow`/`plan`/`security`,
-  `sage`, and `vision`.
+  `tiny`, `task`, and `review`; v37.2 adds `vision` (`mistral/mistral-large-4`, an
+  image-capable hop after Sol 6.1 and before Grok 4.7). It stays out of `critical`,
+  `slow`/`plan`/`security`, and `sage`.
 
 Read [subscription research](../research/SUBSCRIPTION-MIXES.md), the
 [research playbook](../research/RESEARCH-PLAYBOOK.md),

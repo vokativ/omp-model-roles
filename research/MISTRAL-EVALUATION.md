@@ -20,14 +20,17 @@ those reports and attributed to its source.
 
 ## Decision
 
-- **Adopted: four fallback-only hops, one `mistral/*` entry per chain, no primaries.**
+- **Adopted (v37): four fallback-only hops, one `mistral/*` entry per chain, no primaries.**
   `smol` and `tiny`: `mistral/zai-glm-5-3-flash` ahead of Luna. `task` and `review`:
   `mistral/zai-glm-5-3` as third hop (before Grok Build; before same-family Antigravity Opus).
+- **Adopted (v37.2, 2026-11-03, owner decision): a fifth hop, `vision`.** `mistral/mistral-large-4`
+  after Sol 6.1, before Grok 4.7 (chain: Sonnet 5.5 -> Sol 6.1 -> Large 4 -> Grok 4.7). Still one
+  `mistral/*` entry per chain, fallback-only.
 - **Why bounded.** Small monthly pool, unmetered in OMP, shared with the owner's own Mistral Vibe
   CLI use. `retry.usageAwareFallback` excludes ordinary API keys, so it is an error-driven hop only.
-- **Not adopted:** Mistral Large 4, DeepSeek V4.1 Flash 1017, Medium 3.5, Small 4, Ministral, every
-  alias id. No Mistral model in `critical`, `slow`/`plan`/`security`, `sage`, `vision`, `judge`, or
-  as any primary.
+- **Not adopted:** DeepSeek V4.1 Flash 1017, Medium 3.5, Small 4, Ministral, every alias id. No
+  Mistral model in `critical`, `slow`/`plan`/`security`, `sage`, `judge`, or as any primary. (Large 4
+  was on this list in v37; v37.2 adopted it as the late `vision` hop only.)
 - **Judge fix (independent of Mistral).** v37: `judge` -> `openrouter/typesafe/jev-1.14`, chain
   `openrouter/typesafe/jev-1.13` -> `openrouter/liquid/d1.1`; v37.1 (after a TypeSafe login):
   `typesafe/jev-1.14.0` direct with `openrouter/typesafe/jev-1.14` -> `openrouter/typesafe/jev-1.13` ->
@@ -213,7 +216,7 @@ All nine runs repaired the planted bug. Samples are n=1 to 3 per cell: direction
 | `task` | **Adopted, hop 3: `zai-glm-5-3`** | After Sol and Gemini 3.8 Flash, before Grok Build. Terminal-Bench 4.0 41.9% vs 19.7%; 0 edit errors; 1M context; text-only; $1.4/$4.4 |
 | `review` | **Adopted, hop 3: `zai-glm-5-3`** | Producers are mostly Claude; the last hop was same-family Antigravity Opus. GLM is a cross-family independent reviewer, non-blocking. Antigravity's Claude/GPT weekly pool is at 92.9%, inside the 10% usage reserve, so the Opus hop is effectively dead now **[INFERENCE]** and this hop is more likely the live last stop |
 | `commit`, `widget`, `advisor` | No change | `commit` is infrequent (no quota relief); `advisor` reads the whole main conversation against an unknown budget; widget chain-walking unverified since OMP 18.13.2 |
-| `vision` | No Mistral hop | Flash and Large 4 passed the image probe (Large 4 best) but no data against the repo's vision A/B bar. Explicit `/model` only |
+| `vision` | v37: No Mistral hop. **v37.2: adopted, hop 3: `mistral-large-4`** | v37 rationale: Flash and Large 4 passed the image probe (Large 4 best) but no data against the repo's vision A/B bar. v37.2 (owner decision): after Sonnet 5.5 and Sol 6.1, before Grok 4.7, so it runs only when Gemini 3.8 Flash, Sonnet and Sol all fail. Cleanest OMP tool run (5 turns, 10.8 s, 0 edit errors), read the probe image correctly (best vision result of the Mistral models), 1M context, image input, catalog maxTokens 262,144. Caveats: public preview; AA 26.0; Terminal-Bench 4.0 24.7% neutral vs 41% in Mistral's own harness; OMP catalog $1.36/$4.18 vs Mistral's $0.70/$2.10; draws the EDU allowance |
 | `default` | No | Fires every turn; small unmetered pool; no usage-aware safety net |
 | `slow`, `plan`, `security` | No | AA <= 32 vs the 50+ depth tier; v34 principle is frontier depth |
 | `critical` | No | Omniscience +6.0 (GLM-5.3) vs Sol +42.0 / Argon +46.1; a weaker concrete-model-different model can mint `INDEPENDENT` and `GO` |
@@ -231,6 +234,9 @@ Rules applied: one `mistral/*` entry per chain (same routing provider = same poo
 hosted GLM is a third-party model family behind a Mistral route, so record provider (`mistral`) and
 family (GLM) when judging independence.
 
+v37.2 adds one row: `vision` Sonnet 5.5 -> Sol 6.1 -> Grok 4.7 (v37.1) becomes Sonnet 5.5 -> Sol 6.1 ->
+**Large 4** -> Grok 4.7. Mistral now appears in five chains: `smol`, `tiny`, `task`, `review`, `vision`.
+
 **What v37 does not fix.** The `smol`/`tiny` hops relieve Plus only when those roles fall through
 from Anthropic; Plus primaries (`review`, `critical` on Sol) are untouched. This Mac's 29 session
 files from the last 7 days show little Plus use (Sol: 59 assistant messages, at most about 3.7M
@@ -241,7 +247,7 @@ another machine or non-OMP use. Measure over a full reset cycle before widening 
 
 | Model | Why not |
 |---|---|
-| `mistral-large-4` | Public preview. AA 26.0; Terminal-Bench 4.0 24.7% in a generic harness vs 41% in Mistral Vibe's own; about 2x DS Flash's price. Best vision, cleanest tool run (5 turns, 0 errors) and best commit text, so **explicit `/model` use only** |
+| `mistral-large-4` | **Adopted in v37.2 as the late `vision` hop only** (see role-fit table); still not adopted anywhere else. Public preview. AA 26.0; Terminal-Bench 4.0 24.7% in a generic harness vs 41% in Mistral Vibe's own; about 2x DS Flash's price. Best vision, cleanest tool run (5 turns, 0 errors) and best commit text, so outside `vision` it stays **explicit `/model` use only** |
 | `deepseek-v4-1-flash-1017` | Public preview. Strong AA 32.5 / FrontierCode 28.5 / $0.3/$1.2, fastest (5.7 s), but thinking-only turns OMP had to auto-continue; catalog mislabels vision; plan-meter effect unverified |
 | `mistral-medium-3.5` / `-latest` | Deprecated 2026-10-31; Terminal-Bench 4.0 0.0%; Omniscience -38.7; malformed hashline edits (3 of 4 latest, 6 of 7 alias); wrong once at high on the sheep puzzle |
 | `mistral-small-2603`, Ministral | Small 4 AA 4.3 < Flash-Lite 11.7; got "401" wrong once, misread "HELLO7"; `ministral-14b` failed 47/47 edits in a 115 s loop |
@@ -356,6 +362,15 @@ OpenRouter credit are separate prepaid balances; OpenRouter is now fallback-only
 Sessions started before the login keep their cached OpenRouter judge
 route (one still judged via OpenRouter): restart OMP sessions to pick up the direct route.
 
+**v37.2 update (2026-11-03).** Owner decision: `vision` chain gains `mistral/mistral-large-4` after
+`openai-codex/gpt-6.1-sol` and before `xai-oauth/grok-4.7`. Evidence is the v37 probe data above (5
+turns, 10.8 s, 0 edit errors; read the probe image correctly, best Mistral vision result; 1M context,
+image input, catalog maxTokens 262,144), not a new run. The hop sits late because it only runs when
+Gemini 3.8 Flash, Sonnet and Sol all fail, and Large 4 is a public-preview model with modest neutral
+benchmarks (AA 26.0; Terminal-Bench 4.0 24.7% vs 41% in Mistral's harness). It draws the EDU monthly
+allowance; the one-`mistral/*`-entry-per-chain rule still holds. The "No Mistral hop" `vision` verdict,
+the "four hops" wording and the Large 4 "Not adopted" row above are the v37 history.
+
 ## Risks and open questions
 
 1. **Quota size unpublished.** About $15/mo at API prices is **[INFERENCE]**; no per-model
@@ -372,11 +387,12 @@ route (one still judged via OpenRouter): restart OMP sessions to pick up the dir
    (GLM only), relevant before widening. Test: note the meter, make a few hundred
    `deepseek-v4-1-flash-1017` or Ministral calls through OMP, re-read the meter and the API-credit
    counter.
-4. **Preview/new models.** GLM-5.3 Flash was hosted only on 2026-10-22; Large 4 and DS 1017 are
-   preview. The adopted hops are z.ai-trained models on Mistral hosting, not Mistral's own (its own
-   are the weakest part of the lineup).
+4. **Preview/new models.** GLM-5.3 Flash was hosted only on 2026-10-22; DS 1017 is preview, and Large 4
+   is preview and, since v37.2, sits in the `vision` chain (late hop, error-driven only). The GLM hops
+   are z.ai-trained models on Mistral hosting, not Mistral's own (its own are the weakest part of the
+   lineup); Large 4 is Mistral's own.
 5. **Thinking level not pinned.** Bare fallback entries inherit the failing turn's thinking level
-   (`omp://settings.md`); v37's four entries have no suffix. OMP accepted every level on every
+   (`omp://settings.md`); the v37 entries (and the v37.2 Large 4 entry) have no suffix. OMP accepted every level on every
    probed model, so the risk is latency/cost, not errors. Pin a suffix if inherited `xhigh`/`max`
    proves wasteful.
 6. **Plan terms.** Whether EDU may enable PAYG overage is unknown (org setting, off by default;
@@ -394,10 +410,12 @@ route (one still judged via OpenRouter): restart OMP sessions to pick up the dir
 
 ## How to revert
 
-- **Remove the hops:** delete the four `mistral/*` chain entries (`smol`, `tiny`, `task`, `review`)
-  from `retry.fallbackChains` in `model-roles.yml` and `profiles/anthropic-heavy.yml`, restoring
-  the v36 chains in the table above; re-apply with `omp config set retry.fallbackChains '{...}'`,
-  verify with `omp config get`, bump the snapshot version. The `mistral` login can stay: with no
+- **Remove the hops:** delete the five `mistral/*` chain entries (`smol`, `tiny`, `task`, `review`,
+  and, from v37.2, `vision`) from `retry.fallbackChains` in `model-roles.yml` and
+  `profiles/anthropic-heavy.yml`, restoring the v36 chains in the table above (and, for `vision`,
+  Sonnet 5.5 -> Sol 6.1 -> Grok 4.7); re-apply with `omp config set retry.fallbackChains '{...}'`,
+  verify with `omp config get`, bump the snapshot version. To drop only the v37.2 hop, delete
+  `mistral/mistral-large-4` from the `vision` chain. The `mistral` login can stay: with no
   role or chain referencing it, it is inert.
 - **Judge:** do not return to v36 (no working native route). To use TypeSafe direct, log in and
   switch to the alternative config above.

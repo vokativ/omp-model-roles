@@ -1,6 +1,11 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-11-03 · Snapshot version: 37.1
+## Generated: 2026-11-03 · Snapshot version: 37.2
 ## Stale? See research/RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
+##
+## v37.2: vision chain gains mistral/mistral-large-4 after Sol 6.1, before Grok 4.7 (owner decision). Large 4 had the
+##   cleanest OMP tool run and read the vision probe image correctly (1M ctx, image input); it is a public-preview
+##   model with modest independent benchmarks (AA Index 26.0), so it sits late in the chain only. Draws the Mistral
+##   EDU monthly allowance; still one mistral entry per chain.
 ##
 ## v37.1: judge -> typesafe/jev-1.14.0 (direct; TypeSafe API key now stored via /login typesafe);
 ##   chain openrouter/typesafe/jev-1.14 -> openrouter/typesafe/jev-1.13 -> openrouter/liquid/d1.1. Same model and
@@ -339,6 +344,7 @@ retry:
     vision:
       - anthropic/claude-sonnet-5-5
       - openai-codex/gpt-6.1-sol
+      - mistral/mistral-large-4
       - xai-oauth/grok-4.7
     commit:
       - xai-oauth/grok-build

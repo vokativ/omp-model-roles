@@ -1,9 +1,9 @@
 ## Companion overlay to model-roles.yml — merge into ~/.omp/agent/models.yml
 ## (a DIFFERENT file than ~/.omp/agent/config.yml; see README.md's import steps).
-## Generated: 2026-11-03 · Snapshot version: 37
+## Generated: 2026-11-03 · Snapshot version: 37.2
 ##
-## Currently inert: no v37 role or chain references openrouter/google/gemini-3.8-flash (the vision
-## chain is Sonnet 5.5 -> Sol 6.1 -> Grok 4.7). Keep it only if you re-add that OpenRouter route.
+## Currently inert: no v37.2 role or chain references openrouter/google/gemini-3.8-flash (the vision
+## chain is Sonnet 5.5 -> Sol 6.1 -> Large 4 -> Grok 4.7). Keep it only if you re-add that OpenRouter route.
 ##
 ## Why this exists: tested empirically 2026-08-22 (see README.md's "vision"/"designer"
 ## rationale) — a raw OpenRouter call to this model at its default token budget spent
@@ -23,6 +23,8 @@
 ## also accepts image input), so neither needs a maxTokens override. Mistral models are native
 ## providers (the mistral login), not OpenRouter routes, so they would not appear in providers.openrouter
 ## anyway. [INFERENCE] No thinking-high truncation probe was run against them.
+## mistral/mistral-large-4 (v37.2 vision hop, after Sol 6.1): 1,048,576 context, 262,144 maxTokens, image
+## input; also native, also needs no override.
 ##
 ## Note on the v37 judge selectors (openrouter/typesafe/jev-1.14 and jev-1.13, openrouter/liquid/d1.1):
 ## judgments are short graded-probability answers, so no maxTokens override is configured for them
