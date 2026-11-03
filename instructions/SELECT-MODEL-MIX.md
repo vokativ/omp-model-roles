@@ -1,9 +1,9 @@
 # Select an alternative OMP model mix
 
-**Instruction updated: 2026-10-28 (role contract: OMP 18.13.2, snapshot v36). Source
-baseline: 2026-10-08; recheck by 2026-11-11**, or immediately after a plan, permission,
-price, catalog, eligibility, or OMP role/agent change. This is a prompt for OMP to
-follow, not a program or an installation step.
+**Instruction updated: 2026-11-03 (snapshot v37; installed OMP 18.16.0, role contract
+last derived on 18.13.2). Source baseline: 2026-10-08; recheck by 2026-11-11**, or
+immediately after a plan, permission, price, catalog, eligibility, or OMP role/agent
+change. This is a prompt for OMP to follow, not a program or an installation step.
 
 ## How to use
 
@@ -33,14 +33,30 @@ trial or verification of the proposed routes.
 
 Scope is exactly the four requested provider groups: **OpenAI, Anthropic, Google,
 and SpaceX/xAI/X**. Do not allocate to other providers or change their existing
-logins/settings unless the user explicitly extends the scope. One exception: the
-model-kind `judge` role may keep an **already logged-in** native judgment route
-(currently TypeSafe Jev). Label it as separately funded API-key use outside the four
-subscriptions; never add or fund such a route from a preview.
+logins/settings unless the user explicitly extends the scope. There are two
+exceptions, each limited to a login that **already exists**; never add, buy, or fund
+either from a preview:
+
+- **`judge`:** the model-kind `judge` role may keep an already credentialed native
+  judgment route (currently `openrouter/typesafe/jev-1.14`, billed to OpenRouter
+  prepaid credit). Label it as separately funded API-key use outside the four
+  subscriptions.
+- **Mistral fallback hops:** an existing `mistral` plan login (currently the Mistral
+  Education plan key from `/login mistral`) may be kept as **bounded fallback hops
+  only**: never a primary, at most one `mistral/*` entry per chain, and canonical
+  catalog ids only (for example `mistral/zai-glm-5-3` and `mistral/zai-glm-5-3-flash`),
+  not alias ids that lack catalog metadata (`mistral-medium-3.5`, `zai-glm-5`,
+  `mistral-vibe-cli-*`). Label it as a small monthly plan allowance shared with
+  Mistral Vibe CLI, Studio, and API (not one of the four subscriptions), with no
+  `omp usage` meter and an HTTP 402 stop on exhaustion. Mistral has no native judgment
+  API, so it never belongs in `judge`. The v37 snapshot uses it only in `smol`, `tiny`,
+  `task`, and `review`, and keeps it out of `critical`, `slow`/`plan`/`security`,
+  `sage`, and `vision`.
 
 Read [subscription research](../research/SUBSCRIPTION-MIXES.md), the
-[research playbook](../research/RESEARCH-PLAYBOOK.md), and
-[Fable evaluation](../research/FABLE-EVALUATION.md), then current `model-roles.yml`,
+[research playbook](../research/RESEARCH-PLAYBOOK.md),
+[Fable evaluation](../research/FABLE-EVALUATION.md), and
+[Mistral evaluation](../research/MISTRAL-EVALUATION.md), then current `model-roles.yml`,
 `models-overlay.yml`, relevant agent bindings, and any supplied plans/usage notes.
 This instruction's **proposal-only** scope overrides the playbook's apply/ship
 workflow and historical executable-selector directions. Existing allocations,
@@ -50,7 +66,9 @@ mandatory winner or proof of a new account's entitlement.
 When available, inspect current config, usage windows/reset times, and model
 catalog **read-only** (for example, existing OMP config getters, `omp usage`, and
 `omp models`). Do not initiate login, expose secrets, or probe models. If unavailable,
-state that limitation and use supplied evidence without inventing measurements.
+state that limitation and use supplied evidence without inventing measurements. The
+Mistral plan key and the OpenRouter judge key have no `omp usage` meter; do not read
+a missing meter as headroom.
 Ask only for missing **material** subscription, budget, or route-permission facts
 that cannot be obtained from available evidence and actually prevent planning the
 requested scenario; do not repeat answered questions. Label other assumptions.
@@ -140,7 +158,7 @@ overlay is not runnable/covered/permitted merely because its config is well form
    quota fallback**; keep fallback chains within the routing contract below.
 6. The existing **Anthropic-heavy example**—Sonnet workers/review, Opus depth,
    Haiku cheap roles, Google default/vision/advisor, and OpenAI critical—is one
-   candidate, **not the mandatory allocation**. Alternatives within these four
+   candidate, **not the mandatory allocation**. Alternative primaries within these four
    provider groups may favor Anthropic, OpenAI, Google, or xAI according to packages,
    workload, headroom, permission, and evidence. Explain route ordering individually.
 
@@ -160,7 +178,7 @@ Cover these **15 roles**, with a primary and an ordered fallback chain for each:
 | `advisor` | built-in chat | Per-turn advice; count its added pool load |
 | `tiny` | built-in chat | Small low-stakes work (titles, memory); also bundled `sonic` / Vibe `fast` tier via override |
 | `widget` | built-in chat | One request per background job to author its status widget; cheap tier only |
-| `judge` | built-in model-kind | Native judgments: `find`, typed eval judgments, auto-thinking |
+| `judge` | built-in model-kind | Native judgments (native judgment models only): `find`, typed eval judgments, auto-thinking |
 | `review` | custom | PR/diff review (bundled `reviewer` via override); primary from a different model family than the main producers (`task`/`smol`/`slow`), same-family routes last |
 | `security` | custom | Security review (bundled `security-reviewer` via override) |
 | `critical` | custom | Adversarial go/no-go before irreversible/operational actions (`agents/critical.md`); not routine PR review |
@@ -174,19 +192,36 @@ role only when an agent or override needs a model that differs from every built-
 Use exact catalog selectors eligible for the verified allocation or explicitly
 conditional future scenario, including supported reasoning suffixes.
 Every `vision` primary **and fallback** must accept image input; text-only
-Composer is not an image route. `judge` must keep at least one native judgment
-model first for `find` to be enabled (`find.enabled: auto`); once a native judge
-resolves, OMP drops prompted chat candidates from that chain. In OMP 18.13.2 the
-widget author resolves `@widget` but does not walk `retry.fallbackChains.widget`;
-keep that chain for forward compatibility, not as delivered resilience.
-Check companion model overrides if a route needs
-one; do not silently inherit unrelated models or settings.
+Composer and `mistral/zai-glm-5-3` are not image routes.
+
+`judge` must resolve **first to a credentialed native judgment model** (a native
+System One route such as `openrouter/typesafe/jev-1.14`; direct `typesafe/jev-*`
+requires a TypeSafe login) for `find` to be enabled (`find.enabled: auto`),
+auto-prewalk, and smart `tui.autoGraph`. Keep the judge chain **natives only**: once a
+credentialed native judge fails, OMP never tries a prompted chat candidate, so a
+prompted chat tail is dead config. It answers only when every native entry is
+uncredentialed, and then judgments degrade (v36 ran that way from 2026-10-28 to
+2026-11-03: `find` disabled, prompted 0/1 probabilities). An uncredentialed primary is
+skipped, not a route, and an entry that does not resolve (for example the unseeded
+`typesafe/jev-preview`) logs "does not resolve to a compatible model" and should be
+dropped. Confirm a credential exists from read-only state before naming a judge
+primary. In OMP 18.13.2 (not rechecked on 18.16.0) the widget author resolves
+`@widget` but does not walk `retry.fallbackChains.widget`; keep that chain for
+forward compatibility, not as delivered resilience. Check companion model overrides
+if a route needs one; do not silently inherit unrelated models or settings.
 
 Chains must exclude the primary's entire routing provider, deduplicate selectors,
 and use distinct eligible routing providers across fallback tiers wherever possible.
 A different model on the same exhausted provider is not cross-provider resilience.
 Empty chains are valid when no eligible alternative exists; warn, do not fabricate.
 Proxy Claude can diversify a route/pool but is still the Claude model family.
+
+Record **routing provider and model family separately**: GLM (Z.ai) and DeepSeek
+served through `mistral` are distinct third-party model families behind one routing
+provider. Provider exclusion and the one-`mistral`-entry-per-chain limit follow the
+provider; independence for `review` and `critical` follows the family. A
+`mistral/zai-glm-*` hop is neither Mistral-family nor a separate pool from other
+`mistral/*` hops.
 
 For `critical`, exclude the **actual resolved producer's provider and model family**
 from primary and all fallbacks, including proxies of that family. Record actual
@@ -213,7 +248,8 @@ Return all of the following, without writing/applying files:
 2. **Plans and budget assumptions:** included/excluded providers with reasons,
    native-versus-OMP permission/funding distinctions, observed headroom and workload,
    recurring subscription total where supported, separately funded API/overage
-   exposure, and any unresolved material prerequisites. Mark each future route's
+   exposure (the OpenRouter judge credit and the Mistral plan allowance, neither on
+   `omp usage`), and any unresolved material prerequisites. Mark each future route's
    assumptions and unmet prerequisites; distinguish them from verified facts.
    Never invent missing prices.
 3. **A 15-row role table:** exact primary, ordered fallbacks, and brief allocation

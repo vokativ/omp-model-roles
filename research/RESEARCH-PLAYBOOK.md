@@ -43,7 +43,7 @@ My workload is: [implementation/planning/architecture/research/vision volume and
 concurrent machines]. My budget is: [subscription ceiling, separately funded API
 budget, included-credit status, and no-spend/top-up constraints]. Inspect current
 state, usage, and catalog read-only if available; ask only for material missing
-information. Show all 17 roles, ordered fallbacks, agent bindings, rationale,
+information. Show all 15 roles, ordered fallbacks, agent bindings, rationale,
 provenance/independence limits, and entitlement/budget caveats. If these are future
 plans, complete the conditional preview and list unmet access/funding prerequisites
 instead of silently reverting to today's setup. Compare Fable 5.1 with Opus 5.5
@@ -73,6 +73,7 @@ This decision changes neither the live v32 setup nor the static alternative prof
 1. **Read current state first.**
    - `omp config get modelRoles --json` / `omp config get retry.fallbackChains --json` — what's live now.
    - `omp usage` — which providers are actually authenticated, and real quota pressure (5h/7d/weekly/daily windows, % used). This is ground truth; the model catalog (`omp models`) just shows what's technically reachable, not what's affordable.
+   - **No `omp usage` meter for `mistral`, `openrouter`, or `typesafe`.** Plan/API keys without a quota report never appear there, and `retry.usageAwareFallback` excludes them. Check the console instead: Mistral at https://console.mistral.ai/codestral/cli ("View organization usage") and https://admin.mistral.ai/subscription; OpenRouter's credit balance in its dashboard (`/api/v1/credits`). Treat them as bounded, unmetered pools that can only act as error-driven fallback hops; see [MISTRAL-EVALUATION.md](MISTRAL-EVALUATION.md).
    - `omp models <provider>` for each authenticated provider — current model lineup, since names/tiers shift release to release (e.g. a vendor's "flagship/balanced/fast" naming ladder).
 
 2. **Resolve the subscription checklist below.** Use facts supplied in the request
@@ -90,7 +91,7 @@ This decision changes neither the live v32 setup nor the static alternative prof
 
 4. **Match model *character* to workload, not just benchmark score.** If any of the workload is non-coding (writing for humans, research synthesis, business/creative output), check whether a provider's coding-branded product/API (e.g. an OpenAI "Codex"-specific endpoint, an agentic dev-tool mode) is known to skew toward technical/terse output outside of software tasks — that's a real, sourced effect, not just benchmark noise. Keep `default` (and anything that produces reader-facing prose) on whichever model is credibly rated for natural, plain-language writing.
 
-5. **Prefer free/bundled multi-model proxies as pressure release, not as your primary daily driver** — they're usually one point-version behind flagship and can have volatile preview-tier quotas. Good for: `advisor`, fallback tiers, low-stakes roles. Risky as: the *primary* `default` model.
+5. **Prefer free/bundled multi-model proxies as pressure release, not as your primary daily driver** — they're usually one point-version behind flagship and can have volatile preview-tier quotas. Good for: `advisor`, fallback tiers, low-stakes roles. Risky as: the *primary* `default` model. Worked example: v37's four fallback-only Mistral hops ([MISTRAL-EVALUATION.md](MISTRAL-EVALUATION.md)).
 
 6. **Every fallback chain entry should be a different provider than its primary** (and ideally different from the other fallback tiers too) — the point of a fallback chain is surviving one provider's outage/quota exhaustion, which a same-provider fallback doesn't protect against.
 
@@ -120,7 +121,8 @@ This decision changes neither the live v32 setup nor the static alternative prof
 
 ## Subscription checklist (ask only for material missing facts)
 
-- **Per provider you have a login for**: exact plan/tier and price? (e.g. Anthropic Free / Pro $20 / Max 5x $100 / Max 20x $200 / Team; OpenAI Free / Plus $20 / Pro $100 / Pro $200 / Team; Google — which product and tier, storage-plan vs AI-specific subscription vs a free preview program; xAI — bundled-with-social-app tier vs standalone SuperGrok Lite/Standard/Heavy; any others: Groq, Mistral, DeepSeek, Perplexity, OpenRouter credits, local models via Ollama/LM Studio/llama.cpp?)
+- **Per provider you have a login for**: exact plan/tier and price? (e.g. Anthropic Free / Pro $20 / Max 5x $100 / Max 20x $200 / Team; OpenAI Free / Plus $20 / Pro $100 / Pro $200 / Team; Google — which product and tier, storage-plan vs AI-specific subscription vs a free preview program; xAI — bundled-with-social-app tier vs standalone SuperGrok Lite/Standard/Heavy; Mistral — which plan, and which key: a `/login mistral` plan key bills the plan's monthly Mistral Vibe budget, a console-created key bills pay-as-you-go/Free; OpenRouter — prepaid credit balance (v37 uses it only for the `judge` role); any others: Groq, DeepSeek, Perplexity, TypeSafe, local models via Ollama/LM Studio/llama.cpp?)
+- **Providers with no `omp usage` meter** (Mistral, OpenRouter, TypeSafe): where do you check the remaining allowance or credit, and what happens at exhaustion? (Mistral plan key: monthly reset, HTTP 402 `billing_vibe_budget_exhausted`; OpenRouter judge route: judgments and `find` fail rather than degrade.) Do other tools share the same budget (e.g. the Mistral Vibe CLI)?
 - **Anything added or dropped** since the last pass?
 - **Has the workload mix changed?** More/less pure coding vs. research-and-writing vs. design/vision work? New repos with different characteristics (e.g. much heavier subagent/parallel-task usage, or a lot more image/design review)?
 - **Any role currently causing pain** — hitting rate limits, feels slow, tone/output quality feels off for what it's used for?
@@ -162,6 +164,7 @@ Optional planning instructions/profile — not the current imported setup:
   role; the Contributor tier's discount is paid for with permission to train on submitted prompts
   and completions, and a plain API key is excluded from `usageAwareFallback`. Read it before
   re-litigating "should we add the cheap Meta model somewhere".
+- `MISTRAL-EVALUATION.md` — 2026-11-03 · v37: Mistral EDU (student Pro) plan and the judge-role regression. Plan/billing facts (plan key bills the monthly Mistral Vibe budget; no `omp usage` meter; exhaustion = HTTP 402), model inventory and OMP catalog gaps, Artificial Analysis comparison, live OMP probe matrix, the four fallback-only GLM hops adopted (`smol`/`tiny` GLM-5.3 Flash, `task`/`review` GLM-5.3) and what was not adopted, plus the judge fix (v36's TypeSafe primary had no credential; now OpenRouter Jev natives) and revert steps. Read it before adding another Mistral model or changing `judge`.
 - `ARCHITECT-CRITICAL-AGENTS.md` — original dispatch investigation, with a v29 addendum for the review-oriented architect and its verification.
 - `FABLE-EVALUATION.md` — 2026-10-08 web-only Fable 5.1 versus Opus 5.5 comparison for plan and architect: official/independent evidence, correctness counterevidence, effort/cost/latency limits, provisional Opus defaults, and conditional Fable reversal/access criteria. Historical local Fable speed/depletion claims are withdrawn after OpenAI fallback invalidated their model identity.
 - `THINKING-PARTNER-ROLE.md` — 2026-09-04 · v19: architecture, multi-agent debate (Architect vs Slow), and allocation for the `sage` Thinking Partner role, defusing the Anthropic 429 credits_required failure mode on Fable.

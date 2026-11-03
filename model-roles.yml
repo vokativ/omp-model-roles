@@ -1,6 +1,30 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-10-28 · Snapshot version: 36
+## Generated: 2026-11-03 · Snapshot version: 37
 ## Stale? See research/RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
+##
+## v37: judge regression fix and bounded Mistral (EDU plan) adoption. Evidence: research/MISTRAL-EVALUATION.md.
+##   - judge -> openrouter/typesafe/jev-1.14; chain openrouter/typesafe/jev-1.13 -> openrouter/liquid/d1.1.
+##     v36's typesafe/jev-1.14.0 primary had no credential (no typesafe row ever existed in agent.db; the
+##     "stored TypeSafe credentials" claim was wrong), typesafe/jev-preview is unseeded (the logged
+##     "does not resolve to a compatible model" warning), and the chain had no OpenRouter route. Every
+##     judgment since 2026-10-28 fell through to prompted gemini-3.5-flash-lite (0/1 probabilities), which
+##     disabled find (find.enabled: auto), auto-prewalk, and smart autoGraph. Natives only on purpose: after a
+##     credentialed native judge fails, OMP never tries a prompted chat tail. Billed to OpenRouter credit
+##     ($0.042/M input, output free; 164 judgments cost $0.012 in Sep-Oct).
+##   - mistral login = Mistral EDU (student Pro, $5.99/mo list) plan key: bills the plan's monthly usage
+##     allowance shared with Vibe CLI/Studio (~$15/mo at API prices, inferred; monthly reset; no omp usage
+##     meter; exhaustion = HTTP 402). Small, unmetered pool -> fallback hops only, one mistral entry per chain:
+##       smol: mistral/zai-glm-5-3-flash ahead of Luna (relieves the Plus 7d meter; GLM-5.3 Flash AA 27.8 vs
+##             Luna 21.4, vision, 0 edit-tool errors in OMP probes, $0.15/$0.5).
+##       tiny: mistral/zai-glm-5-3-flash ahead of Luna (same reason).
+##       task: mistral/zai-glm-5-3 after Gemini 3.8 Flash, before Grok Build (Terminal-Bench 4.0 41.9%
+##             vs 19.7% for 3.8 Flash; 0 edit-tool errors).
+##       review: mistral/zai-glm-5-3 before Antigravity Opus, so the last independent (non-Claude) reviewer
+##             is not the same-family hop.
+##   - Not adopted: Mistral Large 4 / DeepSeek V4.1 Flash (public preview; DeepSeek emits thinking-only turns),
+##     Medium 3.5 (deprecated 2026-10-31, Terminal-Bench 4.0 0%, malformed edits), Small 4 / Ministral (weak,
+##     ministral-14b failed 47/47 edits), and every alias id (no catalog metadata: no thinking, null context).
+##     No Mistral model in critical, slow/plan/security, sage, vision, judge, or as any primary.
 ##
 ## v36: OMP 18.13.2 harness alignment, missing roles integration, and custom agent hardening.
 ##   - critical: added structured: true to agents/critical.md frontmatter, repairing the silent contract
@@ -250,6 +274,8 @@
 ##   - openai-codex      (ChatGPT Plus, $20/mo — independent critical gate & tier-1 fallback: critical -> gpt-6.1-sol)
 ##   - google-antigravity (Google AI Pro, ~$20/mo — everyday default/vision/advisor on 3.8 Flash; lightweight fallbacks on 3.5 Flash-Lite)
 ##   - xai-oauth         (X Premium, $8/mo bundled SuperGrok credits — last-tier fallbacks; Grok Build/Composer end the cheap chains)
+##   - mistral           (Mistral EDU/student Pro plan key via /login mistral — bounded fallback hops only: smol/tiny GLM-5.3 Flash, task/review GLM-5.3; no omp usage meter)
+##   - openrouter        (API key with prepaid credit — judge only: native TypeSafe Jev judgments via OpenRouter Decisions)
 
 modelRoles:
   # --- Core Built-in Chat Roles ---
@@ -265,7 +291,7 @@ modelRoles:
   widget: anthropic/claude-haiku-5-5:low
 
   # --- Model-Kind Roles ---
-  judge: typesafe/jev-1.14.0
+  judge: openrouter/typesafe/jev-1.14
 
   # --- Custom Workflow, Review & Architecture Roles ---
   review: openai-codex/gpt-6.1-sol
@@ -285,6 +311,7 @@ retry:
       - openai-codex/gpt-6.1-sol
       - xai-oauth/grok-build
     smol:
+      - mistral/zai-glm-5-3-flash
       - openai-codex/gpt-6-luna
       - google-antigravity/gemini-3.5-flash-lite
       - xai-oauth/grok-build
@@ -301,6 +328,7 @@ retry:
     task:
       - openai-codex/gpt-6.1-sol
       - google-antigravity/gemini-3.8-flash
+      - mistral/zai-glm-5-3
       - xai-oauth/grok-build
     vision:
       - anthropic/claude-sonnet-5-5
@@ -315,6 +343,7 @@ retry:
       - openai-codex/gpt-6-luna
       - xai-oauth/grok-build
     tiny:
+      - mistral/zai-glm-5-3-flash
       - openai-codex/gpt-6-luna
       - google-antigravity/gemini-3.5-flash-lite
       - xai-oauth/grok-composer-2.5-fast
@@ -322,12 +351,13 @@ retry:
       - google-antigravity/gemini-3.5-flash-lite
       - xai-oauth/grok-composer-2.5-fast
     judge:
-      - typesafe/jev-latest
-      - typesafe/jev-preview
-      - google-antigravity/gemini-3.5-flash-lite
+      # Natives only: once a credentialed native judge fails, OMP never falls back to a prompted chat model.
+      - openrouter/typesafe/jev-1.13
+      - openrouter/liquid/d1.1
     review:
       - google-antigravity/gemini-4-argon
       - xai-oauth/grok-4.7
+      - mistral/zai-glm-5-3
       - google-antigravity/claude-opus-5-5
     security:
       - openai-codex/gpt-6.1-sol

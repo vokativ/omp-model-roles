@@ -9,7 +9,7 @@
     "commit": "anthropic/claude-haiku-5-5:low",
     "advisor": "google-antigravity/gemini-3.8-flash",
     "widget": "anthropic/claude-haiku-5-5:low",
-    "judge": "typesafe/jev-1.14.0",
+    "judge": "openrouter/typesafe/jev-1.14",
     "tiny": "anthropic/claude-haiku-5-5:low",
     "review": "openai-codex/gpt-6.1-sol",
     "security": "anthropic/claude-sonnet-5-5",
@@ -31,6 +31,7 @@
         "xai-oauth/grok-build"
       ],
       "smol": [
+        "mistral/zai-glm-5-3-flash",
         "openai-codex/gpt-6-luna",
         "google-antigravity/gemini-3.5-flash-lite",
         "xai-oauth/grok-build"
@@ -50,6 +51,7 @@
       "task": [
         "openai-codex/gpt-6.1-sol",
         "google-antigravity/gemini-3.8-flash",
+        "mistral/zai-glm-5-3",
         "xai-oauth/grok-build"
       ],
       "vision": [
@@ -68,6 +70,7 @@
         "xai-oauth/grok-build"
       ],
       "tiny": [
+        "mistral/zai-glm-5-3-flash",
         "openai-codex/gpt-6-luna",
         "google-antigravity/gemini-3.5-flash-lite",
         "xai-oauth/grok-composer-2.5-fast"
@@ -77,13 +80,13 @@
         "xai-oauth/grok-composer-2.5-fast"
       ],
       "judge": [
-        "typesafe/jev-latest",
-        "typesafe/jev-preview",
-        "google-antigravity/gemini-3.5-flash-lite"
+        "openrouter/typesafe/jev-1.13",
+        "openrouter/liquid/d1.1"
       ],
       "review": [
         "google-antigravity/gemini-4-argon",
         "xai-oauth/grok-4.7",
+        "mistral/zai-glm-5-3",
         "google-antigravity/claude-opus-5-5"
       ],
       "security": [

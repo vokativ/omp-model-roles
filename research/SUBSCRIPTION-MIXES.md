@@ -15,6 +15,17 @@ accepted: Astra on a ChatGPT Plus account and Fable 5.1 via Max 5x OAuth. That
 supersedes "no Max account was exercised" and "no Fable access" for the owner's own
 accounts only; it is a reachability observation, not a permission or quota guarantee.
 
+**Updated 2026-11-03:** the live root `model-roles.yml` is now snapshot v37, superseding
+the v35 references above. Two changes sit outside the four provider groups: the `judge`
+role runs on `openrouter/typesafe/jev-1.14` (a native judgment model billed to
+OpenRouter prepaid credit), and an existing `mistral` login (Mistral Education plan key)
+supplies bounded fallback hops in `smol`, `tiny`, `task`, and `review`, never a primary.
+See the [Mistral section](#mistral-education-plan-key-bounded-fallback-only) and
+[MISTRAL-EVALUATION.md](MISTRAL-EVALUATION.md). Only the Mistral section was checked on
+2026-11-03: the other provider sections still date from 2026-10-08 (the 2026-10-15
+recheck date has passed), and the 17-role map below was not revised for the 15-role
+contract.
+
 The goal is to choose which pool should carry general work, reserve deeper models
 for harder work, and retain a genuinely different model family for critical review.
 Selection follows [../instructions/SELECT-MODEL-MIX.md](../instructions/SELECT-MODEL-MIX.md),
@@ -247,6 +258,114 @@ infer generic Workspace subscription access to OMP, CLI, or API. [Gemini API][g-
 and [Vertex AI][g-vertex] are separately billed. Antigravity native entitlements do
 not alone establish authorization for every third-party OMP route.
 
+### Mistral: Education plan key, bounded fallback only
+
+Mistral is not one of the four requested provider groups and is in no total below. The
+repo keeps one existing `mistral` login (an OMP `/login mistral` plan key on a Mistral
+Education account) only as fallback hops, the exception allowed by
+[../instructions/SELECT-MODEL-MIX.md](../instructions/SELECT-MODEL-MIX.md); the model
+evidence is in [MISTRAL-EVALUATION.md](MISTRAL-EVALUATION.md). **Sources checked
+2026-11-03.** "Mistral Vibe" here is Mistral's coding product (CLI, IDE, web), not OMP's
+good/fast "Vibe" worker tiers.
+
+| Public SKU | Price | What matters for this repo |
+|---|---|---|
+| Free | $0 | Limited Mistral Vibe access (chat, search, limited coding sessions) plus Mistral Studio ([pricing FAQ][m-pricing]); its allowance is not evaluated here |
+| Pro | $14.99/month, excluding tax ([pricing][m-pricing]) | Mistral Vibe CLI, IDE, and web, more messages and web searches; the card lists "$25.5 /mo in API credits" (a third-party snapshot dated Oct 1, [Kunavo](https://kunavo.com/guides/mistral-vibe-pricing), lists $30, so the figures differ) |
+| Education | $5.99/month, excluding tax ([pricing][m-pricing]) | The [help article][m-edu] (dated 2026-08-12) calls it "the Pro plan with a discount" for eligible students and teachers and requires a verified institutional email (student ID or enrollment letter not accepted). The pricing card limits it to a maximum of 12 months for verified students at accredited higher-education institutions who have not used Vibe (or Le Chat) before. Same Mistral Vibe CLI, IDE, and web access; the card lists "$15 /mo in API credits". The renewal price after 12 months is not stated. The owner reports paying about $5/month |
+| Team | $24.99/user/month ([pricing][m-pricing]) | "Even higher limits"; organization terms not evaluated |
+| Enterprise | Contact sales | Private deployments; not a personal-plan alias |
+
+The Pro card's "$25.5 /mo in API credits" and the Education card's "$15 /mo in API
+credits" differ although the help article calls Education Pro with a discount, so the
+sources disagree on whether Education carries Pro's allowance. This repo plans on the
+Education card's $15.
+
+**Allowance and reset.** "Each Mistral plan includes monthly usage that is shared across
+Studio, the API, and Vibe Code. Usage consumes this monthly allowance first"
+([subscriptions][m-subs]); plans are global across Mistral Vibe, Studio, and API
+([key and profile notes][m-keys]), so the owner's own Mistral Vibe CLI use draws on the
+same allowance as OMP. The size is **not published** in tokens or requests, only "fair
+usage limits" ([pricing][m-pricing]); no per-model multiplier is documented, and
+overage is "at API rate". The reset is the **billing period (monthly)**: "the plan can
+stop working until the next billing period" ([FAQ][m-faq]); no five-hour or weekly
+window is documented. **[INFERENCE]** the $15 is the allowance in API-priced dollars
+(the card line, the docs' "included monthly usage", and "at API rate"). At
+[Mistral API prices][m-api-pricing], $15 buys roughly 114 GLM-5.3 agent sessions (200k
+input, 80% cached, 12k output) or 893 GLM-5.3 Flash sessions: a planning ratio, not a
+quota.
+
+**Exhaustion.** With pay-as-you-go (PAYG) off, the default, Mistral Vibe stops until the
+next period ([key and profile notes][m-keys]). With PAYG on, usage past the plan draws
+prepaid credits and requests fail with **HTTP 402** at a zero balance; PAYG needs
+prepaid credits, and partner-bought Pro plans (Google, Apple, Free Mobile, Orange)
+cannot enable it ([billing][m-billing]). Whether Education can enable PAYG is
+unverified. The observed plan-budget error is
+`402 {"code":"2304","type":"billing_vibe_budget_exhausted"}`, reported even with PAYG
+active and credits, on a Free plan with a "vibe"-type key ([issue 1362][m-issue-1362]).
+No exhaustion was produced or observed on this account; OMP's default
+`retry.fallbackOn: any` is expected to walk the chain on that error **[INFERENCE]**.
+
+**No OMP usage meter.** `omp usage` shows no Mistral section (2026-11-03), and no usage
+or quota endpoint worked with this key: Mistral Vibe CLI 3.0.4 calls only
+whoami/account-context, managed-config, experiment-eval, event, and connector-bootstrap
+endpoints and has no usage command (its
+November plan lists "Monthly usage indication in the TUI" as not yet done,
+[issue 1366][m-issue-1366]), and direct probes of console and API usage and billing
+paths returned 401 or 404. The live meter is console-only:
+<https://console.mistral.ai/codestral/cli> ("View organization usage"),
+<https://admin.mistral.ai/subscription> (plan, included usage, estimated usage, PAYG
+toggle), and <https://admin.mistral.ai/organization/usage> ("Vibe usage beyond quota").
+
+**Plan key versus Studio key.** `/login mistral` mints a key through Mistral Vibe CLI's
+browser sign-in flow. The key has "vibe" scope (whoami `plan_type` CHAT, `plan_name`
+EDU) and bills the plan's Mistral Vibe budget. A "Studio"-type key made in the console
+bills PAYG or Free-mode usage and is governed by API rate limits ([FAQ][m-faq]; in
+issue 1362 a vibe-type key hit 402 despite PAYG credits and a Studio-type key fixed it).
+A third-party OMP extension,
+[omp-mistral-subscription](https://github.com/Gauthier-Huguenin/omp-mistral-subscription),
+claims 12 requests and 46k completion tokens moved the "Vibe Code" counter and not the
+API-credit counter (the author's claim; models unspecified). The sources conflict: the
+help article says "API rate limits are not the same as your Vibe plan budget", while
+the undated docs pages describe one shared pool. Non-Vibe models (DeepSeek V4.1 Flash
+1017, Ministral 3B/8B/14B, Codestral, Large 3, Small 4) answered 1-token probes through
+this key and no document excludes any model from the shared allowance, so
+**[INFERENCE]** all draw on it; nothing directly confirms DeepSeek or Ministral usage
+lands on the Mistral Vibe meter. `has_paid_vibe_entitlement: false` in Mistral Vibe's
+local whoami cache is a client default (the raw response has no such field) that only
+suppresses an upgrade prompt; it does not mean Education lacks Mistral Vibe. Mistral
+Vibe usage is included on Education by indirect evidence only: the help article, the
+card's "Full access to Vibe for all-day coding", the Mistral Vibe maintainer saying
+Large 4 requires "the Pro plan" ([issue 1366][m-issue-1366], 2026-10-30), and the CLI's
+extra-model list, which is empty for a Free account but names Large 4, GLM-5.3, and
+GLM-5.3 Flash for Education. The quota counter itself was not observed.
+
+**Models** (details in [MISTRAL-EVALUATION.md](MISTRAL-EVALUATION.md)). The Education
+account's Mistral Vibe CLI defaults to GLM-5.3 (Mistral-hosted, per a remote experiment
+flag fetched 2026-11-03). The only catalog ids this repo uses are
+`mistral/zai-glm-5-3-flash` (image input, 1M context, $0.15/$0.5 per million tokens;
+[Artificial Analysis](https://artificialanalysis.ai/leaderboards/models) Intelligence
+Index v5.0 27.8, Terminal-Bench 4.0 32.8%) and `mistral/zai-glm-5-3` (text-only, 1M
+context, $1.4/$4.4; Index 31.7, Terminal-Bench 4.0 41.9% against 19.7% for Gemini 3.8
+Flash). No Mistral-accessible model is a depth peer: the best Index is 32.5, against
+Opus 5.5 at 58.4 and Sol 6.1 at 54.5. Large 4 and DeepSeek V4.1 Flash 1017 are labelled
+public preview on Mistral's pages; Large 4's 41% Terminal-Bench 4.0 figure is from
+Mistral's own Mistral Vibe harness (24.7% in Artificial Analysis's generic harness);
+Medium 3.5 is deprecated (2026-10-31, per the [Mistral model docs][m-models]) at 0.0%
+Terminal-Bench 4.0. Alias ids (`mistral-medium-3.5`, `zai-glm-5`, `mistral-vibe-cli-*`)
+lack OMP catalog metadata and are not selectors.
+
+**Cancellation and data.** Refunds are only within 14 days of the initial purchase;
+otherwise access lasts to period end, then Free mode ([help 455205][m-help-455205],
+[help 568728][m-help-568728]). The pricing card lists model-training opt-out for Pro;
+the plan key falls under Mistral's [consumer terms][m-terms], and **[INFERENCE]** the
+same applies to Education. OMP's provider docs describe `/login mistral` as minting a
+plan-tied key; Mistral's terms for use through a third-party harness were not reviewed.
+
+**Not verified:** the live meter reading, the allowance size and per-model weighting
+(the $15 equivalence is an inference), whether Education can enable PAYG, and the
+renewal price after the 12-month limit.
+
 ## Recommended mixes by workload and paying tier
 
 These are **recommendations [INFERENCE]**, not measured winners. Dollar totals use
@@ -313,7 +432,8 @@ The static [../profiles/anthropic-heavy.yml](../profiles/anthropic-heavy.yml) is
 an opt-in example, not auto-imported, an entitlement grant, or a budget controller.
 Its local catalog references need no companion registration in the recorded catalog;
 that does not guarantee the same catalog or access on another installation.
-No OpenRouter/NVIDIA floor is inherited.
+No OpenRouter/NVIDIA chat-model floor is inherited; the `judge` role's OpenRouter
+route is a native judgment model, funded separately.
 
 ### Why plan and architect still use Opus 5.5
 
@@ -542,3 +662,16 @@ formatter is configured for these Markdown/config-only changes.
 [g-cli]: https://geminicli.com/docs/resources/quota-and-pricing/
 [g-api]: https://ai.google.dev/gemini-api/docs/pricing
 [g-vertex]: https://cloud.google.com/vertex-ai/pricing
+[m-pricing]: https://mistral.ai/pricing
+[m-edu]: https://help.mistral.ai/en/articles/698530
+[m-faq]: https://help.mistral.ai/en/articles/698531
+[m-help-455205]: https://help.mistral.ai/en/articles/455205
+[m-help-568728]: https://help.mistral.ai/en/articles/568728
+[m-subs]: https://docs.mistral.ai/admin/billing-usage/subscriptions
+[m-billing]: https://docs.mistral.ai/admin/billing-usage/billing
+[m-keys]: https://docs.mistral.ai/vibe/code/cli/api-keys-profiles
+[m-api-pricing]: https://docs.mistral.ai/inference/pricing
+[m-models]: https://docs.mistral.ai/models
+[m-terms]: https://legal.mistral.ai/terms
+[m-issue-1362]: https://github.com/mistralai/mistral-vibe/issues/1362
+[m-issue-1366]: https://github.com/mistralai/mistral-vibe/issues/1366
