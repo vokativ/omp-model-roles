@@ -2,6 +2,10 @@
 
 *In `research/`. Bare filenames such as `model-roles.yml` and `README.md` refer to the repo root, one level up.*
 
+> **Historical (v19.1).** Current `sage` is `anthropic/claude-fable-5-1` (v35+); see
+> [THINKING-PARTNER-ROLE.md](THINKING-PARTNER-ROLE.md) §5 and `model-roles.yml`. The model and
+> verification-chain details below describe the v19 state (Opus 5 primary).
+
 ---
 
 ## 1. Context & Genesis
@@ -52,7 +56,7 @@ We conducted an in-depth consultation with both **`sage` (`anthropic/claude-opus
 
 ## 3. Upgraded Prompt Structure
 
-The complete prompt architecture for `agents/sage.md` incorporates five dedicated operational blocks:
+The complete prompt architecture for `agents/sage.md` incorporates six dedicated operational blocks:
 - `<directives>`: Epistemic mission, license to push the risk curve, prohibition against safe mediocrity.
 - `<anti-patterns>`: The explicit anti-slop defect catalog.
 - `<divergence>`: The six cognitive divergence operators (Assumption Inversion, Constraint Shock, Domain Collision, Second-Order Equilibrium, Orthodoxy Incentives, Subtractive Reduction).

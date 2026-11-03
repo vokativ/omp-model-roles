@@ -31,7 +31,7 @@ those reports and attributed to its source.
   `mistral/zai-glm-5-3`; `default` chain -> `google-antigravity/gemini-3.8-flash` ->
   `anthropic/claude-sonnet-5-5`. Details and evidence: [DEFAULT-ROLE-EVALUATION.md](DEFAULT-ROLE-EVALUATION.md).
   Still one `mistral/*` entry per chain (the primary is the entry; the `default` chain holds none).
-- **Why bounded.** Small monthly pool, unmetered in OMP, shared with the owner's own Mistral Vibe
+- **Why bounded.** Bounded monthly pool ($150/mo Vibe Code, resets 1st of calendar month, PAYG off), unmetered in OMP, shared with the owner's own Mistral Vibe
   CLI use (and, from v38, the default role). `retry.usageAwareFallback` excludes ordinary API keys, so it is an error-driven hop only.
 - **Not adopted:** DeepSeek V4.1 Flash 1017, Medium 3.5, Small 4, Ministral, every alias id. No
   Mistral model in `critical`, `slow`/`plan`/`security`, `sage`, `judge`, or as any primary except the
@@ -51,8 +51,8 @@ Observed 2026-11-03. **[INFERENCE]** marks anything not read directly from a sou
 | Plan | "The Education plan is the Pro plan with a discount" for verified students/teachers; institutional email required | https://help.mistral.ai/en/articles/698530 (2026-08-12) |
 | Price | **$5.99/mo** (normally $14.99, excl. tax), **max 12 months**, only students at accredited higher-ed who have not used Vibe/Le Chat before; renewal price not stated. Owner says about $5/mo, about $50-70/yr (unverified). Refund only within 14 days | https://mistral.ai/pricing (`data-prices` 5.99); https://help.mistral.ai/en/articles/455205 |
 | Included | Mistral Vibe CLI/IDE/web ("All-day coding in the CLI, IDE, or on web"), more messages/searches, **"$15 /mo in API credits"** | mistral.ai/pricing raw HTML |
-| Allowance | "Monthly usage … **shared across Studio, the API, and Vibe Code**." Size **unpublished** ("fair usage limits"); no per-model weighting documented, overage "at API rate". **[INFERENCE]** the $15 line is the allowance in API-priced dollars | https://docs.mistral.ai/admin/billing-usage/subscriptions ; https://docs.mistral.ai/vibe/code/cli/api-keys-profiles |
-| Reset | **Monthly (billing period)**; "can stop working until the next billing period". No 5h/weekly windows documented | https://help.mistral.ai/en/articles/698531 |
+| Allowance | "Monthly usage … **shared across Studio, the API, and Vibe Code**." Size **unpublished** ("fair usage limits"); no per-model weighting documented, overage "at API rate". **[INFERENCE]** the $15 line is the allowance in API-priced dollars (v37 reading; superseded by v38 correction below: $150 Vibe Code + $15 API) | https://docs.mistral.ai/admin/billing-usage/subscriptions ; https://docs.mistral.ai/vibe/code/cli/api-keys-profiles |
+| Reset | **Monthly (billing period)**; "can stop working until the next billing period". No 5h/weekly windows documented (v37 reading; superseded by v38 correction below: reset 1st of calendar month) | https://help.mistral.ai/en/articles/698531 |
 | Exhausted | PAYG off (default): Mistral Vibe stops until next period. PAYG on: prepaid credits, then **HTTP 402**; partner-bought Pro (Google, Apple, Free Mobile, Orange) cannot enable PAYG. Error shape seen: `402 {"code":"2304","type":"billing_vibe_budget_exhausted"}` (Free plan, vibe-type key; not reproduced here) | https://docs.mistral.ai/admin/billing-usage/billing ; https://github.com/mistralai/mistral-vibe/issues/1362 |
 | Key scope | OMP's key is a **"vibe" plan key**: whoami `plan_type:"CHAT"`, `plan_name:"EDU"`, `primitive_access_scope:"personal_and_shared"`; Mistral Vibe maps `CHAT -> "vibe"` | Mistral Vibe CLI 3.0.4: `vibe/setup/auth/whoami.py`, `vibe/app_server/_account.py:56-61` |
 | Billing route | A vibe-type key bills the **plan's Mistral Vibe budget**, not PAYG credits or the Free tier. OMP: "usage counts against the plan's Vibe Code quota instead of pay-as-you-go API credits". An OMP-extension author claims 12 requests / 46k completion tokens moved only the "Vibe Code" counter (author's claim) | issue #1362; help 698531 FAQ; `omp://providers.md`; https://github.com/Gauthier-Huguenin/omp-mistral-subscription |
@@ -235,7 +235,7 @@ All nine runs repaired the planted bug. Samples are n=1 to 3 per cell: direction
 | `review` | **Adopted, hop 3: `zai-glm-5-3`** | Producers are mostly Claude; the last hop was same-family Antigravity Opus. GLM is a cross-family independent reviewer, non-blocking. Antigravity's Claude/GPT weekly pool is at 92.9%, inside the 10% usage reserve, so the Opus hop is effectively dead now **[INFERENCE]** and this hop is more likely the live last stop |
 | `commit`, `widget`, `advisor` | No change | `commit` is infrequent (no quota relief); `advisor` reads the whole main conversation against an unknown budget; widget chain-walking unverified since OMP 18.13.2 |
 | `vision` | v37: No Mistral hop. **v37.2: adopted, hop 3: `mistral-large-4`** | v37 rationale: Flash and Large 4 passed the image probe (Large 4 best) but no data against the repo's vision A/B bar. v37.2 (owner decision): after Sonnet 5.5 and Sol 6.1, before Grok 4.7, so it runs only when Gemini 3.8 Flash, Sonnet and Sol all fail. Cleanest OMP tool run (5 turns, 10.8 s, 0 edit errors), read the probe image correctly (best vision result of the Mistral models), 1M context, image input, catalog maxTokens 262,144. Caveats: public preview; AA 26.0; Terminal-Bench 4.0 24.7% neutral vs 41% in Mistral's own harness; OMP catalog $1.36/$4.18 vs Mistral's $0.70/$2.10; draws the EDU allowance |
-| `default` | No | Fires every turn; small unmetered pool; no usage-aware safety net |
+| `default` | v37: No. **v38 (owner decision): adopted as the sole Mistral primary** (`zai-glm-5-3`) | v37 rationale: fires every turn; no usage-aware safety net. v38: see `research/DEFAULT-ROLE-EVALUATION.md`; draws the $150/mo Vibe Code allowance, chain walks to Gemini 3.8 Flash on HTTP 402 |
 | `slow`, `plan`, `security` | No | AA <= 32 vs the 50+ depth tier; v34 principle is frontier depth |
 | `critical` | No | Omniscience +6.0 (GLM-5.3) vs Sol +42.0 / Argon +46.1; a weaker concrete-model-different model can mint `INDEPENDENT` and `GO` |
 | `sage` | No | GLM-5.3 arena #28 vs Opus 5.5 #3; Fable model-level chains own failover |
@@ -253,7 +253,7 @@ hosted GLM is a third-party model family behind a Mistral route, so record provi
 family (GLM) when judging independence.
 
 v37.2 adds one row: `vision` Sonnet 5.5 -> Sol 6.1 -> Grok 4.7 (v37.1) becomes Sonnet 5.5 -> Sol 6.1 ->
-**Large 4** -> Grok 4.7. Mistral now appears in five chains: `smol`, `tiny`, `task`, `review`, `vision`.
+**Large 4** -> Grok 4.7. Mistral now appears in five fallback chains plus the `default` primary (v38): `smol`, `tiny`, `task`, `review`, `vision`.
 
 **What v37 does not fix.** The `smol`/`tiny` hops relieve Plus only when those roles fall through
 from Anthropic; Plus primaries (`review`, `critical` on Sol) are untouched. This Mac's 29 session
@@ -323,7 +323,7 @@ tokens; `or/` = `openrouter/`):
 bool answers all 1; A/B/F `openrouter/typesafe/jev-1.14-20261014` **0.40-0.56 s**,
 $0.0000125/call, graded probabilities **0.89-0.96**; no `does not resolve` warning in any A/B/F log.
 
-**Chosen config (F)**, in `model-roles.yml` v37:
+**Config F (v37, superseded by v37.1)**, in `model-roles.yml` v37:
 
 ```yaml
 modelRoles:
@@ -342,15 +342,15 @@ single call takes 0.40-0.56 s and a whole `find` cascade about 2 s over 8-11 req
 route is skipped 30 s; the last candidate runs to completion. If `Aborted: The operation timed
 out` shows in `~/.omp/logs`, run `omp config set judgment.attemptTimeoutMs 10000`.
 
-**Alternative if the owner later logs in to TypeSafe** (tested as B, minus its dead Flash-Lite tail):
+**Alternative (adopted in v37.1)** (tested as B, minus its dead Flash-Lite tail):
 `judge: typesafe/jev-1.14.0` with chain `openrouter/typesafe/jev-1.14` -> `openrouter/typesafe/jev-1.13`.
-Today the uncredentialed primary is skipped and OpenRouter answers; after login it bills TypeSafe.
+At v37 the uncredentialed primary was skipped and OpenRouter answered; after login it bills TypeSafe.
 Steps (`omp://environment-variables.md`; not run): console.typesafe.ai -> add credit under Billing
 (required before a key can be created, per third-party reports) -> key at console.typesafe.ai/keys
 -> `/login typesafe`, `omp login`, or `TYPESAFE_API_KEY` in `~/.omp/agent/.env`. Price is
 identical ($42 per billion input tokens, output free; 64k context, 262k with the
 `TypeSafe-Danger-Zone-Long-Context` header); there is no free API tier (jevhub.io/is-jev-free,
-jevainews.com/news/typesafe-signups-paused; TypeSafe X post 2026-09-27). Not recommended: it adds a
+jevainews.com/news/typesafe-signups-paused; TypeSafe X post 2026-09-27). It adds a
 second prepaid balance for no price benefit.
 
 **Cost.** OpenRouter credit, $0.042/M input, output free. Observed: auto-thinking about
@@ -421,7 +421,7 @@ measurements: [DEFAULT-ROLE-EVALUATION.md](DEFAULT-ROLE-EVALUATION.md). The stat
    the subagent takes the parent's model instead (`omp://vibe-mode.md`). Each failed hop consumes a
    retry attempt; there is no preflight skip as for metered providers. Check the console URLs above.
 3. **DeepSeek/Ministral on the plan meter?** Unverified; no source confirms it. Irrelevant to v37
-   (GLM only), relevant before widening. Test: note the meter, make a few hundred
+   (GLM + Large 4 only), relevant before widening. Test: note the meter, make a few hundred
    `deepseek-v4-1-flash-1017` or Ministral calls through OMP, re-read the meter and the API-credit
    counter.
 4. **Preview/new models.** GLM-5.3 Flash was hosted only on 2026-10-22; DS 1017 is preview, and Large 4

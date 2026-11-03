@@ -49,10 +49,11 @@
 ##             vs 19.7% for 3.8 Flash; 0 edit-tool errors).
 ##       review: mistral/zai-glm-5-3 before Antigravity Opus, so the last independent (non-Claude) reviewer
 ##             is not the same-family hop.
-##   - Not adopted: Mistral Large 4 / DeepSeek V4.1 Flash (public preview; DeepSeek emits thinking-only turns),
+##   - Not adopted: Mistral Large 4 (adopted late in vision by v37.2) / DeepSeek V4.1 Flash (public preview; DeepSeek emits thinking-only turns),
 ##     Medium 3.5 (deprecated 2026-10-31, Terminal-Bench 4.0 0%, malformed edits), Small 4 / Ministral (weak,
 ##     ministral-14b failed 47/47 edits), and every alias id (no catalog metadata: no thinking, null context).
-##     No Mistral model in critical, slow/plan/security, sage, vision, judge, or as any primary.
+##     No Mistral model in critical, slow/plan/security, sage, vision, judge, or as any primary
+##     (v37 as written; superseded: vision gains Large 4 in v37.2, default primary is GLM-5.3 from v38).
 ##
 ## v36: OMP 18.13.2 harness alignment, missing roles integration, and custom agent hardening.
 ##   - critical: added structured: true to agents/critical.md frontmatter, repairing the silent contract
@@ -86,7 +87,7 @@
 ##     The model-level anthropic/claude-fable-5-1 / -5 chains OWN this order (OMP checks exact model
 ##     keys before role keys); the role-level sage chain only applies if sage reverts to Opus.
 ##     Antigravity Opus (idle Claude/GPT pool) now precedes Sol so sage does not drain the Plus
-##     5h window that critical swarms exhaust; Argon kept late (weekly meter exhausted until ~10-24).
+##     5h window that critical swarms exhaust; Argon kept late (weekly meter exhausted until ~10-24; reading as of 2026-10-20, ~37-40% on 2026-11-03, order unchanged).
 ##   - Evidence: 2026-10-20 probes accepted Fable 5.1 via Max OAuth (no credits_required). Blind A/B of
 ##     3 sage prompts was family-biased (Sonnet judges favored Claude, Sol judge favored OpenAI; Grok
 ##     neutral: Fable 8.43 > Opus 8.13 > Astra 7.85 > Sol 7.74) and P1 leaked model identity, so
@@ -132,7 +133,7 @@
 ##     advisor primary -> Antigravity Sonnet 5.5. Existing chain order is unchanged.
 ##   - Both 5.5 selectors verified through OMP at thinking: high, with fallback disabled.
 ##   - Four free accounts still expose Claude 4.6, not 5.5; they are not extra 5.5 capacity.
-##     Google schedules Claude 4.6 removal for 2026-11-02. See README's account-tier notes.
+##     Google scheduled Claude 4.6 removal for 2026-11-02 (date now past; not re-verified). See README's account-tier notes.
 ##   - Direct and Antigravity Opus 5.5 are not independent model votes.
 ##
 ## v30: updated smol fallback chain for prewalk and sub-default cost profile.
@@ -298,9 +299,9 @@
 ## "architect"|"critical", ...) dispatch targets. See research/ARCHITECT-CRITICAL-AGENTS.md.
 ##
 ## Assumes these logins exist on the target machine:
-##   - anthropic        (Claude Max 5x, $100/mo — primary workhorse and depth pool: task/smol/slow/plan/review/security/sage; Haiku for tiny/commit/widget/sonic)
-##   - openai-codex      (ChatGPT Plus, $20/mo — independent critical gate & tier-1 fallback: critical -> gpt-6.1-sol)
-##   - google-antigravity (Google AI Pro, ~$20/mo — vision/advisor on 3.8 Flash and default's first fallback; lightweight fallbacks on 3.5 Flash-Lite)
+##   - anthropic        (Claude Max 5x, $100/mo — primary workhorse and depth pool: task/smol/slow/plan/security/sage; Haiku for tiny/commit/widget/sonic; Sonnet 5.5 also last default hop and first vision fallback)
+##   - openai-codex      (ChatGPT Plus, $20/mo — critical + review primary (gpt-6.1-sol); first fallback in slow/plan/security/task and second in vision; Luna in smol/tiny/commit/advisor)
+##   - google-antigravity (Google AI Pro, ~$20/mo — vision/advisor on 3.8 Flash and default's first fallback; Gemini 4 Argon (review/critical first hop, depth-chain tier 2) and Antigravity Opus 5.5 (depth-chain tier 3); lightweight fallbacks on 3.5 Flash-Lite)
 ##   - xai-oauth         (X Premium, $8/mo bundled SuperGrok credits — last-tier fallbacks; Grok Build/Composer end the cheap chains)
 ##   - mistral           (Mistral EDU/student Pro plan key via /login mistral — default primary GLM-5.3 (v38) plus fallback hops: smol/tiny GLM-5.3 Flash, task/review GLM-5.3, vision Large 4; no omp usage meter)
 ##   - typesafe          (API key with prepaid credit via /login typesafe — judge primary: typesafe/jev-1.14.0)

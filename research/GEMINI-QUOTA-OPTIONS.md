@@ -3,6 +3,12 @@
 *In `research/`. Bare filenames such as `model-roles.yml` and `README.md` refer to the repo root,
 one level up.*
 
+> **Historical (2026-08).** Present-tense statements below describe the 2026-08-15 state
+> unless dated otherwise. Current state (v38): `default` = `mistral/zai-glm-5-3` →
+> `google-antigravity/gemini-3.8-flash` → `anthropic/claude-sonnet-5-5`; `vision` and `advisor`
+> stay on `google-antigravity/gemini-3.8-flash`; the `designer` role was deleted in v36; Argon's
+> weekly meter is no longer exhausted (~37-40% on 2026-11-03). See `model-roles.yml`.
+
 Written 2026-08-15 in response to: "a lot of stuff is on Google Gemini now, should I upgrade a
 subscription or use an API key, and how do we check back in a month across multiple machines to
 see if this allocation actually makes sense."
@@ -81,7 +87,7 @@ lane (the one `gemini-3.8-flash` actually draws on) hasn't hit that yet, but `de
 and `designer` all now primary on that exact meter — more concentrated load than before this
 morning's change.
 
-**What happens today if the Google lane exhausts:** `retry.usageAwareFallback: true` +
+**What happened (2026-08-15 state) if the Google lane exhausts:** `retry.usageAwareFallback: true` +
 `retry.usageReservePolicy: auto` proactively switches `default` to
 `retry.fallbackChains.default[0]` = `anthropic/claude-sonnet-5` *before* a hard 429 — no
 interruption, just a model-character change for the rest of that window, then
@@ -113,7 +119,7 @@ Two things worth knowing before touching this:
    `google-antigravity/*` entry fires *before* `modelRoles.default`'s chain, for every antigravity
    model in every role.
 
-**Not applied yet** — you have no `GEMINI_API_KEY` or Vertex credentials configured
+**Not applied (as of 2026-08-15)** — you had no `GEMINI_API_KEY` or Vertex credentials configured
 (`omp models google` / `omp models google-vertex` both come back empty), and a bare wildcard
 would shadow the working Sonnet-5 safety net with two unauthenticated, unselectable entries. If
 you want this, it needs to chain into the existing fallback, and it needs real credentials —
@@ -127,7 +133,7 @@ covered in the ready-to-paste snippet at the end.
 | What it buys | Immediate Sonnet 5 / Terra fallback (already paid, 90%+ idle) | Same-model Gemini 3.8 Flash overflow at half direct Google cost | Direct Google Gemini overflow tier | 4x bigger *free* Antigravity quota + $10/mo Cloud credit |
 | Setup | None | Fund OpenRouter credits → `openrouter/google/gemini-3.8-flash` | `ai.google.dev` → GCP billing setup | Google One upgrade |
 | Billing risk | Zero | Zero (isolated prepaid balance) | Can collide with existing app GCP billing accounts | Fixed recurring subscription |
-| Right for you if | **Current state**: Antigravity is healthy, flat subscriptions absorb overflow | Antigravity runs dry daily AND you want same-weights overflow with zero billing hassle | Strict requirement for first-party Google endpoint | Antigravity IDE UI itself is needed |
+| Right for you if | **State on 2026-08-15**: Antigravity is healthy, flat subscriptions absorb overflow | Antigravity runs dry daily AND you want same-weights overflow with zero billing hassle | Strict requirement for first-party Google endpoint | Antigravity IDE UI itself is needed |
 
 ### Price comparison: Google AI Studio vs OpenRouter
 

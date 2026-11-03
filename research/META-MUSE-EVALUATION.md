@@ -32,7 +32,7 @@ measurement. Contrast with `README.md`'s "2026-08-25 A/B", which *is* locally me
 
 ## What it actually is (verified)
 
-Provider `meta` is authenticated with three models. Specs and prices below are corroborated
+As of 2026-08-25, provider `meta` was authenticated with three models (the current `model-roles.yml` logins list has no `meta`). Specs and prices below are corroborated
 *twice*: Meta's primary docs and this harness's own `omp models meta --json`.
 
 | Model | Context | Max out | $/1M in | $/1M out | $/1M cache-read | Trains on your data? |
@@ -128,6 +128,8 @@ Two claims in the third and fourth rows were **retracted by this process** rathe
 recorded here deliberately, so the doc is not read as uniformly damning.
 
 ## Role-fit verdict
+
+*Role names in this table are from the 2026-08 snapshot; v36 removed `designer`, `fast_worker`, `good_worker`, and `architect`.*
 
 | Role | Verdict | Reason |
 |---|---|---|

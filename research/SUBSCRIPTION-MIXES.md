@@ -1,8 +1,9 @@
 # Four-provider subscription mixes (opt-in planning)
 
-**Sources checked: 2026-10-08. Recheck on 2026-10-15**, and sooner if checkout,
+**Sources checked: 2026-10-08. Recheck on 2026-10-15 (overdue; only the Mistral section was
+rechecked, on 2026-11-03)**, and sooner if checkout,
 terms, catalog, or account eligibility changes. This is not a new root snapshot:
-`model-roles.yml`, the v32 allocation, custom agents, and existing logins stay unchanged.
+`model-roles.yml`, the live allocation (v38), custom agents, and existing logins stay unchanged.
 No Max account or alternative mix was exercised against a provider. No local
 quality, throughput, or quota benchmark was performed for this planning work.
 
@@ -23,11 +24,11 @@ to TypeSafe prepaid credit via an existing `/login typesafe` API key), with
 as native fallbacks billed to OpenRouter prepaid credit (v37 ran judge on OpenRouter first),
 and an existing `mistral` login (Mistral Education plan key)
 supplies bounded fallback hops in `smol`, `tiny`, `task`, and `review`, never a primary.
-See the [Mistral section](#mistral-education-plan-key-bounded-fallback-only) and
+See the [Mistral section](#mistral-education-plan-key-fallback-hops-and-v38-default) and
 [MISTRAL-EVALUATION.md](MISTRAL-EVALUATION.md). Only the Mistral section was checked on
 2026-11-03: the other provider sections still date from 2026-10-08 (the 2026-10-15
 recheck date has passed), and the 17-role map below was not revised for the 15-role
-contract.
+contract (it is now labelled historical; see the v38 note below).
 
 **Updated 2026-11-03 (v38):** the live root `model-roles.yml` is now snapshot v38, superseding the
 v37.1 reference above. The `default` role runs on `mistral/zai-glm-5-3` (owner decision; the one
@@ -38,6 +39,13 @@ separate Education allowances, **$15/mo Included API usage** and **$150/mo Inclu
 usage** (both reset on the 1st of each calendar month; PAYG for both off); OMP's `/login mistral`
 key is inferred to draw the $150 Vibe Code allowance, which corrects the "$15" planning figure in the
 Mistral section below (v37 inferred it from the pricing card's API-credit line).
+
+**v38 status of the role map below:** the 17-role map and table in "Anthropic-heavy full primary
+and fallback role map" is the historical 2026-10-08 design (pre-v36: `architect`, `designer`,
+`good_worker`, `fast_worker` were removed in v36). The current 15-role map is the `modelRoles`,
+`retry.fallbackChains`, and `cycleOrder` in [../model-roles.yml](../model-roles.yml).
+[../profiles/anthropic-heavy.yml](../profiles/anthropic-heavy.yml) is a run-only copy of that live
+v38 config, not the 17-role table.
 
 The goal is to choose which pool should carry general work, reserve deeper models
 for harder work, and retain a genuinely different model family for critical review.
@@ -133,9 +141,10 @@ not substitution of personal Max or Team terms.
 The current pricing model table includes Opus on paid plans and Sonnet/Haiku on
 Free and paid plans. Fable is native usage-credit access on Pro and listed at
 50% of weekly limits on Max, with caveats. These are native-product entitlements,
-not third-party OAuth permission or proof of API/catalog availability. The static
-alternative keeps Sonnet, Opus, and Haiku: **Opus 5.5 remains the provisional
-`plan` and `architect` default**, with Fable 5.1 a credible conditional candidate,
+not third-party OAuth permission or proof of API/catalog availability. The historical
+17-role alternative keeps Sonnet, Opus, and Haiku: **Opus 5.5 remained the provisional
+`plan` and `architect` default** (2026-10-08; since v36 there is no `architect` role, the
+`architect` agent is bound to `@slow`, which is Opus 5.5), with Fable 5.1 a credible conditional candidate,
 not a categorically excluded family. See the
 [2026-10-08 web comparison](FABLE-EVALUATION.md) and the role-specific decision below.
 Historical Pro/Fable failures establish neither current quality nor future Max
@@ -271,11 +280,13 @@ infer generic Workspace subscription access to OMP, CLI, or API. [Gemini API][g-
 and [Vertex AI][g-vertex] are separately billed. Antigravity native entitlements do
 not alone establish authorization for every third-party OMP route.
 
-### Mistral: Education plan key, bounded fallback only
+### Mistral: Education plan key, fallback hops and v38 default
 
 Mistral is not one of the four requested provider groups and is in no total below. The
 repo keeps one existing `mistral` login (an OMP `/login mistral` plan key on a Mistral
-Education account) only as fallback hops, the exception allowed by
+Education account): fallback hops in `smol`, `tiny`, `task`, and `review`, `mistral-large-4`
+in `vision` (v37.2), and since v38 the owner-chosen `default` primary (`mistral/zai-glm-5-3`),
+the one exception allowed by
 [../instructions/SELECT-MODEL-MIX.md](../instructions/SELECT-MODEL-MIX.md); the model
 evidence is in [MISTRAL-EVALUATION.md](MISTRAL-EVALUATION.md). **Sources checked
 2026-11-03.** "Mistral Vibe" here is Mistral's coding product (CLI, IDE, web), not OMP's
@@ -292,7 +303,8 @@ good/fast "Vibe" worker tiers.
 The Pro card's "$25.5 /mo in API credits" and the Education card's "$15 /mo in API
 credits" differ although the help article calls Education Pro with a discount, so the
 sources disagree on whether Education carries Pro's allowance. This repo plans on the
-Education card's $15.
+$150/mo Vibe Code allowance the OMP key is inferred to draw (v38); the card's $15 is the
+separate API allowance.
 
 **Allowance and reset.** "Each Mistral plan includes monthly usage that is shared across
 Studio, the API, and Vibe Code. Usage consumes this monthly allowance first"
@@ -300,20 +312,21 @@ Studio, the API, and Vibe Code. Usage consumes this monthly allowance first"
 ([key and profile notes][m-keys]), so the owner's own Mistral Vibe CLI use draws on the
 same allowance as OMP. The size is **not published** in tokens or requests, only "fair
 usage limits" ([pricing][m-pricing]); no per-model multiplier is documented, and
-overage is "at API rate". The reset is the **billing period (monthly)**: "the plan can
+overage is "at API rate". The reset is the **1st of the calendar month** (v38 correction
+below; v37 read it as a "billing period"): "the plan can
 stop working until the next billing period" ([FAQ][m-faq]); no five-hour or weekly
-window is documented. **[INFERENCE]** the $15 is the allowance in API-priced dollars
+window is documented. **[INFERENCE]** the $150 is the allowance in API-priced dollars
 (the card line, the docs' "included monthly usage", and "at API rate"). At
-[Mistral API prices][m-api-pricing], $15 buys roughly 114 GLM-5.3 agent sessions (200k
-input, 80% cached, 12k output) or 893 GLM-5.3 Flash sessions: a planning ratio, not a
+[Mistral API prices][m-api-pricing], $150 buys roughly 1,140 GLM-5.3 agent sessions (200k
+input, 80% cached, 12k output) or 8,930 GLM-5.3 Flash sessions: a planning ratio, not a
 quota.
 
 **v38 correction (owner's admin.mistral.ai/subscription page, 2026-11-03).** The page shows two
 separate allowances, each resetting on the 1st of each calendar month: Included API usage ($0 of $15
 used) and Included Vibe Code usage ($5.35 of $150 used), with pay-as-you-go off for both. **[INFERENCE]**
 OMP's `/login mistral` key draws the $150 Vibe Code allowance (API usage stayed $0 after a day of OMP
-calls). The paragraph above, its "$15" planning figure, and the "billing period" reset wording are the
-v37 reading; use $150/mo and calendar-month reset. The planning ratios scale by 10.
+calls). The v37 text this paragraph corrected (the "$15" planning figure, the "billing period" reset
+wording, 114/893-session ratios) has been edited in place above to $150/mo and calendar-month reset.
 
 **Exhaustion.** With pay-as-you-go (PAYG) off, the default, Mistral Vibe stops until the
 next period ([key and profile notes][m-keys]). With PAYG on, usage past the plan draws
@@ -402,7 +415,7 @@ drive the recommendation.
 |---|---|---|
 | Cheapest paid developer starting point | OpenAI Plus $20 + Google Free; no Anthropic/X: **$20** | Consider OpenAI for main work and Google for light default/vision and native independent review, conditional on authorized routes. Free/Go alone are not treated as full OMP Codex options |
 | Cheap balanced | OpenAI Plus $20 + Google AI Pro ~$20; no Anthropic/X: **~$40** | Choose the main pool from workload and observed headroom, not a tier tie. Non-trial Google adds proxy depth while native Gemini can review independently. Optional X Premium adds $8 only after route permission is established |
-| Anthropic-heavy alternative | Claude Max 5x $100 + OpenAI Plus $20 + Google AI Pro ~$20 + X Premium $8: **~$148**; omit Google/X for **$120** | Sonnet bulk work, selective Opus depth, OpenAI Sol critical; claim Max API credits and enforce Console budget prerequisites first. Fable plan/architect consideration remains evidence-dependent |
+| Anthropic-heavy alternative | Claude Max 5x $100 + OpenAI Plus $20 + Google AI Pro ~$20 + X Premium $8: **~$148**; omit Google/X for **$120** | Sonnet bulk work, selective Opus depth, OpenAI Sol critical (live v38 `critical` is Sol; `default` is Mistral GLM-5.3, not Sonnet); claim Max API credits and enforce Console budget prerequisites first. Fable plan/architect consideration remains evidence-dependent |
 | Anthropic higher tier | Replace Max 5x with Max 20x: **~$248** for the four-provider mix | More native allowance and $200 monthly API credit, not unlimited OMP work; upgrade only on observed permitted API usage/need |
 | OpenAI-heavy | Pro $100 + Google AI Pro ~$20; no Anthropic/X: **~$120** | Sol workers/depth, Luna cheap work; native Gemini independent critical. Pro $200/$500 totals ~**$220/$520**; the same example models do not justify paying more without useful capacity/features |
 | Google-heavy | AI Ultra $100 + OpenAI Plus $20; no Anthropic/X: **~$120** | Flash general work, **native Gemini Pro** depth; Sol critical. Ultra $200 gives ~**$220**, not 20x Claude proxy capacity |
@@ -413,7 +426,7 @@ drive the recommendation.
 If no authorized/funded route is established, show the conditional planning result
 and the material missing prerequisites; do not invent free OMP authorization.
 If a cheaper pool cannot sustain workers, consider the next paying tier **after a
-full usage cycle**, not because a model's API price appears low. Current live v32
+full usage cycle**, not because a model's API price appears low. Current (v38) live
 usage readings describe existing accounts, not future Max/Ultra/Heavy capacity.
 
 ## Ask OMP for an instruction-only preview
@@ -426,14 +439,14 @@ interface. From an OMP session in this repository, paste an ordinary request:
 Read instructions/SELECT-MODEL-MIX.md and follow it. Preview a complete conditional
 future allocation for Claude Max 5x ($100), ChatGPT Plus ($20), non-trial Google AI
 Pro (about $20), and X Premium ($8). Main work: frequent implementation, planning,
-and architecture review; occasional vision/design; one active machine.
+and architecture review; occasional vision; one active machine.
 Subscription budget: about $148/month, no additional paid API spend or top-ups.
 Max API credits are not yet claimed and third-party route permissions are
 unconfirmed; mark those as prerequisites rather than assuming access. Inspect
 existing state/catalog read-only if available and ask only for material missing
-information. Show all 17 roles, ordered fallback chains, agent bindings, the full
+information. Show all 15 roles, ordered fallback chains, agent bindings, the full
 proposed overlay, rationale, provenance/independence limits, and access/budget
-caveats. Compare Fable 5.1 with Opus 5.5 separately for plan and architect from
+caveats. Compare Fable 5.1 with Opus 5.5 separately for plan and architect (`slow`) from
 web evidence only. Do not modify files/config/auth, install a profile, subscribe,
 buy credits, or send Fable/additional selected-model probe requests.
 ```
@@ -441,24 +454,26 @@ buy credits, or send Fable/additional selected-model probe requests.
 Replace the example's plans, workload, machines, budget, credit status, and permissions
 with your actual facts. Explicitly say when a provider is absent or should be omitted;
 an omission request does not cancel a subscription. OMP should not silently fill
-material unknowns from the v32 setup. Read-only state/catalog inspection, where
+material unknowns from the current (v38) setup. Read-only state/catalog inspection, where
 available, distinguishes local model identity from account permission and budget.
 
 **Preview is the default and does not apply changes.** Reading these files offline
 sends no inference request. Asking OMP to follow the instructions uses your existing
 OMP/model route and may consume its allowance; it is not an offline zero-call program.
 Do not turn preview into selected-model probes, particularly Fable requests.
-The static [../profiles/anthropic-heavy.yml](../profiles/anthropic-heavy.yml) is
-an opt-in example, not auto-imported, an entitlement grant, or a budget controller.
+The [../profiles/anthropic-heavy.yml](../profiles/anthropic-heavy.yml) profile is a
+run-only copy of the live v38 role/chain config (same data as `model-roles.yml`), not
+installed, auto-imported, an entitlement grant, or a budget controller.
 Its local catalog references need no companion registration in the recorded catalog;
 that does not guarantee the same catalog or access on another installation.
-No OpenRouter/NVIDIA chat-model floor is inherited; the `judge` role's OpenRouter
-route is a native judgment model, funded separately.
+It includes the `mistral`, `typesafe`, and `openrouter` routes (the `default` Mistral primary, the
+`judge` TypeSafe primary, and its OpenRouter judgment fallbacks, funded separately), so a run in
+an isolated API-auth profile needs those logins or edits. No OpenRouter/NVIDIA chat-model floor is inherited.
 
 ### Why plan and architect still use Opus 5.5
 
 **[INFERENCE, web evidence checked 2026-10-08]** Keep both roles on Opus 5.5
-provisionally in the unchanged static profile and 17-role table below. Public
+provisionally in the historical (pre-v36) 17-role table below. Public
 analytical/workflow and long-horizon engineering proxies generally favor Opus;
 no controlled head-to-head isolating OMP implementation planning or read-only
 architecture review was found in the reviewed sources. This is not proof of a
@@ -512,12 +527,17 @@ judge-family biased and the first prompt leaked model identity, so Fable versus 
 quality is unresolved; the choice rests on low volume (~2 dispatches/week), cost
 (estimate: ~2.4x Opus per dispatch), published pushback evidence, and decorrelation.
 
-### Anthropic-heavy full primary and fallback role map
+**Updated 2026-11-03 (v38):** `architect` has been a consultant agent bound to `@slow` since
+v36 (no `architect` role); `slow` and `plan` are Opus 5.5 and `sage` is Fable 5.1 in the live config.
 
-These are **OMP 18.8.4 local catalog selectors**, not public SKU/model identifiers or
-proof of third-party entitlement. For example, the public xAI page still advertises
-Grok 4.6 while the installed OMP catalog includes `grok-4.7`. Do not turn a catalog
-label into a public-release or account-access claim.
+### Anthropic-heavy full primary and fallback role map (historical 17-role design, pre-v36)
+
+These were **OMP 18.8.4 local catalog selectors** when recorded (installed is now 18.16.0; not
+re-verified there), not public SKU/model identifiers or
+proof of third-party entitlement. For example, the public xAI page still advertised
+Grok 4.6 while the installed OMP catalog included `grok-4.7`. Do not turn a catalog
+label into a public-release or account-access claim. The table below is the 2026-10-08 design, kept
+as evidence; the current map is in [../model-roles.yml](../model-roles.yml).
 
 | Alias used below | Exact local selector |
 |---|---|
@@ -560,16 +580,19 @@ a producer that already fell back to Sol needs another genuinely independent rev
 Record actual model provenance before counting independent evidence. With only one
 authorized/available model family, explicitly disclose that critical cannot be independent.
 
-Live v35 differs from this static map: `critical` is Sol with chain Argon → Grok 4.7;
-`sage` is Fable 5.1 with model-level chain Opus → Google Opus → Sol → Argon → Grok 4.7
-(Opus chain `Google Opus → Sol → Argon → Grok 4.7` applies only if sage reverts to
-Opus); Astra appears in no role or chain.
+Live v38 differs from this historical map: `critical` is Sol with chain Argon → Grok 4.7;
+`sage` is Fable 5.1 with model-level chain Opus → Google Opus → Sol → Argon → Grok 4.7;
+`default` is `mistral/zai-glm-5-3` with fallbacks Gemini 3.8 Flash → Sonnet 5.5; `smol` carries
+a Mistral hop; `vision` includes `mistral-large-4`; Astra appears in no role or chain;
+`architect`, `designer`, `good_worker`, and `fast_worker` no longer exist.
 
-The static overlay includes all 17 roles and all 17 role-keyed chains, plus
+The 2026-10-08 static overlay included all 17 roles and all 17 role-keyed chains, plus
 `task.agentModelOverrides` of `reviewer: @review`,
 `security-reviewer: @security`, `sonic: @fast_worker`, `task: @good_worker`,
 `retry.usageAwareFallback: true`, `retry.usageReservePolicy: auto`,
 `cycleOrder: [smol, default, slow, architect, sage]`, and `extendedContext: true`.
+The live v38 equivalent is `sonic: "@tiny"`, no `task` override, and
+`cycleOrder: [smol, default, slow, sage]`.
 It does not carry inherited unrelated settings, credentials, obsolete exact-model
 fallback keys, or wildcard chains. Custom agents remain separately installed and
 unchanged; selecting a model role does not install an agent instruction contract.
@@ -607,8 +630,8 @@ Fable inference is part of this planning work. Existing OAuth/current setup stay
    top-ups just to make the alternative work. Keep Google overages at Never and
    xAI/OpenAI extra-credit purchases/top-ups disabled unless deliberately budgeted.
 4. Use an **isolated OMP profile** for the API-key experiment, not the current auth
-   store. Installed OMP 18.8.4 help documents `--profile` as isolating auth, sessions,
-   settings, and caches. Configure **only Anthropic API-key auth** for Anthropic in
+   store. OMP 18.8.4 help documented `--profile` as isolating auth, sessions,
+   settings, and caches (recorded then; installed is now 18.16.0, not re-checked). Configure **only Anthropic API-key auth** for Anthropic in
    a separate profile such as `anthropic-api`, plus legitimate authentication for
    the other selected providers (or ask for a preview omitting those providers).
    OMP's help says `ANTHROPIC_OAUTH_TOKEN` takes precedence over
@@ -624,8 +647,9 @@ Fable inference is part of this planning work. Existing OAuth/current setup stay
    ```
 
    `--profile` selects the isolated environment; `--config` changes session routing,
-   not Console billing. The role file contains no auth. No persistent
-   `omp config set`, root import, profile/auth creation, or selected-provider probe
+   not Console billing. The role file contains no auth, and it routes `default` to Mistral and
+   `judge` to TypeSafe/OpenRouter, so the isolated profile also needs those logins (or edits).
+   No persistent `omp config set`, root import, profile/auth creation, or selected-provider probe
    is needed for the planning preview. The command above is a later authorized
    alternative-provider run, **not** offline reading or the planning request.
 6. Inspect actual request auth/model provenance and Console billing when making
@@ -641,12 +665,12 @@ an authorization conclusion. Recheck sources next week before making purchases.
 
 ## Local verification
 
-On 2026-10-08, two ordinary OMP planning replies on the existing OpenAI Sol route
+On 2026-10-08 (historical, pre-v36), two ordinary OMP planning replies on the existing OpenAI Sol route
 exercised the instruction: the four-provider Anthropic-heavy future mix, and a
 Google Pro trial/no-xAI variant. Both completed without tool calls or Fable requests.
 Their full 17-role overlays matched their response tables and passed catalog,
 image-input, provider-exclusion, trial-eligibility, and critical-family checks.
-The Anthropic-heavy proposal matched the unchanged static profile. Read-only OMP
+The Anthropic-heavy proposal matched the then-unchanged static profile. Read-only OMP
 RPC loaded its overlay and resolved all 17 primaries; the trial variant's designer
 and critical also resolved correctly. RPC state checks sent no inference requests.
 

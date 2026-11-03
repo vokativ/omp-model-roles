@@ -81,7 +81,7 @@ When available, inspect current config, usage windows/reset times, and model
 catalog **read-only** (for example, existing OMP config getters, `omp usage`, and
 `omp models`). Do not initiate login, expose secrets, or probe models. If unavailable,
 state that limitation and use supplied evidence without inventing measurements. The
-Mistral plan key and the OpenRouter judge key have no `omp usage` meter; do not read
+Mistral plan key, the TypeSafe key, and the OpenRouter key have no `omp usage` meter; do not read
 a missing meter as headroom.
 Ask only for missing **material** subscription, budget, or route-permission facts
 that cannot be obtained from available evidence and actually prevent planning the
@@ -170,8 +170,10 @@ overlay is not runnable/covered/permitted merely because its config is well form
    If Opus is also ineligible, choose an eligible depth route and explain why.
    Same-provider Opus/Fable switching is a capability choice, **not cross-provider
    quota fallback**; keep fallback chains within the routing contract below.
-6. The existing **Anthropic-heavy example**—Sonnet workers/review, Opus depth,
-   Haiku cheap roles, Google default/vision/advisor, and OpenAI critical—is one
+6. The earlier **Anthropic-heavy example**—Sonnet workers, Opus depth, Haiku cheap
+   roles, Google vision/advisor, and OpenAI critical/review (live v38 `default` is the
+   owner-chosen Mistral GLM-5.3; `profiles/anthropic-heavy.yml` is now only a run-only
+   copy of the live v38 config)—is one
    candidate, **not the mandatory allocation**. Alternative primaries within these four
    provider groups may favor Anthropic, OpenAI, Google, or xAI according to packages,
    workload, headroom, permission, and evidence. Explain route ordering individually.
@@ -262,7 +264,7 @@ Return all of the following, without writing/applying files:
 2. **Plans and budget assumptions:** included/excluded providers with reasons,
    native-versus-OMP permission/funding distinctions, observed headroom and workload,
    recurring subscription total where supported, separately funded API/overage
-   exposure (the OpenRouter judge credit and the Mistral plan allowance, neither on
+   exposure (the TypeSafe and OpenRouter judge credits and the Mistral plan allowance, none on
    `omp usage`), and any unresolved material prerequisites. Mark each future route's
    assumptions and unmet prerequisites; distinguish them from verified facts.
    Never invent missing prices.

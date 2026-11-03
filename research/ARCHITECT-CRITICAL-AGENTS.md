@@ -1,5 +1,16 @@
 # Wiring `architect`/`critical` into real subagent dispatch — 2026-08-26
 
+## Update — v36 (current state)
+
+The `architect` role no longer exists. v36 collapsed it into `@slow`: `agents/architect.md`
+now sets `model: "@slow"` (`slow` = `anthropic/claude-opus-5-5`, chain Sol 6.1 → Gemini 4
+Argon → Antigravity Opus 5.5 → Grok 4.7) with `tools: [read, grep, glob, find, web_search]`.
+`critical` stays a dedicated role and agent (`model: "@critical"`, `structured: true`).
+The `designer`, `fast_worker` and `good_worker` roles were deleted, and `cycleOrder` is
+`[smol, default, slow, sage]` (neither `architect` nor `critical`). The "v35" update below
+and every `@architect` role reference after it describe pre-v36 state; see
+`model-roles.yml` for the current map.
+
 ## Update — v35, 2026-10-20
 
 The v29 model assignments below, and the older Opus-critical sections after them, are
@@ -130,7 +141,7 @@ Session-only access and subagent dispatch are complementary, not either/or — b
 `agents/architect.md` and `agents/critical.md` at the repo root, installed to
 `~/.omp/agent/agents/`. Both declare `spawns: []` and omit `write`/`edit`/`task`.
 
-- **`architect`**: `model: "@architect"`, `thinking: high`, `tools: [read, grep, glob]`. Produces
+- **`architect`** (as shipped; since v36 `model: "@slow"`, `tools: [read, grep, glob, find, web_search]`): `model: "@architect"`, `thinking: high`, `tools: [read, grep, glob]`. Produces
   RFC-style design recommendations — constraints, invariants, interfaces, trade-offs,
   migration/rollback notes. Does not implement.
 - **`critical`**: `model: "@critical"`, `thinking: high`, `tools: [read, grep, glob, bash]`, plus an
@@ -204,8 +215,8 @@ Evidence from current wiring and history:
 
 - **No automatic trigger exists.** `critical` runs only when a caller explicitly dispatches
   `task(agent: "critical", ...)` or manually selects `/model @critical`. Retry/usage-aware fallback
-  changes the model only *after* invocation; it never causes an invocation. Current `cycleOrder`
-  includes `architect`, not `critical` — an earlier README claim that both were present was stale.
+  changes the model only *after* invocation; it never causes an invocation. `cycleOrder`
+  included `architect`, not `critical`, as of v15 (since v36 neither: `[smol, default, slow, sage]`) — an earlier README claim that both were present was stale.
 - Real, non-test usage found in `parent-help-android`: two adversarial Tier-1 **implementation**
   reviews (`CriticalReviewer.md`, `CriticalReviewer2.md`). The omp-model-roles history is test-only
   (`CritSmoke`, `CritVerify`, and the provenance guard below).

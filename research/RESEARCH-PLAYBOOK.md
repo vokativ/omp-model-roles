@@ -66,14 +66,14 @@ architect head-to-head was found in the reviewed sources. Follow instruction ste
 for separate role criteria, effort tuning, and reversal/access/budget conditions.
 Historical local Fable timing/depletion metrics are withdrawn because the requests
 fell back to OpenAI; do not reuse them or demand unavailable Fable tests now.
-This decision changes neither the live v32 setup nor the static alternative profile.
+This decision changes neither the live setup (v38) nor the run-only profile copy.
 
 ## Methodology
 
 1. **Read current state first.**
    - `omp config get modelRoles --json` / `omp config get retry.fallbackChains --json` — what's live now.
    - `omp usage` — which providers are actually authenticated, and real quota pressure (5h/7d/weekly/daily windows, % used). This is ground truth; the model catalog (`omp models`) just shows what's technically reachable, not what's affordable.
-   - **No `omp usage` meter for `mistral`, `openrouter`, or `typesafe`.** Plan/API keys without a quota report never appear there, and `retry.usageAwareFallback` excludes them. Check the console instead: Mistral at https://console.mistral.ai/codestral/cli ("View organization usage") and https://admin.mistral.ai/subscription; OpenRouter's credit balance in its dashboard (`/api/v1/credits`); TypeSafe's prepaid credit at console.typesafe.ai (Billing). Treat them as bounded, unmetered pools: Mistral only as error-driven fallback hops, TypeSafe (v37.1 `judge` primary, API key stored via `/login typesafe`) and OpenRouter (`judge` fallbacks only) as separately funded native judgment routes; see [MISTRAL-EVALUATION.md](MISTRAL-EVALUATION.md).
+   - **No `omp usage` meter for `mistral`, `openrouter`, or `typesafe`.** Plan/API keys without a quota report never appear there, and `retry.usageAwareFallback` excludes them. Check the console instead: Mistral at https://console.mistral.ai/codestral/cli ("View organization usage") and https://admin.mistral.ai/subscription; OpenRouter's credit balance in its dashboard (`/api/v1/credits`); TypeSafe's prepaid credit at console.typesafe.ai (Billing). Treat them as bounded, unmetered pools: Mistral as error-driven fallback hops plus the owner-chosen v38 `default` primary, TypeSafe (v37.1 `judge` primary, API key stored via `/login typesafe`) and OpenRouter (`judge` fallbacks only) as separately funded native judgment routes; see [MISTRAL-EVALUATION.md](MISTRAL-EVALUATION.md).
    - `omp models <provider>` for each authenticated provider — current model lineup, since names/tiers shift release to release (e.g. a vendor's "flagship/balanced/fast" naming ladder).
 
 2. **Resolve the subscription checklist below.** Use facts supplied in the request
@@ -84,14 +84,14 @@ This decision changes neither the live v32 setup nor the static alternative prof
    - `default` — highest volume, fires every turn. Needs the model best suited to the *actual* workload mix (see below), on a pool that can sustain constant use.
    - `task`/`smol` — high volume (subagent dispatch, background classification). Route to whichever pool has real headroom. `smol` also executes implementation after an opted-in prewalk, so do not evaluate it only on trivial/background work.
    - `slow`/`plan` — measure actual use, not assumed low frequency. `slow` may drive a whole difficult task or the opening of a prewalk; `/plan` remains useful when approval before implementation is required.
-   - `architect` — the owner uses it frequently for technical reviews, not only rare RFCs. In v29 it shares Sol with `slow`/`review`/workers; different role names are not independent model evidence. Use a distinct model deliberately when that matters.
+   - `architect` — no role since v36; the architect agent binds `@slow` (Opus 5.5 primary). The owner uses it frequently for technical reviews, not only rare RFCs. It shares Opus with `plan`; different role names are not independent model evidence. Use a distinct model deliberately when that matters.
    - `commit`, and any other rarely-invoked role — the safe place to actually exercise a login you're barely using (e.g. a cheap/bundled AI subscription with small credits), since low frequency ≈ low risk to a small pool.
    - `advisor` — if enabled, roughly **doubles** whatever pool it shares with `default` (it reviews every turn). Prefer a free/separate pool for it so enabling it later doesn't create new pressure on your scarcest account.
-   - `vision`/`designer` — occasional, multimodal. Free/generous pools are usually fine here.
+   - `vision` — occasional, multimodal. Free/generous pools are usually fine here.
 
 4. **Match model *character* to workload, not just benchmark score.** If any of the workload is non-coding (writing for humans, research synthesis, business/creative output), check whether a provider's coding-branded product/API (e.g. an OpenAI "Codex"-specific endpoint, an agentic dev-tool mode) is known to skew toward technical/terse output outside of software tasks — that's a real, sourced effect, not just benchmark noise. Keep `default` (and anything that produces reader-facing prose) on whichever model is credibly rated for natural, plain-language writing.
 
-5. **Prefer free/bundled multi-model proxies as pressure release, not as your primary daily driver** — they're usually one point-version behind flagship and can have volatile preview-tier quotas. Good for: `advisor`, fallback tiers, low-stakes roles. Risky as: the *primary* `default` model. Worked example: v37's four fallback-only Mistral hops ([MISTRAL-EVALUATION.md](MISTRAL-EVALUATION.md)). **Owner exception (v38, 2026-11-03):** the owner chose `mistral/zai-glm-5-3` as the `default` primary (measured faster than the former Gemini default; keeps the default off the Claude Max pool; see [DEFAULT-ROLE-EVALUATION.md](DEFAULT-ROLE-EVALUATION.md)). Do not propose this unprompted; it is acceptable only with a fallback chain to non-Mistral models including a 1M-context model (v38: Gemini 3.8 Flash -> Sonnet 5.5), pay-as-you-go off so exhaustion (HTTP 402) fails over, and the text-only image limitation accepted.
+5. **Prefer free/bundled multi-model proxies as pressure release, not as your primary daily driver** — they're usually one point-version behind flagship and can have volatile preview-tier quotas. Good for: `advisor`, fallback tiers, low-stakes roles. Risky as: the *primary* `default` model. Worked example: v37's fallback-only Mistral hops (five as of v37.2) ([MISTRAL-EVALUATION.md](MISTRAL-EVALUATION.md)). **Owner exception (v38, 2026-11-03):** the owner chose `mistral/zai-glm-5-3` as the `default` primary (measured faster than the former Gemini default; keeps the default off the Claude Max pool; see [DEFAULT-ROLE-EVALUATION.md](DEFAULT-ROLE-EVALUATION.md)). Do not propose this unprompted; it is acceptable only with a fallback chain to non-Mistral models including a 1M-context model (v38: Gemini 3.8 Flash -> Sonnet 5.5), pay-as-you-go off so exhaustion (HTTP 402) fails over, and the text-only image limitation accepted.
 
 6. **Every fallback chain entry should be a different provider than its primary** (and ideally different from the other fallback tiers too) — the point of a fallback chain is surviving one provider's outage/quota exhaustion, which a same-provider fallback doesn't protect against.
 
@@ -138,16 +138,18 @@ The importable overlays and README are at the root. Selection instructions live 
 Root — the importable config:
 - `../model-roles.yml` — model roles, agent bindings, retry policies/chains, cycle order, and owner-approved `extendedContext: true`. Merge all supplied keys into `config.yml`; `omp --config ./model-roles.yml` applies a run-only overlay, not a persistent install.
 - `../models-overlay.yml` — companion `models.yml` overlay (per-model overrides like `maxTokens`).
-  Currently just the OpenRouter Gemini 3.8 Flash `maxTokens` fix that `vision`'s fallback chain
-  depends on — check whether any newly-added fallback model needs one of these before assuming
-  `model-roles.yml` alone is a complete import.
+  Currently just an OpenRouter Gemini 3.8 Flash `maxTokens` override that no live role/chain uses
+  (inert); keep it only if that route is re-added — check whether any newly-added fallback model
+  needs one of these before assuming `model-roles.yml` alone is a complete import.
 - `../README.md` — import instructions, the repo-layout map, plus the rationale/subscription table
   that justified the current values, including the locally measured 2026-08-25 A/B.
 
-Optional planning instructions/profile — not the current imported setup:
+Optional planning instructions/profile:
 - `../instructions/SELECT-MODEL-MIX.md` — the single behavior contract for OMP to
   preview a subscription/workload/budget-aware allocation; not a standalone program.
-- `../profiles/anthropic-heavy.yml` — opt-in static alternative, not auto-installed.
+- `../profiles/anthropic-heavy.yml` — run-only copy of the live v38 role/chain config (same data as
+  `model-roles.yml`), not installed. It includes the mistral/typesafe/openrouter routes, so a run in an
+  isolated API-auth profile needs those logins or edits.
   A run-only overlay is not authentication isolation: follow the notes' API-credit,
   isolated-profile, provider-permission, and Console spending prerequisites before any run.
 
@@ -155,16 +157,16 @@ Optional planning instructions/profile — not the current imported setup:
 - `RESEARCH-PLAYBOOK.md` — this file.
 - `SUBSCRIPTION-MIXES.md` — 2026-10-08 major OpenAI/Anthropic/Google/SpaceX-xAI-X SKUs,
   sourced prices and missing-price caveats, recommended paying-tier mixes, instruction
-  usage, full Anthropic-heavy role map, and safe API-auth/budget prerequisites.
+  usage, historical (pre-v36) 17-role Anthropic-heavy map, and safe API-auth/budget prerequisites.
 - `GEMINI-QUOTA-OPTIONS.md` — point-in-time investigation into Gemini/Antigravity quota burnout
-  options; superseded in part by the `vision`/`designer` decisions in this snapshot — see its own
+  options; superseded in part by later `vision` decisions (v31 onward) and the v36 designer removal — see its own
   addendum before treating its recommendation as current.
 - `META-MUSE-EVALUATION.md` — point-in-time evaluation of the `meta` provider (Muse Spark 1.2 /
   1.2-contributor), 2026-08-25. Research-only, no local benchmark. Conclusion: not adopted in any
   role; the Contributor tier's discount is paid for with permission to train on submitted prompts
   and completions, and a plain API key is excluded from `usageAwareFallback`. Read it before
   re-litigating "should we add the cheap Meta model somewhere".
-- `MISTRAL-EVALUATION.md` — 2026-11-03 · v37/v37.1: Mistral EDU (student Pro) plan and the judge-role regression. Plan/billing facts (plan key bills the monthly Mistral Vibe budget; no `omp usage` meter; exhaustion = HTTP 402), model inventory and OMP catalog gaps, Artificial Analysis comparison, live OMP probe matrix, the four fallback-only GLM hops adopted (`smol`/`tiny` GLM-5.3 Flash, `task`/`review` GLM-5.3) and what was not adopted, plus the judge fix (v36's TypeSafe primary had no credential; v37 moved to OpenRouter Jev natives; v37.1 after the TypeSafe login runs direct `typesafe/jev-1.14.0` with OpenRouter Jev and Liquid d1.1 as fallbacks, failover chain walk verified) and revert steps. Read it before adding another Mistral model or changing `judge`.
+- `MISTRAL-EVALUATION.md` — 2026-11-03 · v37/v37.1: Mistral EDU (student Pro) plan and the judge-role regression. Plan/billing facts (plan key bills the monthly Mistral Vibe budget; no `omp usage` meter; exhaustion = HTTP 402), model inventory and OMP catalog gaps, Artificial Analysis comparison, live OMP probe matrix, the four fallback-only GLM hops adopted (`smol`/`tiny` GLM-5.3 Flash, `task`/`review` GLM-5.3; plus the v37.2 `vision` Large 4 hop) and what was not adopted, plus the judge fix (v36's TypeSafe primary had no credential; v37 moved to OpenRouter Jev natives; v37.1 after the TypeSafe login runs direct `typesafe/jev-1.14.0` with OpenRouter Jev and Liquid d1.1 as fallbacks, failover chain walk verified) and revert steps. Read it before adding another Mistral model or changing `judge`.
 - `DEFAULT-ROLE-EVALUATION.md` — 2026-11-03 · v38: the `default` role decision. Usage forensics (how long sessions stay on the default, context sizes), live OMP latency/tool-task probes, benchmarks, Mistral repricing against the corrected $150/mo Vibe Code allowance, options considered, and the owner's choice of `mistral/zai-glm-5-3` primary with a Gemini 3.8 Flash -> Sonnet 5.5 chain, plus the text-only image limitation and revert path. Read it before changing the `default` primary or chain.
 - `ARCHITECT-CRITICAL-AGENTS.md` — original dispatch investigation, with a v29 addendum for the review-oriented architect and its verification.
 - `FABLE-EVALUATION.md` — 2026-10-08 web-only Fable 5.1 versus Opus 5.5 comparison for plan and architect: official/independent evidence, correctness counterevidence, effort/cost/latency limits, provisional Opus defaults, and conditional Fable reversal/access criteria. Historical local Fable speed/depletion claims are withdrawn after OpenAI fallback invalidated their model identity.
