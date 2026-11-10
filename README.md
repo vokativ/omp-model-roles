@@ -36,6 +36,8 @@ research/
   MISTRAL-EVALUATION.md      <- 2026-11-03: Mistral EDU plan, model evaluation, OMP probes, judge regression
   DEFAULT-ROLE-EVALUATION.md    <- 2026-11-03: default-role usage forensics, OMP latency probe, cost model
   TASK-ROLE-EVALUATION.md       <- 2026-11-03: task role Sonnet 5.5 vs GLM-5.3 vs Gemini 3.8 Flash; decided: keep Sonnet 5.5
+  MISTRAL-LINEUP-BENCHMARK.md   <- 2026-11-10: latest Mistral lineup, raw-API speed and use-case tests (coding, tools, vision, OCR, FIM), fleet audit; nothing applied
+  REVIEW-ROLE-EVALUATION.md     <- 2026-11-10: Argon vs Sol on 11 real PRs; keep Sol for review; Codex meter/preflight and omp 18.18.6 Antigravity incidents
 ```
 
 Just importing the config? You need the two `.yml` files, `agents/`, and the import steps below —
@@ -127,6 +129,15 @@ Sol messages) and no Antigravity Claude calls, so the drain likely comes from an
 non-OMP use (inference; the scan counts whole files touched in the window, an upper bound). v37's
 Mistral hops in `smol`/`tiny` put a separately metered pool ahead of Luna to take pressure off Plus
 (see the Mistral section below).
+
+**2026-11-10 notes (no config change).** Two incidents, details in
+[research/REVIEW-ROLE-EVALUATION.md](research/REVIEW-ROLE-EVALUATION.md): (1) omp's Codex meter read
+5h 95% / 7d 72% while the owner's ChatGPT page showed 22% weekly, and OMP's usage preflight skipped
+Sol on that reading (a real PR #104 review fell to Grok 4.7); (2) omarchy auto-updated to omp 18.18.6
+(`update.auto: true` in its `config.yml`), which drops the `google-antigravity` provider, so every
+Antigravity hop there is dead until it runs 18.18.3 again. Argon's weekly meter is at ~91% after the
+review benchmark. The Mistral lineup tests are in
+[research/MISTRAL-LINEUP-BENCHMARK.md](research/MISTRAL-LINEUP-BENCHMARK.md).
 
 Consequences baked into this file (chains verified against `model-roles.yml`, 2026-11-03):
 - **`default` runs on `mistral/zai-glm-5-3`** (v38, owner decision 2026-11-03; v37.2 and earlier: `google-antigravity/gemini-3.8-flash`), falling back to `google-antigravity/gemini-3.8-flash` $\to$ `anthropic/claude-sonnet-5-5` (was Sonnet $\to$ Sol 6.1 $\to$ Grok Build). Full evidence: [research/DEFAULT-ROLE-EVALUATION.md](research/DEFAULT-ROLE-EVALUATION.md).
