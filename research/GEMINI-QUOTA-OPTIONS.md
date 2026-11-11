@@ -37,8 +37,8 @@ Buy API Keys Right Now" recommendation above, in a targeted way, not a reversal 
   demoted to its last-resort fallback — no OpenRouter involvement at all.
 - **The 50%-off OpenRouter promo mentioned below (Options table, "OpenRouter (50% Promo)") is
   gone** — that pricing was time-boxed to Aug 27 2026. Current OpenRouter pricing for this model
-  is not discounted; the maxTokens override in `models-overlay.yml` matters more now than the
-  price row below suggests.
+  is not discounted; the maxTokens override in `models-overlay.yml` (removed in v40: no role or
+  chain used that route) mattered more than the price row below suggests.
 
 Net effect: this file's underlying judgment call — don't add paid overflow speculatively,
 wait for real pressure and real evidence — held up. The original text below is kept for

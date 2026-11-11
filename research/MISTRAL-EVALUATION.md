@@ -448,15 +448,15 @@ measurements: [DEFAULT-ROLE-EVALUATION.md](DEFAULT-ROLE-EVALUATION.md). The stat
 ## How to revert
 
 - **Remove the hops:** delete the five `mistral/*` chain entries (`smol`, `tiny`, `task`, `review`,
-  and, from v37.2, `vision`) from `retry.fallbackChains` in `model-roles.yml` and
-  `profiles/anthropic-heavy.yml`, restoring the v36 chains in the table above (and, for `vision`,
+  and, from v37.2, `vision`) from `retry.fallbackChains` in `model-roles.yml`,
+  restoring the v36 chains in the table above (and, for `vision`,
   Sonnet 5.5 -> Sol 6.1 -> Grok 4.7); re-apply with `omp config set retry.fallbackChains '{...}'`,
   verify with `omp config get`, bump the snapshot version. To drop only the v37.2 hop, delete
   `mistral/mistral-large-4` from the `vision` chain. The `mistral` login can stay: with no
   role or chain referencing it, it is inert.
 - **Revert the v38 default:** set `modelRoles.default` back to `google-antigravity/gemini-3.8-flash` and
   `retry.fallbackChains.default` back to `anthropic/claude-sonnet-5-5` -> `openai-codex/gpt-6.1-sol` ->
-  `xai-oauth/grok-build` in `model-roles.yml` and `profiles/anthropic-heavy.yml` (re-apply with
+  `xai-oauth/grok-build` in `model-roles.yml` (re-apply with
   `omp config set modelRoles.default ...` and `omp config set retry.fallbackChains '{...}'`, verify
   with `omp config get`, bump the snapshot version). The five fallback hops stay valid on their own.
 - **Judge:** do not return to v36 (no working native route). To use TypeSafe direct, log in and

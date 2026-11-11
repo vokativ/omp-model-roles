@@ -44,13 +44,14 @@ Mistral section below (v37 inferred it from the pricing card's API-credit line).
 and fallback role map" is the historical 2026-10-08 design (pre-v36: `architect`, `designer`,
 `good_worker`, `fast_worker` were removed in v36). The current 15-role map is the `modelRoles`,
 `retry.fallbackChains`, and `cycleOrder` in [../model-roles.yml](../model-roles.yml).
-[../profiles/anthropic-heavy.yml](../profiles/anthropic-heavy.yml) is a run-only copy of that live
-v38 config, not the 17-role table.
+The former `profiles/anthropic-heavy.yml` run-only copy was removed in v40; use
+`../model-roles.yml` itself as the run-only overlay. It is not the 17-role table.
 
-**Updated 2026-11-11 (v39):** `sage` now runs on `anthropic/claude-fable-5-2` (owner decision;
-Fable 5.1 since v35), and the model-level failover chain key is renamed from
-`anthropic/claude-fable-5-1` to `anthropic/claude-fable-5-2` with the same order. The
-`anthropic/claude-fable-5` chain is retained. No quality claim is made for 5.2 over 5.1.
+**Updated 2026-11-11 (v39/v40):** `sage` now runs on `anthropic/claude-fable-5-2` (owner decision;
+Fable 5.1 since v35), with a new model-level failover chain key `anthropic/claude-fable-5-2` in the
+same order; the `anthropic/claude-fable-5-1` and `anthropic/claude-fable-5` chains are retained.
+No quality claim is made for 5.2 over 5.1. v40 turns `extendedContext` off (Codex Sol 500K, Luna
+272K); see [../CHANGELOG.md](../CHANGELOG.md).
 
 The goal is to choose which pool should carry general work, reserve deeper models
 for harder work, and retain a genuinely different model family for critical review.
@@ -466,8 +467,8 @@ available, distinguishes local model identity from account permission and budget
 sends no inference request. Asking OMP to follow the instructions uses your existing
 OMP/model route and may consume its allowance; it is not an offline zero-call program.
 Do not turn preview into selected-model probes, particularly Fable requests.
-The [../profiles/anthropic-heavy.yml](../profiles/anthropic-heavy.yml) profile is a
-run-only copy of the live v38 role/chain config (same data as `model-roles.yml`), not
+Since v40 the run-only overlay is [../model-roles.yml](../model-roles.yml) itself (the former
+`profiles/anthropic-heavy.yml` copy was removed); used via `--config` it is not
 installed, auto-imported, an entitlement grant, or a budget controller.
 Its local catalog references need no companion registration in the recorded catalog;
 that does not guarantee the same catalog or access on another installation.
@@ -596,8 +597,8 @@ The 2026-10-08 static overlay included all 17 roles and all 17 role-keyed chains
 `security-reviewer: @security`, `sonic: @fast_worker`, `task: @good_worker`,
 `retry.usageAwareFallback: true`, `retry.usageReservePolicy: auto`,
 `cycleOrder: [smol, default, slow, architect, sage]`, and `extendedContext: true`.
-The live v38 equivalent is `sonic: "@tiny"`, no `task` override, and
-`cycleOrder: [smol, default, slow, sage]`.
+The live v40 equivalent is `sonic: "@tiny"`, no `task` override,
+`cycleOrder: [smol, default, slow, sage]`, and `extendedContext: false`.
 It does not carry inherited unrelated settings, credentials, obsolete exact-model
 fallback keys, or wildcard chains. Custom agents remain separately installed and
 unchanged; selecting a model role does not install an agent instruction contract.
@@ -648,7 +649,7 @@ Fable inference is part of this planning work. Existing OAuth/current setup stay
    overlay from the repo root:
 
    ```bash
-   omp --profile anthropic-api --config ./profiles/anthropic-heavy.yml
+   omp --profile anthropic-api --config ./model-roles.yml
    ```
 
    `--profile` selects the isolated environment; `--config` changes session routing,

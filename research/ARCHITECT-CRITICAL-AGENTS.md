@@ -24,8 +24,8 @@ shared primary of architect/slow/review/workers. Check resolved identities after
 fallback: an Opus architect that falls back to Sol collides with Sol-based `critical`.
 
 Astra (`openai-codex/gpt-6-astra`) is in no role and no chain in v35, and was not in
-the live `retry.fallbackChains`; older prose (including the `model-roles.yml` v29
-header) saying it stayed in sage's fallback chain is stale. It is reachable on Plus
+the live `retry.fallbackChains`; older prose (including the v29 entry, now in `CHANGELOG.md`)
+saying it stayed in sage's fallback chain is stale. It is reachable on Plus
 (2026-10-20 probe) for an explicit `--model` one-off. The Astra/Sol price figures
 below remain a dated v29 rationale, not a quality-parity or savings claim.
 
@@ -63,7 +63,8 @@ claim that JSON constraints impair reasoning or measurably slowed this agent.
 
 Following the cross-machine review, the owner chose `extendedContext: true` in
 the shared overlay for every machine, superseding the off trial and machine-local
-proposal. README records the supporting session measurements and limitations.
+proposal (reversed in v40: `extendedContext: false` everywhere). README records the
+supporting session measurements and limitations.
 Prewalk remains explicitly opted in for implementation, not read-only review.
 See [README's daily workflow](../README.md#daily-workflow-choose-the-job-not-a-committee)
 for commands, role boundaries, and the limits of the Stencil benchmark evidence.

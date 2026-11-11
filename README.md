@@ -1,10 +1,11 @@
 # OMP model-role setup — import instructions
 
-**Snapshot: 2026-11-11 · v39.** Stale after ~4-6 weeks, or immediately if any subscription
+**Snapshot: 2026-11-11 · v40.** Stale after ~4-6 weeks, or immediately if any subscription
 changed — check `research/RESEARCH-PLAYBOOK.md`'s staleness check before importing this blind.
 
 `model-roles.yml` is a config **overlay**: `modelRoles`, `task.agentModelOverrides`,
-`retry` policies/chains, `cycleOrder`, and owner-approved `extendedContext: true`.
+`retry` policies/chains, `cycleOrder`, `extendedContext: false`, a GLM-5.3 compaction trigger,
+`defaultThinkingLevel: auto`, and `update.auto: false`. Version history: [CHANGELOG.md](CHANGELOG.md).
 No API keys. Merge into an existing config; do not replace unrelated local preferences.
 
 Subscriptions or workload change? Don't hand-edit this file — see
@@ -12,16 +13,17 @@ Subscriptions or workload change? Don't hand-edit this file — see
 
 ## Repo layout
 
-The root overlays and `agents/` are what you import. Selection instructions live in
+`model-roles.yml` and `agents/` are what you import. Selection instructions live in
 `instructions/`; source research and rationale live in `research/`.
 
 ```
-model-roles.yml       <- the config overlay: modelRoles + retry.fallbackChains   (import this)
-models-overlay.yml    <- companion models.yml overlay: per-model maxTokens fixes (import this too)
+model-roles.yml       <- the config overlay: modelRoles, retry chains, compaction, update/thinking defaults (import this)
+CHANGELOG.md          <- per-version history and rationale of model-roles.yml (v13 onward)
 agents/               <- custom agent definitions: architect, critical, and sage (thinking partner) (import this too)
+scripts/check-live.sh <- diff model-roles.yml against the live `omp config` (needs ruby + jq); OK/DIFF per key
+scripts/omp-spend.sh  <- per-day omp-recorded spend for one provider from session logs, with >150k-prompt and cache-miss counts
 scripts/omp-wt/       <- cross-platform Git Worktree helper (Linux, macOS, Quest, Windows)
 instructions/SELECT-MODEL-MIX.md <- instructions for OMP to preview a subscription-mix allocation (the example preview covers four subscription providers)
-profiles/anthropic-heavy.yml <- run-only copy of the live v38 role/chain config (same data as model-roles.yml), not installed
 README.md             <- you are here: import steps + the rationale for the current values
 research/
   RESEARCH-PLAYBOOK.md            <- how to re-derive the allocation from scratch; staleness check
@@ -40,7 +42,7 @@ research/
   REVIEW-ROLE-EVALUATION.md     <- 2026-11-10: Argon vs Sol on 11 real PRs; keep Sol for review; Codex meter/preflight and omp 18.18.6 Antigravity incidents
 ```
 
-Just importing the config? You need the two `.yml` files, `agents/`, and the import steps below —
+Just importing the config? You need `model-roles.yml`, `agents/`, and the import steps below —
 nothing in `research/`.
 
 ## Optional subscription mixes — preview without changing this setup
@@ -76,10 +78,9 @@ buy anything, or send Fable/selected-model probe requests.
 Reading the instruction file offline sends no model request. Asking OMP to follow
 it uses the existing OMP session/model and may consume that model's allowance;
 preview does not mean a zero-inference offline executable.
-[profiles/anthropic-heavy.yml](profiles/anthropic-heavy.yml) is a run-only copy of the live v38
-role/chain config (same data as `model-roles.yml`), **not automatically installed**. It includes
-the mistral/typesafe/openrouter routes, so a run in an isolated API-auth profile needs those
-logins or edits. Any later run needs the notes'
+`model-roles.yml` itself doubles as a run-only overlay (`omp --config ./model-roles.yml`),
+**not automatically installed** that way. It includes the mistral/typesafe/openrouter routes, so a
+run in an isolated API-auth profile needs those logins or edits. Any later run needs the notes'
 isolated-profile API-auth and provider-enforced spending prerequisites.
 The [2026-10-08 Fable 5.1-versus-Opus 5.5 evaluation](research/FABLE-EVALUATION.md)
 supports **provisional Opus 5.5 for both `plan` and `architect` in the Anthropic-heavy allocation**.
@@ -134,10 +135,17 @@ Mistral hops in `smol`/`tiny` put a separately metered pool ahead of Luna to tak
 [research/REVIEW-ROLE-EVALUATION.md](research/REVIEW-ROLE-EVALUATION.md): (1) omp's Codex meter read
 5h 95% / 7d 72% while the owner's ChatGPT page showed 22% weekly, and OMP's usage preflight skipped
 Sol on that reading (a real PR #104 review fell to Grok 4.7); (2) omarchy auto-updated to omp 18.18.6
-(`update.auto: true` in its `config.yml`), which drops the `google-antigravity` provider, so every
-Antigravity hop there is dead until it runs 18.18.3 again. Argon's weekly meter is at ~91% after the
-review benchmark. The Mistral lineup tests are in
+(`update.auto: true` in its `config.yml`), which dropped the `google-antigravity` provider. omp 18.18.8
+lists 13 Antigravity models again (2026-11-11, catalog only), and v40 pins `update.auto: false`.
+Argon's weekly meter is at ~91% after the review benchmark. The Mistral lineup tests are in
 [research/MISTRAL-LINEUP-BENCHMARK.md](research/MISTRAL-LINEUP-BENCHMARK.md).
+
+**2026-11-11 (v40), from the Fable 5.2 review** ([CHANGELOG.md](CHANGELOG.md)): `extendedContext`
+off; GLM-5.3 keeps its own 150k compaction trigger because the toggle does not shrink its 1M window;
+`commit` falls back to Luna first; `update.auto: false` and `defaultThinkingLevel: auto` are carried in
+the overlay. Machine-local, not in the overlay: `auth.accountPolicies` with `reservePct: 0` for
+`openai-codex` so the usage preflight stops skipping Sol on disputed meter readings (untested at a
+real Plus limit; revert with `omp config set auth.accountPolicies '[]'`).
 
 Consequences baked into this file (chains verified against `model-roles.yml`, 2026-11-03):
 - **`default` runs on `mistral/zai-glm-5-3`** (v38, owner decision 2026-11-03; v37.2 and earlier: `google-antigravity/gemini-3.8-flash`), falling back to `google-antigravity/gemini-3.8-flash` $\to$ `anthropic/claude-sonnet-5-5` (was Sonnet $\to$ Sol 6.1 $\to$ Grok Build). Full evidence: [research/DEFAULT-ROLE-EVALUATION.md](research/DEFAULT-ROLE-EVALUATION.md).
@@ -156,7 +164,7 @@ Consequences baked into this file (chains verified against `model-roles.yml`, 20
 - **Why Fable for `sage`, and what is not proven.** Access: 2026-10-20 probes accepted Fable 5.1 via Max OAuth; a 2026-11-11 dispatch on `anthropic/claude-fable-5-2` (13 turns, tools enabled, repo cwd) was accepted with the delivered id `claude-fable-5-2` verified from the event stream — no fallback hop fired. Quality is **unresolved**: a blind A/B (3 sage-style prompts × 4 models, one answer per model per prompt, thinking high, delivered ids verified) gave mean rubric scores (1-10) that depend on the judge's family — Sonnet 5.5 ×3: Fable 8.19, Opus 7.98, Astra 6.61, Sol 6.30; Grok 4.7 (neutral): Fable 8.43, Opus 8.13, Astra 7.85, Sol 7.74; Sol 6.1: Astra 8.83, Sol 8.70, Fable 6.35, Opus 6.28. Judge-family self-preference dominates; prompt P1 leaked first-person model identity, and excluding P1 Sonnet's Fable–Opus gap vanishes (8.14 vs 8.19); n = 3 prompts, not 9. Chosen anyway on low volume (4 sessions in 14 days, ~2 completed dispatches/week, all on Opus: $4.50 API-equivalent, ~$1.12/dispatch), the best published pushback evidence (AA-PersonalityBench: Fable #1 of 36 on "constructively pushes back"; Arena creative writing Opus 5.5 #1, Fable 5.1 #9, Sol 6.1 #30, Astra #38), and decorrelation from the Opus-based `plan`/`architect`/`slow` (inference). **Estimates:** Fable ~2.4x cost and ~1.6x latency per answer in the batch (≈$2.6/dispatch, roughly +1.6 weekly-pool points vs Opus at 2 dispatches/week; the $185 ≈ 100% weekly calibration is rough).
 - **Fable operational caveats.** Fable reasoning blocks are readable only by Fable/Mythos: a mid-session Fable → Opus failover drops that reasoning, and OMP may skip same-provider fallback when signed thinking history exists (fresh dispatches are unaffected). Fable always thinks, and safeguard classifiers can substitute Opus 4.8/Opus 5 server-side (`providers.anthropic.serverSideFallback` defaults to false). It draws the shared Max weekly pool faster, no published multiplier. Policy risk: OMP presents as Claude Code over Max OAuth (can1357/oh-my-pi issue 12487); Anthropic's 2026-10-07 update says subscription limits remain usable with third-party apps. Max's $100/mo API credits cover API-key use, not OAuth.
 - **Astra (`openai-codex/gpt-6-astra`) is in no role and no chain.** Probe-verified accepted on Plus on 2026-10-20, but it draws the same Plus 5h/7d meter as Sol (no failover resilience when Plus saturates); list price is ~5x Sol 6.1 ($10/$50 vs $2/$10 per M tokens; Artificial Analysis cost/task $3.26 vs $0.72) for an Intelligence Index of 53 vs 52, with Coding Agent Index within 1-2 points; Arena creative writing ranks it #38 vs Opus 5.5 #1. A coarse burn probe saw 13.8K Astra tokens = +1 meter point = 40.8K Sol tokens (whole-percent granularity: hypothesis ~3-5x, not a measured ratio). Use only as an explicit one-off — `--model openai-codex/gpt-6-astra` — when stuck and Plus has headroom. Earlier README text placing Astra in sage's fallback chain no longer applies.
-- **`task` runs on `anthropic/claude-sonnet-5-5`**, falling back to `openai-codex/gpt-6.1-sol` $\to$ `google-antigravity/gemini-3.8-flash` $\to$ `mistral/zai-glm-5-3` $\to$ `xai-oauth/grok-build` (the Mistral hop is v37: GLM-5.3 scored Terminal-Bench 4.0 41.9% vs 19.7% for Gemini 3.8 Flash and made 0 edit-tool errors in OMP probes). The bundled `task` agent (and Vibe's `good` tier) already binds to `@task`, so no override is needed (v36 removed the duplicate `good_worker` role). Sol 6.1 ($2/M input, $0.10/M cached, $10/M output, 128K max output in the installed catalog) serves as `critical` primary and first fallback; the shared overlay enables extended context, giving Codex Sol an effective **922K** window; turning it off would cap it at **272K**.
+- **`task` runs on `anthropic/claude-sonnet-5-5`**, falling back to `openai-codex/gpt-6.1-sol` $\to$ `google-antigravity/gemini-3.8-flash` $\to$ `mistral/zai-glm-5-3` $\to$ `xai-oauth/grok-build` (the Mistral hop is v37: GLM-5.3 scored Terminal-Bench 4.0 41.9% vs 19.7% for Gemini 3.8 Flash and made 0 edit-tool errors in OMP probes). The bundled `task` agent (and Vibe's `good` tier) already binds to `@task`, so no override is needed (v36 removed the duplicate `good_worker` role). Sol 6.1 ($2/M input, $0.10/M cached, $10/M output, 128K max output in the installed catalog) serves as `critical` primary and first fallback; with `extendedContext: false` (v40) Codex Sol has a **500K** window (922K when on).
 - **`designer` role removed** (v36). OMP has no built-in designer role or agent; invoke `xai-oauth/grok-4.7` directly via `/model xai-oauth/grok-4.7` when design work is needed.
 - **`smol` runs on `anthropic/claude-sonnet-5-5`** (chain: `mistral/zai-glm-5-3-flash` $\to$ Luna $\to$ Gemini 3.5 Flash-Lite $\to$ Grok Build). **`tiny` runs on `anthropic/claude-haiku-5-5:low`** (chain: `mistral/zai-glm-5-3-flash` $\to$ Luna $\to$ Gemini 3.5 Flash-Lite $\to$ `grok-composer-2.5-fast`). v37 puts Mistral's GLM-5.3 Flash ahead of Luna in both to relieve the ChatGPT Plus 7d meter (78% used on 2026-11-03): Artificial Analysis Intelligence v5.0 27.8 vs Luna's 21.4, vision, 1M context, $0.15/$0.5 per M, 0 edit-tool errors in 6 turns / 8.2 s in OMP probes. **Bundled `sonic` (Vibe's `fast` tier) is routed with `task.agentModelOverrides.sonic: "@tiny"`** (v36, replacing the `fast_worker` role): bundled `sonic` otherwise binds to `@smol` (Sonnet 5.5). The override names a role, not a bare model, on purpose: a role-less pinned subagent falls back through the `default` chain (Sonnet first). History: v24 moved the cheap tier off OpenAI's retired `gpt-5.3-codex-spark` onto Grok; v33 moved it onto Haiku.
 - **`widget` runs on `anthropic/claude-haiku-5-5:low`** (v36; chain: Gemini 3.5 Flash-Lite $\to$ Grok Composer 2.5 Fast). Resolves OMP 18.12.3's `async.widgets: true` background job author defaulting to `smol` (Sonnet 5.5), protecting frontier quota while providing fast, concise status-line widgets.
@@ -165,8 +173,8 @@ Consequences baked into this file (chains verified against `model-roles.yml`, 20
 
 ### Haiku 5.5: bounded subscription adoption (v32, widened in v33)
 
-`commit` uses `anthropic/claude-haiku-5-5:low`, followed by Grok Build → Luna →
-Gemini 3.5 Flash-Lite. It is infrequent, bounded summarization work, not general
+`commit` uses `anthropic/claude-haiku-5-5:low`, followed by Luna → Gemini 3.5 Flash-Lite →
+Grok Build (v40: Grok Build moved last after 44.8 s vs 5.6 s in the commit dry run and weekly-meter peaks of 90%/99%). It is infrequent, bounded summarization work, not general
 implementation. v33 also moved `tiny` and Vibe/`sonic` workers to Haiku 5.5:low and made it
 `advisor`'s first fallback; automatic fallback traffic can become sustained load
 on the same Claude allowance (now Max 5x) used by every Anthropic-primary role.
@@ -305,13 +313,31 @@ organization usage"), https://admin.mistral.ai/subscription (plan, included usag
 https://admin.mistral.ai/organization/usage ("Vibe usage beyond quota"). To confirm the login and
 selectors: `omp models mistral --json`.
 
-### Extended context: one enabled configuration everywhere
+### Extended context: off everywhere (v40)
 
-After the 2026-10-02 cross-machine review, the owner chose **one configuration
-everywhere: `extendedContext: true`**. This supersedes both the initial off trial
-and the interim machine-local proposal. The portable overlay and CLI import
-commands now enable it explicitly. The Ubuntu development server was already on;
-the Mac was subsequently enabled to match. No separate profile is necessary.
+v40 (2026-11-11, owner decision) sets **`extendedContext: false`** on every machine, reversing the
+2026-10-02 "on everywhere" policy below, to rein in quota burn from very long contexts. Measured that day
+with `omp models find` on omp 18.18.8, off only shrinks models that declare an extended window:
+
+| Model | On | Off |
+|---|---:|---:|
+| `openai-codex/gpt-6.1-sol` | 922,000 | 500,000 |
+| `openai-codex/gpt-6-luna` | 872,000 | 272,000 |
+| `anthropic/claude-haiku-5-5` | 1,000,000 | 100,000 |
+| GLM-5.3 / 5.3 Flash, Mistral Large 4, Gemini 3.8 Flash / Argon | 1,048,576 | unchanged |
+| Claude Sonnet / Opus 5.5, Fable 5.2, Antigravity Opus 5.5 | 1,000,000 | unchanged |
+
+GLM-5.3 (`default`) therefore keeps its own `compaction.modelThresholds` trigger at 150k (v38.1).
+Check on 2026-11-11: since v38.1, 0 of 44 GLM-5.3 calls exceeded 150k (average prompt 65k, $0.026/call)
+vs 690 of 766 on 2026-11-10 ($0.069/call); no session reached the trigger yet, so it is configured but
+not yet exercised. `scripts/omp-spend.sh mistral` tracks it. No Gemini or Claude threshold is set.
+
+The 2026-10-02 analysis below is kept as the historical record for the earlier "on" policy.
+
+**Historical (2026-10-02 to v39):** after the cross-machine review, the owner chose **one configuration
+everywhere: `extendedContext: true`**. This superseded both the initial off trial
+and the interim machine-local proposal. The Ubuntu development server was already on;
+the Mac was subsequently enabled to match.
 
 (Sol 6.1 is now `critical`'s primary and the first fallback of most chains; the analysis
 below predates the Anthropic-heavy v33 allocation, when Codex served more roles.)
@@ -374,10 +400,9 @@ omp config get extendedContext --json
 omp models find gpt-6.1-sol --json
 ```
 
-The persistent setting is `omp config set extendedContext true`; start a new
-session after importing it. OMP also exposes `/extended-context on` in its
+The persistent setting is `omp config set extendedContext false` (v40); start a new
+session after importing it. OMP also exposes `/extended-context on|off|status` in its
 interactive UI. Do not fake a larger provider limit through `models.yml`.
-The server and Mac both use extended context under this owner-approved policy.
 
 ## Daily workflow: choose the job, not a committee
 
@@ -487,10 +512,10 @@ overrides and custom agents still use the installation steps below.
 
 ### Option A — merge into the global config (affects every project on that machine)
 1. Run `omp config path`, then open `config.yml` in the printed agent directory.
-2. Merge all top-level keys from `model-roles.yml` into `config.yml`, including `task`, `cycleOrder`, `extendedContext: true`, and `compaction.modelThresholds` (GLM 5.3 compacts at 150k; see `research/MISTRAL-BUDGET-2026-11.md`), preserving unrelated settings.
-3. In the same directory, open `models.yml` (create if missing) and copy in `models-overlay.yml`'s `providers:` block. (It only sets an OpenRouter `maxTokens` override for `google/gemini-3.8-flash`, which no current role or chain references, so it is inert — inference. The `judge` role's OpenRouter routes need no override.)
-4. Copy `agents/*.md` (`architect.md`, `critical.md`, and `sage.md`) into `~/.omp/agent/agents/`. The agents bind to role aliases (`@architect`, `@critical`, `@sage`), so `sage.md` runs on whatever `modelRoles.sage` is — Fable 5.2 after import.
-5. Restart any running `omp` session.
+2. Merge all top-level keys from `model-roles.yml` into `config.yml`, including `task`, `cycleOrder`, `extendedContext: false`, `defaultThinkingLevel: auto`, `update.auto: false`, and `compaction.modelThresholds` (GLM 5.3 compacts at 150k; see `research/MISTRAL-BUDGET-2026-11.md`), preserving unrelated settings.
+3. Copy `agents/*.md` (`architect.md`, `critical.md`, and `sage.md`) into `~/.omp/agent/agents/`. The agents bind to role aliases (`@slow`, `@critical`, `@sage`), so `sage.md` runs on whatever `modelRoles.sage` is — Fable 5.2 after import.
+4. Machine-local, optional: `omp config set auth.accountPolicies '[{"provider":"openai-codex","account":{"email":"<the Openai Codex email in omp usage>"},"reservePct":0}]'` (kept out of the repo because it holds the account email).
+5. Restart any running `omp` session, then run `./scripts/check-live.sh` from the repo root (needs ruby + jq): every key must print `OK`.
 
 Equivalent CLI commands for `config.yml`:
 ```bash
@@ -498,21 +523,26 @@ omp config set modelRoles '{"default":"mistral/zai-glm-5-3","smol":"anthropic/cl
 
 omp config set task.agentModelOverrides '{"security-reviewer":"@security","reviewer":"@review","sonic":"@tiny"}'
 
-omp config set retry.fallbackChains '{"default":["google-antigravity/gemini-3.8-flash","anthropic/claude-sonnet-5-5"],"smol":["mistral/zai-glm-5-3-flash","openai-codex/gpt-6-luna","google-antigravity/gemini-3.5-flash-lite","xai-oauth/grok-build"],"slow":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","google-antigravity/claude-opus-5-5","xai-oauth/grok-4.7"],"plan":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","google-antigravity/claude-opus-5-5","xai-oauth/grok-4.7"],"task":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-3.8-flash","mistral/zai-glm-5-3","xai-oauth/grok-build"],"vision":["anthropic/claude-sonnet-5-5","openai-codex/gpt-6.1-sol","mistral/mistral-large-4","xai-oauth/grok-4.7"],"commit":["xai-oauth/grok-build","openai-codex/gpt-6-luna","google-antigravity/gemini-3.5-flash-lite"],"advisor":["anthropic/claude-haiku-5-5:low","openai-codex/gpt-6-luna","xai-oauth/grok-build"],"tiny":["mistral/zai-glm-5-3-flash","openai-codex/gpt-6-luna","google-antigravity/gemini-3.5-flash-lite","xai-oauth/grok-composer-2.5-fast"],"widget":["google-antigravity/gemini-3.5-flash-lite","xai-oauth/grok-composer-2.5-fast"],"judge":["openrouter/typesafe/jev-1.14","openrouter/typesafe/jev-1.13","openrouter/liquid/d1.1"],"review":["google-antigravity/gemini-4-argon","xai-oauth/grok-4.7","mistral/zai-glm-5-3","google-antigravity/claude-opus-5-5"],"security":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","google-antigravity/claude-opus-5-5","xai-oauth/grok-4.7"],"critical":["google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"],"sage":["google-antigravity/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"],"anthropic/claude-fable-5-2":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"],"anthropic/claude-fable-5-1":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"],"anthropic/claude-fable-5":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"]}'
+omp config set retry.fallbackChains '{"default":["google-antigravity/gemini-3.8-flash","anthropic/claude-sonnet-5-5"],"smol":["mistral/zai-glm-5-3-flash","openai-codex/gpt-6-luna","google-antigravity/gemini-3.5-flash-lite","xai-oauth/grok-build"],"slow":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","google-antigravity/claude-opus-5-5","xai-oauth/grok-4.7"],"plan":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","google-antigravity/claude-opus-5-5","xai-oauth/grok-4.7"],"task":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-3.8-flash","mistral/zai-glm-5-3","xai-oauth/grok-build"],"vision":["anthropic/claude-sonnet-5-5","openai-codex/gpt-6.1-sol","mistral/mistral-large-4","xai-oauth/grok-4.7"],"commit":["openai-codex/gpt-6-luna","google-antigravity/gemini-3.5-flash-lite","xai-oauth/grok-build"],"advisor":["anthropic/claude-haiku-5-5:low","openai-codex/gpt-6-luna","xai-oauth/grok-build"],"tiny":["mistral/zai-glm-5-3-flash","openai-codex/gpt-6-luna","google-antigravity/gemini-3.5-flash-lite","xai-oauth/grok-composer-2.5-fast"],"widget":["google-antigravity/gemini-3.5-flash-lite","xai-oauth/grok-composer-2.5-fast"],"judge":["openrouter/typesafe/jev-1.14","openrouter/typesafe/jev-1.13","openrouter/liquid/d1.1"],"review":["google-antigravity/gemini-4-argon","xai-oauth/grok-4.7","mistral/zai-glm-5-3","google-antigravity/claude-opus-5-5"],"security":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","google-antigravity/claude-opus-5-5","xai-oauth/grok-4.7"],"critical":["google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"],"sage":["google-antigravity/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"],"anthropic/claude-fable-5-2":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"],"anthropic/claude-fable-5-1":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"],"anthropic/claude-fable-5":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"]}'
 
 omp config set retry.usageAwareFallback true
 omp config set retry.usageReservePolicy auto
 omp config set cycleOrder '["smol","default","slow","sage"]'
-omp config set extendedContext true
+omp config set extendedContext false
+omp config set defaultThinkingLevel auto
+omp config set update.auto false
 omp config set compaction.modelThresholds '{"mistral/zai-glm-5-3":"f150000"}'
 ```
 
 ## Verify
 ```bash
+./scripts/check-live.sh                # OK for every key in model-roles.yml; DIFF lines show file vs live
 omp config get modelRoles --json       # sage must be anthropic/claude-fable-5-2; judge must be typesafe/jev-1.14.0
 omp config get retry.fallbackChains --json
-omp config get extendedContext --json  # true on every machine
-omp models find gpt-6.1-sol --json      # Codex contextWindow: 922000
+omp config get extendedContext --json  # false on every machine (v40)
+omp models find gpt-6.1-sol --json      # Codex contextWindow: 500000 with extendedContext off
+omp models google-antigravity | head -1 # must list the provider (13 models on 18.18.8); empty = a broken omp build
+omp --version                          # stays put across restarts (update.auto: false)
 omp models mistral --json              # logged in: lists zai-glm-5-3 and zai-glm-5-3-flash (1,048,576 context each) and mistral-large-4 (the vision hop)
 omp models --kind judge --json         # lists typesafe/jev-1.14.0 (and jev-latest, jev-preview, openrouter/typesafe/jev-1.14, jev-1.13, liquid/d1.1); the judge fallback chain must resolve with no startup warning
 omp usage                              # Anthropic, ChatGPT, Antigravity, xAI meters only; no Mistral, TypeSafe, or OpenRouter meter

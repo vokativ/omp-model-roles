@@ -103,21 +103,28 @@ This decision changes neither the live setup (v38) nor the run-only profile copy
    solely as an assumed cost optimization; trial same-session prewalk instead.
    Keep independent subagents/reviews where isolation earns their context cost.
 
-   After reviewing both machines' session histories, the owner chose one shared
-   v29 configuration with `extendedContext: true`. Import it on every machine;
-   do not retain the superseded Mac-off trial or machine-local split. See README's
-   measured context distribution and limitations. Compare quota over a full reset
-   cycle, compaction frequency, lost constraints, and rework. A higher ceiling is
-   not pre-allocation; a lower ceiling can increase compaction and re-reading.
+   v40 (2026-11-11, owner decision) imports one shared configuration with
+   `extendedContext: false` on every machine, reversing the v29 "on everywhere"
+   policy. Off only shrinks models that declare an extended window (Codex Sol/Luna,
+   Haiku); 1M-window models such as GLM-5.3 need a per-model
+   `compaction.modelThresholds` trigger instead (see README's extended-context
+   section). Compare quota over a full reset cycle, compaction frequency, lost
+   constraints, and rework before changing either.
 
-8. **Only after explicit authorization to update the live setup: apply, verify, ship.**
+8. **Cap evaluation burn on live meters.** Read `omp usage` before a benchmark; stop when any
+   meter a live chain depends on has moved 20 points, or run on an account no chain uses.
+   Record before/after readings in the evaluation. (The 2026-11-10 review benchmark took
+   Argon from 2.5% to 91.4%, leaving `critical` without its first fallback for that week.)
+
+9. **Only after explicit authorization to update the live setup: apply, verify, ship.**
    ```bash
    omp config set modelRoles '{...}'
    omp config set retry.fallbackChains '{...}'
    omp config get modelRoles --json   # verify
    omp config get retry.fallbackChains --json   # verify
    ```
-   Update `model-roles.yml` and `README.md` in this repo to match exactly what's live, commit, push.
+   Update `model-roles.yml`, `CHANGELOG.md`, and `README.md` in this repo to match exactly what's live, run
+   `scripts/check-live.sh` on every machine (all `OK`), commit, push.
 
 ## Subscription checklist (ask only for material missing facts)
 
@@ -132,25 +139,22 @@ This decision changes neither the live setup (v38) nor the run-only profile copy
 
 ## Files in this repo
 
-The importable overlays and README are at the root. Selection instructions live in
+The importable overlay and README are at the root. Selection instructions live in
 `instructions/`; source research and rationale live in `research/` (this folder).
 
 Root — the importable config:
-- `../model-roles.yml` — model roles, agent bindings, retry policies/chains, cycle order, and owner-approved `extendedContext: true`. Merge all supplied keys into `config.yml`; `omp --config ./model-roles.yml` applies a run-only overlay, not a persistent install.
-- `../models-overlay.yml` — companion `models.yml` overlay (per-model overrides like `maxTokens`).
-  Currently just an OpenRouter Gemini 3.8 Flash `maxTokens` override that no live role/chain uses
-  (inert); keep it only if that route is re-added — check whether any newly-added fallback model
-  needs one of these before assuming `model-roles.yml` alone is a complete import.
+- `../model-roles.yml` — model roles, agent bindings, retry policies/chains, cycle order, compaction thresholds, `extendedContext: false`, `defaultThinkingLevel`, and `update.auto: false`. Merge all supplied keys into `config.yml`; `omp --config ./model-roles.yml` applies a run-only overlay, not a persistent install. Check a machine with `../scripts/check-live.sh`.
+- `../CHANGELOG.md` — per-version history and rationale (moved out of the YAML header in v40).
 - `../README.md` — import instructions, the repo-layout map, plus the rationale/subscription table
   that justified the current values, including the locally measured 2026-08-25 A/B.
+- No `models.yml` overlay ships: the former `models-overlay.yml` (an OpenRouter Gemini 3.8 Flash
+  `maxTokens` override no role or chain used) was removed in v40. Check whether a newly-added
+  fallback model needs a `models.yml` override before assuming `model-roles.yml` is a complete import.
 
-Optional planning instructions/profile:
+Optional planning instructions:
 - `../instructions/SELECT-MODEL-MIX.md` — the single behavior contract for OMP to
   preview a subscription/workload/budget-aware allocation; not a standalone program.
-- `../profiles/anthropic-heavy.yml` — run-only copy of the live v38 role/chain config (same data as
-  `model-roles.yml`), not installed. It includes the mistral/typesafe/openrouter routes, so a run in an
-  isolated API-auth profile needs those logins or edits.
-  A run-only overlay is not authentication isolation: follow the notes' API-credit,
+  A run-only overlay (`--config`) is not authentication isolation: follow the notes' API-credit,
   isolated-profile, provider-permission, and Console spending prerequisites before any run.
 
 `research/` — methodology and point-in-time investigations:

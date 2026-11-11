@@ -71,7 +71,7 @@ Read [subscription research](../research/SUBSCRIPTION-MIXES.md), the
 [Fable evaluation](../research/FABLE-EVALUATION.md),
 [Mistral evaluation](../research/MISTRAL-EVALUATION.md), and
 [default-role evaluation](../research/DEFAULT-ROLE-EVALUATION.md), then current `model-roles.yml`,
-`models-overlay.yml`, relevant agent bindings, and any supplied plans/usage notes.
+`CHANGELOG.md`, relevant agent bindings, and any supplied plans/usage notes.
 This instruction's **proposal-only** scope overrides the playbook's apply/ship
 workflow and historical executable-selector directions. Existing allocations,
 profiles, past failures, and prior checks are evidence with dates, not today's
@@ -171,9 +171,8 @@ overlay is not runnable/covered/permitted merely because its config is well form
    Same-provider Opus/Fable switching is a capability choice, **not cross-provider
    quota fallback**; keep fallback chains within the routing contract below.
 6. The earlier **Anthropic-heavy example**—Sonnet workers, Opus depth, Haiku cheap
-   roles, Google vision/advisor, and OpenAI critical/review (live v38 `default` is the
-   owner-chosen Mistral GLM-5.3; `profiles/anthropic-heavy.yml` is now only a run-only
-   copy of the live v38 config)—is one
+   roles, Google vision/advisor, and OpenAI critical/review (live `default` is the
+   owner-chosen Mistral GLM-5.3; `model-roles.yml` doubles as the run-only overlay)—is one
    candidate, **not the mandatory allocation**. Alternative primaries within these four
    provider groups may favor Anthropic, OpenAI, Google, or xAI according to packages,
    workload, headroom, permission, and evidence. Explain route ordering individually.
@@ -282,8 +281,8 @@ Return all of the following, without writing/applying files:
    `reviewer: "@review"`, and `sonic: "@tiny"` (no `task` override: the bundled
    `task` agent binds `@task`; route `sonic` through a role, never a bare model, so
    its failover is not the `default` chain); `retry.usageAwareFallback: true`;
-   `retry.usageReservePolicy: auto`; `cycleOrder: [smol, default, slow, sage]`; and
-   `extendedContext: true`. Keep current custom agents unchanged; model bindings do
+   `retry.usageReservePolicy: auto`; `cycleOrder: [smol, default, slow, sage]`;
+   `extendedContext: false` (v40); `defaultThinkingLevel: auto`; and `update.auto: false`. Keep current custom agents unchanged; model bindings do
    not install their instruction contracts. List any required companion model
    override separately, without editing it or claiming a runtime check occurred.
 5. **Fable decision and limits:** separate conclusions for `plan` and `slow` (architect agent),

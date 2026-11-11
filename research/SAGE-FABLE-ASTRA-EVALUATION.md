@@ -1,6 +1,6 @@
 # `sage`: Fable 5.1 vs Opus 5.5, and Astra — evaluation 2026-10-20
 
-**Probes, usage readings and the blind A/B ran on 2026-10-20 (snapshot v35).** Raw artifacts were kept under `/tmp/probe/` (not committed); every figure below comes from them or from the cited public pages. Config effects are in [`model-roles.yml`](../model-roles.yml) (v35 header). Opus-vs-Fable public proxies for `plan`/`architect` live in [`FABLE-EVALUATION.md`](./FABLE-EVALUATION.md); this note supersedes that file's "no Fable access" statement only for access, not for its benchmark review.
+**Probes, usage readings and the blind A/B ran on 2026-10-20 (snapshot v35).** Raw artifacts were kept under `/tmp/probe/` (not committed); every figure below comes from them or from the cited public pages. Config effects are in [`model-roles.yml`](../model-roles.yml) (v35 entry in [`CHANGELOG.md`](../CHANGELOG.md)). Opus-vs-Fable public proxies for `plan`/`architect` live in [`FABLE-EVALUATION.md`](./FABLE-EVALUATION.md); this note supersedes that file's "no Fable access" statement only for access, not for its benchmark review.
 
 ## 1. Decision
 

@@ -337,12 +337,12 @@ window; Haiku below default capability).
 
 1. In `model-roles.yml`, set `modelRoles.default: google-antigravity/gemini-3.8-flash` and
    `retry.fallbackChains.default` to the v37 chain (`anthropic/claude-sonnet-5-5`,
-   `openai-codex/gpt-6.1-sol`, `xai-oauth/grok-build`); do the same in `profiles/anthropic-heavy.yml`.
+   `openai-codex/gpt-6.1-sol`, `xai-oauth/grok-build`).
 2. Re-apply with `omp config set modelRoles '{...}'` and `omp config set retry.fallbackChains
    '{...}'` using the README's apply block, check with `omp config get`, then bump the snapshot
    version.
 3. The `mistral` login stays; the five fallback hops need it. Restart long-lived OMP sessions to pick
-   up the new default. Revert both machines (the server shares the config).
+   up the new default. Revert every machine (omarchy, Lubuntu, Mac); `scripts/check-live.sh` confirms each.
 4. A partial revert is also possible: drop only the Mistral primary but keep the new chain
    (Gemini 3.8 Flash -> Sonnet 5.5), which keeps Sol and Grok Build off the default.
 
