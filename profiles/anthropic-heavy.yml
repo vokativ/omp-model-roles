@@ -14,7 +14,7 @@
     "review": "openai-codex/gpt-6.1-sol",
     "security": "anthropic/claude-sonnet-5-5",
     "critical": "openai-codex/gpt-6.1-sol",
-    "sage": "anthropic/claude-fable-5-1"
+    "sage": "anthropic/claude-fable-5-2"
   },
   "task": {
     "agentModelOverrides": {
@@ -106,7 +106,7 @@
         "google-antigravity/gemini-4-argon",
         "xai-oauth/grok-4.7"
       ],
-      "anthropic/claude-fable-5-1": [
+      "anthropic/claude-fable-5-2": [
         "anthropic/claude-opus-5-5",
         "google-antigravity/claude-opus-5-5",
         "openai-codex/gpt-6.1-sol",

@@ -18,7 +18,7 @@ historical. Current `model-roles.yml` (v35): `architect` is `anthropic/claude-op
 (chain Sol 6.1 → Gemini 4 Argon → Antigravity Opus 5.5 → Grok 4.7), moved off Sol in
 v33; `critical` is `openai-codex/gpt-6.1-sol` (chain Argon → Grok 4.7), so the
 architect/critical pairing is now cross-provider rather than the same-Opus collision
-recorded below; `sage` is `anthropic/claude-fable-5-1` since v35 (provisional).
+recorded below; `sage` is `anthropic/claude-fable-5-2` since v39 (Fable 5.1 since v35; provisional).
 Sol serves `critical` as primary and is the first fallback of most chains, not the
 shared primary of architect/slow/review/workers. Check resolved identities after
 fallback: an Opus architect that falls back to Sol collides with Sol-based `critical`.

@@ -2,7 +2,7 @@
 
 *In `research/`. Bare filenames such as `model-roles.yml` and `README.md` refer to the repo root, one level up.*
 
-> **Historical (v19.1).** Current `sage` is `anthropic/claude-fable-5-1` (v35+); see
+> **Historical (v19.1).** Current `sage` is `anthropic/claude-fable-5-2` (v39+; `anthropic/claude-fable-5-1` in v35–v38); see
 > [THINKING-PARTNER-ROLE.md](THINKING-PARTNER-ROLE.md) §5 and `model-roles.yml`. The model and
 > verification-chain details below describe the v19 state (Opus 5 primary).
 

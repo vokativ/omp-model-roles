@@ -1,6 +1,16 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-11-03 · Snapshot version: 38
+## Generated: 2026-11-11 · Snapshot version: 39
 ## Stale? See research/RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
+##
+## v39: sage -> anthropic/claude-fable-5-2 (owner decision; Fable 5.1 since v35). New model-level chain key
+##   anthropic/claude-fable-5-2 with the same order (Opus 5.5 -> Antigravity Opus 5.5 -> Sol 6.1 -> Argon ->
+##   Grok 4.7). The anthropic/claude-fable-5-1 and anthropic/claude-fable-5 chains are retained: both ids stay in
+##   the catalog, and a revert to 5.1 without its key would fall to the role-level sage chain (no direct-Opus hop).
+##   Catalog-verified 2026-11-11 via `omp models`: claude-fable-5-2, 1M context / 128K output, low..max
+##   thinking, image input. Two 2026-11-11 dispatches on anthropic/claude-fable-5-2 (repo review, tools on) were
+##   accepted via Max 5x OAuth with the delivered id verified from the event stream and no fallback hop.
+##   No quality claim is made for 5.2 over 5.1; the v35 UNRESOLVED verdict stands.
+##   Revert = set modelRoles.sage back to anthropic/claude-fable-5-1 (or Opus 5.5).
 ##
 ## v38: default -> mistral/zai-glm-5-3 (owner decision); chain google-antigravity/gemini-3.8-flash -> anthropic/claude-sonnet-5-5.
 ##   Evidence: research/DEFAULT-ROLE-EVALUATION.md. Gemini 3.8 Flash lost its speed case: in OMP probes it took 21.6 s
@@ -327,7 +337,7 @@ modelRoles:
   review: openai-codex/gpt-6.1-sol
   security: anthropic/claude-sonnet-5-5
   critical: openai-codex/gpt-6.1-sol
-  sage: anthropic/claude-fable-5-1
+  sage: anthropic/claude-fable-5-2
 task:
   agentModelOverrides:
     security-reviewer: "@security"
@@ -405,6 +415,12 @@ retry:
       - google-antigravity/gemini-4-argon
       - xai-oauth/grok-4.7
     # Model-level chains outrank role chains in OMP: with sage on Fable, THIS chain is sage's failover.
+    anthropic/claude-fable-5-2:
+      - anthropic/claude-opus-5-5
+      - google-antigravity/claude-opus-5-5
+      - openai-codex/gpt-6.1-sol
+      - google-antigravity/gemini-4-argon
+      - xai-oauth/grok-4.7
     anthropic/claude-fable-5-1:
       - anthropic/claude-opus-5-5
       - google-antigravity/claude-opus-5-5

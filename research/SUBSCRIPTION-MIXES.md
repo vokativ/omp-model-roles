@@ -47,6 +47,11 @@ and fallback role map" is the historical 2026-10-08 design (pre-v36: `architect`
 [../profiles/anthropic-heavy.yml](../profiles/anthropic-heavy.yml) is a run-only copy of that live
 v38 config, not the 17-role table.
 
+**Updated 2026-11-11 (v39):** `sage` now runs on `anthropic/claude-fable-5-2` (owner decision;
+Fable 5.1 since v35), and the model-level failover chain key is renamed from
+`anthropic/claude-fable-5-1` to `anthropic/claude-fable-5-2` with the same order. The
+`anthropic/claude-fable-5` chain is retained. No quality claim is made for 5.2 over 5.1.
+
 The goal is to choose which pool should carry general work, reserve deeper models
 for harder work, and retain a genuinely different model family for critical review.
 Selection follows [../instructions/SELECT-MODEL-MIX.md](../instructions/SELECT-MODEL-MIX.md),
