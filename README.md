@@ -487,7 +487,7 @@ overrides and custom agents still use the installation steps below.
 
 ### Option A — merge into the global config (affects every project on that machine)
 1. Run `omp config path`, then open `config.yml` in the printed agent directory.
-2. Merge all top-level keys from `model-roles.yml` into `config.yml`, including `task`, `cycleOrder`, and `extendedContext: true`, preserving unrelated settings.
+2. Merge all top-level keys from `model-roles.yml` into `config.yml`, including `task`, `cycleOrder`, `extendedContext: true`, and `compaction.modelThresholds` (GLM 5.3 compacts at 150k; see `research/MISTRAL-BUDGET-2026-11.md`), preserving unrelated settings.
 3. In the same directory, open `models.yml` (create if missing) and copy in `models-overlay.yml`'s `providers:` block. (It only sets an OpenRouter `maxTokens` override for `google/gemini-3.8-flash`, which no current role or chain references, so it is inert — inference. The `judge` role's OpenRouter routes need no override.)
 4. Copy `agents/*.md` (`architect.md`, `critical.md`, and `sage.md`) into `~/.omp/agent/agents/`. The agents bind to role aliases (`@architect`, `@critical`, `@sage`), so `sage.md` runs on whatever `modelRoles.sage` is — Fable 5.1 after import.
 5. Restart any running `omp` session.
@@ -504,6 +504,7 @@ omp config set retry.usageAwareFallback true
 omp config set retry.usageReservePolicy auto
 omp config set cycleOrder '["smol","default","slow","sage"]'
 omp config set extendedContext true
+omp config set compaction.modelThresholds '{"mistral/zai-glm-5-3":"f150000"}'
 ```
 
 ## Verify

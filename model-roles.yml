@@ -149,7 +149,16 @@
 ##   - Removed the architect fallback back to its new primary. Cross-provider fallbacks
 ##     remain; Astra stays available explicitly and in sage's existing fallback chain.
 ##   - Cross-machine session review supports extended context for this workload.
-##     Owner chose one configuration everywhere: extendedContext: true.
+##     Owner chose one configuration everywhere: extendedContext: true
+
+## v38.1: GLM 5.3 has a 1M window, so the default compaction trigger sits near ~890k tokens. A 2026-11-10
+## session grew to 483k with no compaction (710 calls re-reading ~296k cached tokens each, plus ~41 prefix-cache
+## misses re-billing the whole context at 10x): $50.86 of the $150 Vibe Code budget in one day. Compact at 150k.
+## See research/MISTRAL-BUDGET-2026-11.md.
+compaction:
+  modelThresholds:
+    mistral/zai-glm-5-3: "f150000"
+.
 ##     Prewalk remains opt-in; see README for Sol -> Luna implementation workflow.
 ##   - No claim of measured quality parity or subscription-quota savings versus Astra.
 ##
