@@ -6,7 +6,7 @@ cd "$(dirname "$0")/.." || exit 1
 status=0
 for k in modelRoles retry.fallbackChains retry.usageAwareFallback retry.usageReservePolicy \
          task.agentModelOverrides cycleOrder extendedContext defaultThinkingLevel update.auto \
-         compaction.modelThresholds; do
+         generate_image.enabled compaction.modelThresholds; do
   want=$(ruby -ryaml -rjson -e 'v = YAML.load_file("model-roles.yml").dig(*ARGV[0].split(".")); puts JSON.generate(v)' "$k") || exit 2
   have=$(omp config get "$k" --json | jq -c .value)
   if diff <(jq -S . <<<"$want") <(jq -S . <<<"$have") >/dev/null; then

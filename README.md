@@ -1,6 +1,6 @@
 # OMP model-role setup — import instructions
 
-**Snapshot: 2026-11-11 · v40.** Stale after ~4-6 weeks, or immediately if any subscription
+**Snapshot: 2026-11-12 · v41.** Stale after ~4-6 weeks, or immediately if any subscription
 changed — check `research/RESEARCH-PLAYBOOK.md`'s staleness check before importing this blind.
 
 `model-roles.yml` is a config **overlay**: `modelRoles`, `task.agentModelOverrides`,
@@ -139,6 +139,15 @@ Sol on that reading (a real PR #104 review fell to Grok 4.7); (2) omarchy auto-u
 lists 13 Antigravity models again (2026-11-11, catalog only), and v40 pins `update.auto: false`.
 Argon's weekly meter is at ~91% after the review benchmark. The Mistral lineup tests are in
 [research/MISTRAL-LINEUP-BENCHMARK.md](research/MISTRAL-LINEUP-BENCHMARK.md).
+
+
+**2026-11-12 (v41), image generation on Antigravity** ([CHANGELOG.md](CHANGELOG.md)):
+`generate_image.enabled: true`; `image` model-kind role on `google-antigravity/gemini-3-pro-image`
+(Nano Banana Pro), chain Nano Banana 2 (`gemini-3.1-flash-image`) $\to$ `openai-codex/gpt-image-2` (last
+resort). Verified with one identical prompt through both Antigravity models: image calls draw the shared
+Gemini weekly/5h subscription buckets (3.7% $\to$ 4.1% weekly for two images; no separate billing, no Argon
+or Claude/GPT movement), and Pro beat Flash on prompt adherence and text rendering in the vision-model
+rubric (n=1 each). `vision` (image analysis) is unchanged; `image` is the generation runner.
 
 **2026-11-11 (v40), from the Fable 5.2 review** ([CHANGELOG.md](CHANGELOG.md)): `extendedContext`
 off; GLM-5.3 keeps its own 150k compaction trigger because the toggle does not shrink its 1M window;
@@ -519,11 +528,13 @@ overrides and custom agents still use the installation steps below.
 
 Equivalent CLI commands for `config.yml`:
 ```bash
-omp config set modelRoles '{"default":"mistral/zai-glm-5-3","smol":"anthropic/claude-sonnet-5-5","slow":"anthropic/claude-opus-5-5","plan":"anthropic/claude-opus-5-5","task":"anthropic/claude-sonnet-5-5","vision":"google-antigravity/gemini-3.8-flash","commit":"anthropic/claude-haiku-5-5:low","advisor":"google-antigravity/gemini-3.8-flash","tiny":"anthropic/claude-haiku-5-5:low","widget":"anthropic/claude-haiku-5-5:low","judge":"typesafe/jev-1.14.0","review":"openai-codex/gpt-6.1-sol","security":"anthropic/claude-sonnet-5-5","critical":"openai-codex/gpt-6.1-sol","sage":"anthropic/claude-fable-5-2"}'
+omp config set modelRoles '{"default":"mistral/zai-glm-5-3","smol":"anthropic/claude-sonnet-5-5","slow":"anthropic/claude-opus-5-5","plan":"anthropic/claude-opus-5-5","task":"anthropic/claude-sonnet-5-5","vision":"google-antigravity/gemini-3.8-flash","commit":"anthropic/claude-haiku-5-5:low","advisor":"google-antigravity/gemini-3.8-flash","tiny":"anthropic/claude-haiku-5-5:low","widget":"anthropic/claude-haiku-5-5:low","judge":"typesafe/jev-1.14.0","image":"google-antigravity/gemini-3-pro-image","review":"openai-codex/gpt-6.1-sol","security":"anthropic/claude-sonnet-5-5","critical":"openai-codex/gpt-6.1-sol","sage":"anthropic/claude-fable-5-2"}'
 
 omp config set task.agentModelOverrides '{"security-reviewer":"@security","reviewer":"@review","sonic":"@tiny"}'
 
-omp config set retry.fallbackChains '{"default":["google-antigravity/gemini-3.8-flash","anthropic/claude-sonnet-5-5"],"smol":["mistral/zai-glm-5-3-flash","openai-codex/gpt-6-luna","google-antigravity/gemini-3.5-flash-lite","xai-oauth/grok-build"],"slow":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","google-antigravity/claude-opus-5-5","xai-oauth/grok-4.7"],"plan":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","google-antigravity/claude-opus-5-5","xai-oauth/grok-4.7"],"task":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-3.8-flash","mistral/zai-glm-5-3","xai-oauth/grok-build"],"vision":["anthropic/claude-sonnet-5-5","openai-codex/gpt-6.1-sol","mistral/mistral-large-4","xai-oauth/grok-4.7"],"commit":["openai-codex/gpt-6-luna","google-antigravity/gemini-3.5-flash-lite","xai-oauth/grok-build"],"advisor":["anthropic/claude-haiku-5-5:low","openai-codex/gpt-6-luna","xai-oauth/grok-build"],"tiny":["mistral/zai-glm-5-3-flash","openai-codex/gpt-6-luna","google-antigravity/gemini-3.5-flash-lite","xai-oauth/grok-composer-2.5-fast"],"widget":["google-antigravity/gemini-3.5-flash-lite","xai-oauth/grok-composer-2.5-fast"],"judge":["openrouter/typesafe/jev-1.14","openrouter/typesafe/jev-1.13","openrouter/liquid/d1.1"],"review":["google-antigravity/gemini-4-argon","xai-oauth/grok-4.7","mistral/zai-glm-5-3","google-antigravity/claude-opus-5-5"],"security":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","google-antigravity/claude-opus-5-5","xai-oauth/grok-4.7"],"critical":["google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"],"sage":["google-antigravity/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"],"anthropic/claude-fable-5-2":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"],"anthropic/claude-fable-5-1":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"],"anthropic/claude-fable-5":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"]}'
+omp config set generate_image.enabled true
+
+omp config set retry.fallbackChains '{"default":["google-antigravity/gemini-3.8-flash","anthropic/claude-sonnet-5-5"],"smol":["mistral/zai-glm-5-3-flash","openai-codex/gpt-6-luna","google-antigravity/gemini-3.5-flash-lite","xai-oauth/grok-build"],"slow":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","google-antigravity/claude-opus-5-5","xai-oauth/grok-4.7"],"plan":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","google-antigravity/claude-opus-5-5","xai-oauth/grok-4.7"],"task":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-3.8-flash","mistral/zai-glm-5-3","xai-oauth/grok-build"],"vision":["anthropic/claude-sonnet-5-5","openai-codex/gpt-6.1-sol","mistral/mistral-large-4","xai-oauth/grok-4.7"],"commit":["openai-codex/gpt-6-luna","google-antigravity/gemini-3.5-flash-lite","xai-oauth/grok-build"],"advisor":["anthropic/claude-haiku-5-5:low","openai-codex/gpt-6-luna","xai-oauth/grok-build"],"tiny":["mistral/zai-glm-5-3-flash","openai-codex/gpt-6-luna","google-antigravity/gemini-3.5-flash-lite","xai-oauth/grok-composer-2.5-fast"],"widget":["google-antigravity/gemini-3.5-flash-lite","xai-oauth/grok-composer-2.5-fast"],"judge":["openrouter/typesafe/jev-1.14","openrouter/typesafe/jev-1.13","openrouter/liquid/d1.1"],"image":["google-antigravity/gemini-3.1-flash-image","openai-codex/gpt-image-2"],"review":["google-antigravity/gemini-4-argon","xai-oauth/grok-4.7","mistral/zai-glm-5-3","google-antigravity/claude-opus-5-5"],"security":["openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","google-antigravity/claude-opus-5-5","xai-oauth/grok-4.7"],"critical":["google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"],"sage":["google-antigravity/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"],"anthropic/claude-fable-5-2":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"],"anthropic/claude-fable-5-1":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"],"anthropic/claude-fable-5":["anthropic/claude-opus-5-5","google-antigravity/claude-opus-5-5","openai-codex/gpt-6.1-sol","google-antigravity/gemini-4-argon","xai-oauth/grok-4.7"]}'
 
 omp config set retry.usageAwareFallback true
 omp config set retry.usageReservePolicy auto
@@ -545,6 +556,7 @@ omp models google-antigravity | head -1 # must list the provider (13 models on 1
 omp --version                          # stays put across restarts (update.auto: false)
 omp models mistral --json              # logged in: lists zai-glm-5-3 and zai-glm-5-3-flash (1,048,576 context each) and mistral-large-4 (the vision hop)
 omp models --kind judge --json         # lists typesafe/jev-1.14.0 (and jev-latest, jev-preview, openrouter/typesafe/jev-1.14, jev-1.13, liquid/d1.1); the judge fallback chain must resolve with no startup warning
+omp models --kind image --json         # lists google-antigravity/gemini-3-pro-image (image role) and gemini-3.1-flash-image (first fallback), plus openai-codex/gpt-image-2 (last fallback)
 omp usage                              # Anthropic, ChatGPT, Antigravity, xAI meters only; no Mistral, TypeSafe, or OpenRouter meter
 ```
 

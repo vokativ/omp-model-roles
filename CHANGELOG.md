@@ -2,6 +2,22 @@
 
 Version history of `model-roles.yml`, newest first. Rationale and evidence live in `research/`.
 
+## v41
+
+Image generation on the Antigravity subscription (owner decision, 2026-11-12). `generate_image.enabled: true`
+(the tool is otherwise off by default), `modelRoles.image: google-antigravity/gemini-3-pro-image` (Nano Banana
+Pro), chain `google-antigravity/gemini-3.1-flash-image` (Nano Banana 2) -> `openai-codex/gpt-image-2` (last
+resort, ChatGPT Plus hosted). Verified the same day on omp 18.18.8 with one identical prompt through both
+Antigravity models (`omp -p --tools generate_image --auto-approve`, model pinned per request): both returned
+1264x848 JPEGs via the google-gemini-cli transport. Quota: two image calls moved the shared Gemini buckets
+3.7% -> 4.1% weekly and 0.1% -> 1.0% 5h (fresh `omp usage` readings; the orchestrating sessions ran on
+Mistral, so the movement is attributable to the images) — image generation draws the AI Pro subscription's
+Gemini chat quota, with no separate billing observed; Argon and Claude/GPT shared buckets untouched. The
+catalog's $2/$120 and $0.5/$60 per-M figures are cost estimates only. Quality (vision-model rubric, n=1 per
+model): Pro adhered better (wings structurally formed of code, all rendered text correctly spelled); Flash
+layered code behind solid glowing wings and garbled fine-print code. Revert = remove the `image` role/chain
+entries and set `generate_image.enabled: false`.
+
 ## v40
 
 Owner-approved items from the 2026-11-11 Fable 5.2 review (`default` stays on `mistral/zai-glm-5-3`; the
