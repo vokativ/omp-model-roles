@@ -107,7 +107,7 @@ This decision changes neither the live setup (v38) nor the run-only profile copy
    `extendedContext: false` on every machine, reversing the v29 "on everywhere"
    policy. Off only shrinks models that declare an extended window (Codex Sol/Luna,
    Haiku); 1M-window models such as GLM-5.3 need a per-model
-   `compaction.modelThresholds` trigger instead (see README's extended-context
+   `compaction.modelThresholds` trigger instead (see `OWNER-NOTES.md`'s extended-context
    section). Compare quota over a full reset cycle, compaction frequency, lost
    constraints, and rework before changing either.
 
@@ -123,7 +123,7 @@ This decision changes neither the live setup (v38) nor the run-only profile copy
    omp config get modelRoles --json   # verify
    omp config get retry.fallbackChains --json   # verify
    ```
-   Update `model-roles.yml`, `CHANGELOG.md`, and `README.md` in this repo to match exactly what's live, run
+   Update `model-roles.yml`, `CHANGELOG.md`, `README.md`, and (for dated evidence) `OWNER-NOTES.md` in this repo to match exactly what's live, run
    `scripts/check-live.sh` on every machine (all `OK`), commit, push.
 
 ## Subscription checklist (ask only for material missing facts)
@@ -145,8 +145,11 @@ The importable overlay and README are at the root. Selection instructions live i
 Root — the importable config:
 - `../model-roles.yml` — model roles, agent bindings, retry policies/chains, cycle order, compaction thresholds, `extendedContext: false`, `defaultThinkingLevel`, and `update.auto: false`. Merge all supplied keys into `config.yml`; `omp --config ./model-roles.yml` applies a run-only overlay, not a persistent install. Check a machine with `../scripts/check-live.sh`.
 - `../CHANGELOG.md` — per-version history and rationale (moved out of the YAML header in v40).
-- `../README.md` — import instructions, the repo-layout map, plus the rationale/subscription table
-  that justified the current values, including the locally measured 2026-08-25 A/B.
+- `../README.md` — the compact entry point: per-role reasoning for the built-in roles, swaps by login,
+  judge routes, optional custom roles, install/verify, and instructions another user's OMP can follow.
+- `../OWNER-NOTES.md` — the owner's dated evidence moved out of the README on 2026-11-13: capacity/meter
+  table, incident notes, Mistral EDU billing, extended-context analysis, Haiku and Antigravity notes,
+  and the daily workflow.
 - No `models.yml` overlay ships: the former `models-overlay.yml` (an OpenRouter Gemini 3.8 Flash
   `maxTokens` override no role or chain used) was removed in v40. Check whether a newly-added
   fallback model needs a `models.yml` override before assuming `model-roles.yml` is a complete import.
@@ -175,10 +178,11 @@ Optional planning instructions:
 - `TASK-ROLE-EVALUATION.md` — 2026-11-03: evaluation of the `task` role (subagent default): Sonnet 5.5 (current) vs GLM-5.3 (`mistral/zai-glm-5-3`) vs Gemini 3.8 Flash (`google-antigravity/gemini-3.8-flash`). Workload mix and repricing, synthetic hidden-test benchmark, real past-task replays, GLM subagent integration, research/verification quality, and the Google meter model. Owner decision 2026-11-03: keep Sonnet 5.5; `model-roles.yml` unchanged. Read it before changing the `task` primary or chain.
 - `MISTRAL-LINEUP-BENCHMARK.md` — 2026-11-10: the latest canonical Mistral-hosted models (Large 4, GLM-5.3 / Flash, DeepSeek V4.1 Flash, Medium 3.5, Small 4, Codestral, Ministral, OCR 4.1, Voxtral), what each is for, raw-API TTFT/decode speed, and coding/tool/reasoning/vision/OCR/FIM tests; no image-generation endpoint. Plus the 2026-11-10 fleet audit (omarchy + Lubuntu sessions and meters) with Opus and Sol reviews of the proposed fallback edits. Recommendations recorded, not applied.
 - `REVIEW-ROLE-EVALUATION.md` — 2026-11-10: should `review`/`critical`/`default` use Gemini 4 Argon instead of Sol 6.1? Contamination-free benchmark on 11 real regressing PRs (diff-only and repo modes, blind Opus grading), Argon weekly-meter cost per review, and the decision to keep Sol. Also records omp's disputed Codex meter tripping the usage preflight, and omp 18.18.6 dropping `google-antigravity` on omarchy (`update.auto: true`). Read it before moving `review` or `critical`.
+- `HYDROGEN-EVALUATION.md` — 2026-11-13 · v42: should Gemini 4 Hydrogen replace Gemini 3.8 Flash / 3.5 Flash-Lite in the Google fallback hops? Online comparison (Artificial Analysis, Terminal-Bench, vendor and HN evidence), OMP retest on omp 18.20.0 (n=5 per cell, fresh dirs, bare ids under `auto`: Hydrogen high 21.2 s / 6 turns vs 3.8 Flash 62.5 s / 13 turns), the `:minimal`/`:off` HTTP 400 silent-fallback hazard, the 45-day retirement-notice risk, and the Mistral 402 incident found during the retest. Owner decision: Hydrogen in `default`, `task`, and `smol` hops only; `vision`/`advisor` stay on 3.8 Flash. Read it before touching a Hydrogen hop or adding a thinking suffix to one.
 - `ARCHITECT-CRITICAL-AGENTS.md` — original dispatch investigation, with a v29 addendum for the review-oriented architect and its verification.
 - `FABLE-EVALUATION.md` — 2026-10-08 web-only Fable 5.1 versus Opus 5.5 comparison for plan and architect: official/independent evidence, correctness counterevidence, effort/cost/latency limits, provisional Opus defaults, and conditional Fable reversal/access criteria. Historical local Fable speed/depletion claims are withdrawn after OpenAI fallback invalidated their model identity.
 - `THINKING-PARTNER-ROLE.md` — 2026-09-04 · v19: architecture, multi-agent debate (Architect vs Slow), and allocation for the `sage` Thinking Partner role, defusing the Anthropic 429 credits_required failure mode on Fable.
 - `SAGE-CREATIVE-INSTRUCTIONS.md` — 2026-09-04 · v19.1: cognitive divergence operators, anti-slop defect catalogs, and subtractive taste architecture for `sage` (Thinking Partner), adapted from Anshu Chimala's Apple R&D AI creativity methodology.
 
 Adding a new investigation? Put it in `research/`, register it in this list, and link it from
-`../README.md`'s rationale section so it is discoverable from the entry point.
+`../OWNER-NOTES.md`'s rationale section (and from `../README.md` only if it changes a role's reasoning).

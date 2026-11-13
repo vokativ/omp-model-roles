@@ -63,10 +63,10 @@ claim that JSON constraints impair reasoning or measurably slowed this agent.
 
 Following the cross-machine review, the owner chose `extendedContext: true` in
 the shared overlay for every machine, superseding the off trial and machine-local
-proposal (reversed in v40: `extendedContext: false` everywhere). README records the
+proposal (reversed in v40: `extendedContext: false` everywhere). OWNER-NOTES.md records the
 supporting session measurements and limitations.
 Prewalk remains explicitly opted in for implementation, not read-only review.
-See [README's daily workflow](../README.md#daily-workflow-choose-the-job-not-a-committee)
+See [OWNER-NOTES.md's daily workflow](../OWNER-NOTES.md#daily-workflow-choose-the-job-not-a-committee)
 for commands, role boundaries, and the limits of the Stencil benchmark evidence.
 
 ### v29 verification

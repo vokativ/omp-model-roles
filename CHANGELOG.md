@@ -2,6 +2,41 @@
 
 Version history of `model-roles.yml`, newest first. Rationale and evidence live in `research/`.
 
+## v42
+
+Gemini 4 Hydrogen in three Google fallback hops (owner decision, 2026-11-13). Evidence and limits:
+`research/HYDROGEN-EVALUATION.md`.
+
+- `retry.fallbackChains.default`: `google-antigravity/gemini-3.8-flash` -> `google-antigravity/gemini-4-hydrogen-high`
+  (chain now Hydrogen high -> Sonnet 5.5; primary still `mistral/zai-glm-5-3`).
+- `retry.fallbackChains.task` hop 2: 3.8 Flash -> `google-antigravity/gemini-4-hydrogen-high` (Sol 6.1 -> Hydrogen
+  high -> GLM-5.3 -> Grok Build).
+- `retry.fallbackChains.smol` hop 3: `google-antigravity/gemini-3.5-flash-lite` ->
+  `google-antigravity/gemini-4-hydrogen-medium` (GLM-5.3 Flash -> Luna -> Hydrogen medium -> Grok Build).
+- Unchanged: `vision` and `advisor` primaries stay on 3.8 Flash (the model card shows +5.57 pp unjustified
+  multimodal refusals vs 3.8 Flash; advisor runtime is off); the 3.5 Flash-Lite hops in `tiny`, `commit`, and
+  `widget`; every other role and setting.
+- Evidence, OMP retest (omp 18.20.0, fresh temp dir per run, bare ids under `defaultThinkingLevel: auto`, n=5 per
+  cell, one small fix-and-build tool task): Hydrogen high 5/5 in a median 21.2 s / 6 turns, medium 5/5 in 20.4 s /
+  6 turns, 3.8 Flash 5/5 in 62.5 s / 13 turns (~165.9K uncached input tokens vs ~23.0K for Hydrogen high; 0 edit/write
+  errors in all three); all 12 Hydrogen runs were delivered by the requested model. A 2-run handoff test onto
+  Hydrogen high over a foreign-signed session finished in 3 turns with no signature errors.
+- Evidence, online (verified 2026-11-13): Artificial Analysis Index v5.0.1 Hydrogen high 51 vs 3.8 Flash 31;
+  Terminal-Bench 4.0 54% vs 19.7%; Google calls Hydrogen the "Recommended upgrade from Gemini 3.8 Flash". No
+  third-party Aider/OpenHands/Cline evals or thought-signature bug reports existed one day after launch.
+- Hazard (G1): Google rejects `minimal` with HTTP 400 and has no `off`, but OMP 18.20.0's catalog lists `minimal` for
+  the Hydrogen ids, so `--thinking minimal`/`off` silently walked the chain to 3.8 Flash. A YAML comment above the
+  `default` chain says never to add `:minimal`/`:off` to Hydrogen ids (thinking level is pinned by the id).
+- Risks: Vertex lists Hydrogen as a short-term GA release with a minimum 45-day retirement notice (3.8 Flash: Vertex
+  retirement Sept 2, 2027 or later; 3.5 Flash-Lite: July 21, 2027 or later); per-model Antigravity quota cost is not
+  measured; the evidence is n=5 on one small task, in launch week.
+- Observation, not a config change: every `mistral/zai-glm-5-3` call on 2026-11-13 returned `402 Vibe budget
+  exhausted (type=billing_vibe_budget_exhausted)`, so `default` effectively ran on its first hop (Hydrogen high
+  after v42) until the allowance resets on 2026-12-01. This Mac recorded only $11.90 of Mistral spend in November, so
+  the $150 Vibe Code allowance was mostly used elsewhere [INFERENCE]; check admin.mistral.ai.
+- Revert: restore `google-antigravity/gemini-3.8-flash` for `default` hop 1 and `task` hop 2, and
+  `google-antigravity/gemini-3.5-flash-lite` for `smol` hop 3.
+
 ## v41
 
 Image generation on the Antigravity subscription (owner decision, 2026-11-12). `generate_image.enabled: true`
