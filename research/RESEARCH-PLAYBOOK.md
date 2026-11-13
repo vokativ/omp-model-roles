@@ -124,7 +124,10 @@ This decision changes neither the live setup (v38) nor the run-only profile copy
    omp config get retry.fallbackChains --json   # verify
    ```
    Update `model-roles.yml`, `CHANGELOG.md`, `README.md`, and (for dated evidence) `OWNER-NOTES.md` in this repo to match exactly what's live, run
-   `scripts/check-live.sh` on every machine (all `OK`), commit, push.
+   `scripts/check-live.sh` on every machine (all `OK`), commit, push. Then update the GitHub repository
+   description so it names the new snapshot version and still matches the README (role count, logins):
+   `gh repo edit --description "..."`, checked with `gh repo view --json description`. The description is
+   GitHub metadata, not a file, so a push alone leaves it stale (it said v40 until v42).
 
 ## Subscription checklist (ask only for material missing facts)
 
