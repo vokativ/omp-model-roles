@@ -62,11 +62,11 @@ whether I want the optional custom roles, and apply nothing until I confirm.
 | `slow` | deep reasoning (`@slow`), the `architect` agent | Opus 5.5 → Sol 6.1 → Grok 4.7 | Strongest depth model on the largest pool. Each fallback is the depth model of another subscription. |
 | `plan` | the model used while plan mode is active | same chain as `slow` | Planning gets the same depth as `slow`. |
 | `task` | `task` subagents | Sonnet 5.5 → Sol 6.1 → GLM-5.3 → Grok Build | Kept over GLM-5.3 and Gemini 3.8 Flash after a head-to-head ([research](research/TASK-ROLE-EVALUATION.md)). |
-| `vision` | answering image questions for text-only models (`read` on an image) | Gemini 3.8 Flash → Sonnet 5.5 → Sol 6.1 → Mistral Large 4 → Grok 4.7 | Accurate on the owner's screenshot, code, UI, and table probes at ~4-5 s with no thinking tokens, and it runs on the Google pool, not Claude's. |
+| `vision` | answering image questions for text-only models (`read` on an image) | Sonnet 5.5 → Sol 6.1 → Mistral Large 4 → Grok 4.7 | Reads images natively, so `read` on an image works for text-only default models. |
 | `commit` | `omp commit` messages | Haiku 5.5 (low) → Luna → Grok Build | 5.6 s vs 44.8 s for Grok Build on the same commit. Short, bounded work. |
 | `tiny` | session titles and small jobs; `sonic` subagents (override below) | Haiku 5.5 (low) → GLM-5.3 Flash → Luna → Grok Composer 2.5 Fast | Cheapest capable model for frequent tiny calls. |
 | `widget` | live widgets for background jobs | Haiku 5.5 (low) → Grok Composer 2.5 Fast | If unassigned, it resolves like `smol` (Sonnet), which is wasteful for status widgets. |
-| `advisor` | the per-turn advisor, **only if `advisor.enabled`** (off by default and here) | Gemini 3.8 Flash → Haiku 5.5 (low) → Luna → Grok Build | A cheap reviewer on a non-Claude pool. It does nothing unless you enable it. |
+| `advisor` | the per-turn advisor, **only if `advisor.enabled`** (off by default and here) | Haiku 5.5 (low) → Luna → Grok Build | A cheap reviewer. It does nothing unless you enable it. |
 | `judge` | semantic `find`, the `auto` thinking level, auto-prewalk, `judge()` in eval, smart stop detection | TypeSafe Jev 1.14 → OpenRouter Jev 1.14 → Jev 1.13 → Liquid d1.1 | Needs a native judgment API. No chat subscription includes one; see [Judge options](#judge-options). |
 
 Overrides: `task.agentModelOverrides.sonic: "@tiny"` sends bundled `sonic` workers to Haiku
@@ -89,7 +89,6 @@ Other settings in the overlay:
 |---|---|---|
 | `anthropic` (Claude Max 5x, $100) | `smol`/`slow`/`plan`/`task` primaries, Haiku for `commit`/`tiny`/`widget`, many hops | `slow`/`plan` → `openai-codex/gpt-6.1-sol`; `task`/`smol` → Sol or GLM-5.3; `commit`/`tiny`/`widget` → Luna or GLM-5.3 Flash. Remove the `anthropic/*` hops. Claude Pro is a fifth of Max 5x, so keep it to one or two roles. |
 | `openai-codex` (ChatGPT Plus, $20) | first fallback of the depth chains, Luna hops | Delete those hops; nothing else depends on them. |
-| `google-antigravity` (Google AI Pro, ~$20) | `vision` and `advisor` primaries (no fallback hops anywhere) | `vision` → Sonnet 5.5 or GLM-5.3 Flash (both read images); `advisor` → Haiku; to drop image generation, turn `generate_image` off. |
 | `xai-oauth` (X Premium, $8) | last hop of most chains | Delete those hops. |
 | `mistral` (Education plan, $5.99) | `default` primary, GLM hops, Large 4 `vision` hop | `default` → Sonnet 5.5, which is what `default` already runs on whenever Mistral returns 402. Delete the `mistral/*` hops and the GLM compaction threshold. |
 | `typesafe` (prepaid API key) | `judge` primary | `judge` → `openrouter/typesafe/jev-1.14` (same price), or one of the other [judge routes](#judge-options). |

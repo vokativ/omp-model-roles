@@ -5,8 +5,8 @@
 ##
 ## Assumes these logins exist on the target machine:
 ##   - anthropic        (Claude Max 5x, $100/mo — primary workhorse and depth pool: task/smol/slow/plan/security/sage; Haiku for tiny/commit/widget/sonic; Sonnet 5.5 also last default hop and first vision fallback)
-##   - openai-codex      (ChatGPT Plus, $20/mo — critical + review primary (gpt-6.1-sol); first fallback in slow/plan/security/task and second in vision; Luna in smol/tiny/commit/advisor)
-##   - google-antigravity (Google AI Pro, ~$20/mo — vision/advisor primaries on 3.8 Flash; in no fallback chain since v44)
+##   - openai-codex      (ChatGPT Plus, $20/mo — critical + review primary (gpt-6.1-sol); first fallback in slow/plan/security/task and first fallback in vision; Luna in smol/tiny/commit/advisor)
+##   - google-antigravity (Google AI Pro, ~$20/mo — no role or chain uses it since v44; only generate_image resolves models on its own)
 ##   - xai-oauth         (X Premium, $8/mo bundled SuperGrok credits — last-tier fallbacks; Grok Build/Composer end the cheap chains)
 ##   - mistral           (Mistral EDU/student Pro plan key via /login mistral — default primary GLM-5.3 (v38) plus fallback hops: smol/tiny GLM-5.3 Flash, task/review GLM-5.3, vision Large 4; no omp usage meter)
 ##   - typesafe          (API key with prepaid credit via /login typesafe — judge primary: typesafe/jev-1.14.0)
@@ -19,9 +19,9 @@ modelRoles:
   slow: anthropic/claude-opus-5-5
   plan: anthropic/claude-opus-5-5
   task: anthropic/claude-sonnet-5-5
-  vision: google-antigravity/gemini-3.8-flash
+  vision: anthropic/claude-sonnet-5-5
   commit: anthropic/claude-haiku-5-5:low
-  advisor: google-antigravity/gemini-3.8-flash
+  advisor: anthropic/claude-haiku-5-5:low
   tiny: anthropic/claude-haiku-5-5:low
   widget: anthropic/claude-haiku-5-5:low
 
@@ -58,7 +58,6 @@ retry:
       - mistral/zai-glm-5-3
       - xai-oauth/grok-build
     vision:
-      - anthropic/claude-sonnet-5-5
       - openai-codex/gpt-6.1-sol
       - mistral/mistral-large-4
       - xai-oauth/grok-4.7
@@ -66,7 +65,6 @@ retry:
       - openai-codex/gpt-6-luna
       - xai-oauth/grok-build
     advisor:
-      - anthropic/claude-haiku-5-5:low
       - openai-codex/gpt-6-luna
       - xai-oauth/grok-build
     tiny:

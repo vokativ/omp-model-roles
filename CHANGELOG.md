@@ -6,8 +6,9 @@ Version history of `model-roles.yml`, newest first. Rationale and evidence live 
 
 All `google-antigravity` models removed from every fallback chain (owner decision, 2026-11-14): Hydrogen in
 `default`/`task`/`smol`, Argon and Antigravity Opus 5.5 in the depth, review, security, critical, sage and
-model-level Fable chains, and Flash-Lite in `commit`/`tiny`/`widget`. `vision` and `advisor` primaries are
-unchanged (chains only).
+model-level Fable chains, and Flash-Lite in `commit`/`tiny`/`widget`. Also off the `vision` and `advisor`
+primaries: `vision` -> `anthropic/claude-sonnet-5-5` (chain Sol 6.1 -> Mistral Large 4 -> Grok 4.7), `advisor` ->
+`anthropic/claude-haiku-5-5:low` (chain Luna -> Grok Build). No role or chain references `google-antigravity`.
 
 - Revert: restore the v42 and earlier chains from git history.
 
