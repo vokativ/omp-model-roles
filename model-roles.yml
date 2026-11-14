@@ -1,12 +1,12 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-11-14 · Snapshot version: 43
+## Generated: 2026-11-14 · Snapshot version: 44
 ## Stale? See research/RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
 ## Version history and rationale per version: CHANGELOG.md.
 ##
 ## Assumes these logins exist on the target machine:
 ##   - anthropic        (Claude Max 5x, $100/mo — primary workhorse and depth pool: task/smol/slow/plan/security/sage; Haiku for tiny/commit/widget/sonic; Sonnet 5.5 also last default hop and first vision fallback)
 ##   - openai-codex      (ChatGPT Plus, $20/mo — critical + review primary (gpt-6.1-sol); first fallback in slow/plan/security/task and second in vision; Luna in smol/tiny/commit/advisor)
-##   - google-antigravity (Google AI Pro, ~$20/mo — vision/advisor on 3.8 Flash; Gemini 4 Hydrogen high as default's first and task's second fallback, Hydrogen medium in smol (v42); Gemini 4 Argon (review/critical first hop, depth-chain tier 2) and Antigravity Opus 5.5 (depth-chain tier 3); lightweight fallbacks on 3.5 Flash-Lite in tiny/commit/widget)
+##   - google-antigravity (Google AI Pro, ~$20/mo — vision/advisor primaries on 3.8 Flash; in no fallback chain since v44)
 ##   - xai-oauth         (X Premium, $8/mo bundled SuperGrok credits — last-tier fallbacks; Grok Build/Composer end the cheap chains)
 ##   - mistral           (Mistral EDU/student Pro plan key via /login mistral — default primary GLM-5.3 (v38) plus fallback hops: smol/tiny GLM-5.3 Flash, task/review GLM-5.3, vision Large 4; no omp usage meter)
 ##   - typesafe          (API key with prepaid credit via /login typesafe — judge primary: typesafe/jev-1.14.0)
@@ -41,29 +41,20 @@ task:
 
 retry:
   fallbackChains:
-    # Gemini 4 Hydrogen ids pin their thinking level; never add :minimal or :off — the API rejects
-    # minimal (HTTP 400) and OMP then silently walks to the next hop (v42, research/HYDROGEN-EVALUATION.md).
     default:
-      - google-antigravity/gemini-4-hydrogen-high
       - anthropic/claude-sonnet-5-5
     smol:
       - mistral/zai-glm-5-3-flash
       - openai-codex/gpt-6-luna
-      - google-antigravity/gemini-4-hydrogen-medium
       - xai-oauth/grok-build
     slow:
       - openai-codex/gpt-6.1-sol
-      - google-antigravity/gemini-4-argon
-      - google-antigravity/claude-opus-5-5
       - xai-oauth/grok-4.7
     plan:
       - openai-codex/gpt-6.1-sol
-      - google-antigravity/gemini-4-argon
-      - google-antigravity/claude-opus-5-5
       - xai-oauth/grok-4.7
     task:
       - openai-codex/gpt-6.1-sol
-      - google-antigravity/gemini-4-hydrogen-high
       - mistral/zai-glm-5-3
       - xai-oauth/grok-build
     vision:
@@ -73,7 +64,6 @@ retry:
       - xai-oauth/grok-4.7
     commit:
       - openai-codex/gpt-6-luna
-      - google-antigravity/gemini-3.5-flash-lite
       - xai-oauth/grok-build
     advisor:
       - anthropic/claude-haiku-5-5:low
@@ -82,10 +72,8 @@ retry:
     tiny:
       - mistral/zai-glm-5-3-flash
       - openai-codex/gpt-6-luna
-      - google-antigravity/gemini-3.5-flash-lite
       - xai-oauth/grok-composer-2.5-fast
     widget:
-      - google-antigravity/gemini-3.5-flash-lite
       - xai-oauth/grok-composer-2.5-fast
     judge:
       # Natives only: once a credentialed native judge fails, OMP never falls back to a prompted chat model.
@@ -93,42 +81,29 @@ retry:
       - openrouter/typesafe/jev-1.13
       - openrouter/liquid/d1.1
     review:
-      - google-antigravity/gemini-4-argon
       - xai-oauth/grok-4.7
       - mistral/zai-glm-5-3
-      - google-antigravity/claude-opus-5-5
     security:
       - openai-codex/gpt-6.1-sol
-      - google-antigravity/gemini-4-argon
-      - google-antigravity/claude-opus-5-5
       - xai-oauth/grok-4.7
     critical:
-      - google-antigravity/gemini-4-argon
       - xai-oauth/grok-4.7
     sage:
       # Active only while sage's primary is Opus; a Fable primary uses the model-level chain below.
-      - google-antigravity/claude-opus-5-5
       - openai-codex/gpt-6.1-sol
-      - google-antigravity/gemini-4-argon
       - xai-oauth/grok-4.7
     # Model-level chains outrank role chains in OMP: with sage on Fable, THIS chain is sage's failover.
     anthropic/claude-fable-5-2:
       - anthropic/claude-opus-5-5
-      - google-antigravity/claude-opus-5-5
       - openai-codex/gpt-6.1-sol
-      - google-antigravity/gemini-4-argon
       - xai-oauth/grok-4.7
     anthropic/claude-fable-5-1:
       - anthropic/claude-opus-5-5
-      - google-antigravity/claude-opus-5-5
       - openai-codex/gpt-6.1-sol
-      - google-antigravity/gemini-4-argon
       - xai-oauth/grok-4.7
     anthropic/claude-fable-5:
       - anthropic/claude-opus-5-5
-      - google-antigravity/claude-opus-5-5
       - openai-codex/gpt-6.1-sol
-      - google-antigravity/gemini-4-argon
       - xai-oauth/grok-4.7
   usageAwareFallback: true
   usageReservePolicy: "auto"

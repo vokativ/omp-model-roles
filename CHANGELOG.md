@@ -2,6 +2,15 @@
 
 Version history of `model-roles.yml`, newest first. Rationale and evidence live in `research/`.
 
+## v44
+
+All `google-antigravity` models removed from every fallback chain (owner decision, 2026-11-14): Hydrogen in
+`default`/`task`/`smol`, Argon and Antigravity Opus 5.5 in the depth, review, security, critical, sage and
+model-level Fable chains, and Flash-Lite in `commit`/`tiny`/`widget`. `vision` and `advisor` primaries are
+unchanged (chains only).
+
+- Revert: restore the v42 and earlier chains from git history.
+
 ## v43
 
 Image generation back to OMP's automatic model selection (owner decision, 2026-11-14). Removes the `image`

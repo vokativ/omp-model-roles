@@ -1,6 +1,6 @@
 # OMP model roles: a reasoned setup you can adapt
 
-**Snapshot: 2026-11-14 · v43** (verified on omp 18.18.8). Stale after ~4-6 weeks, or right away if
+**Snapshot: 2026-11-14 · v44** (verified on omp 18.18.8). Stale after ~4-6 weeks, or right away if
 a model below is missing from `omp models`.
 
 This is the owner's [OMP](https://github.com/can1357/oh-my-pi) role and fallback configuration
@@ -52,22 +52,20 @@ whether I want the optional custom roles, and apply nothing until I confirm.
   owner's machine; the evidence is in [OWNER-NOTES.md](OWNER-NOTES.md) and `research/`.
 - **Let OMP skip depleted accounts.** `retry.usageAwareFallback: true` with
   `usageReservePolicy: auto` skips an account that is near its limit before calling it.
-- **Never put `:minimal` or `:off` on a model that rejects it.** Gemini 4 Hydrogen answers HTTP 400
-  and OMP silently walks to the next hop, even though OMP's catalog still lists `minimal`.
 
 ## The reference setup (built-in roles)
 
 | Role | Used by OMP for | Primary → fallbacks | Why |
 |---|---|---|---|
-| `default` | the main session | GLM-5.3 (`mistral/zai-glm-5-3`) → Gemini 4 Hydrogen high → Sonnet 5.5 | Fastest in the OMP tool probe (7.6 s vs 21.6/34.6 s for Gemini 3.8 Flash low/high, ~9 s for Sonnet), and it keeps everyday turns off the Claude pool. It is text-only, so images go through `vision`. The Google hop is Hydrogen high: 21.2 s / 6 turns vs 62.5 s / 13 turns for 3.8 Flash in OMP, 5/5 each ([evaluation](research/HYDROGEN-EVALUATION.md)). |
-| `smol` | prewalk / plan-yolo execution target, Ctrl+P cycle, agents bound to `@smol` | Sonnet 5.5 → GLM-5.3 Flash → GPT-6 Luna → Gemini 4 Hydrogen medium → Grok Build | Here `smol` implements after Opus has planned, so it needs a capable model. With a small main pool, use GLM-5.3 Flash or Luna instead. |
-| `slow` | deep reasoning (`@slow`), the `architect` agent | Opus 5.5 → Sol 6.1 → Gemini 4 Argon → Antigravity Opus 5.5 → Grok 4.7 | Strongest depth model on the largest pool. Each fallback is the depth model of another subscription. |
+| `default` | the main session | GLM-5.3 (`mistral/zai-glm-5-3`) → Sonnet 5.5 | Fastest in the OMP tool probe (7.6 s vs 21.6/34.6 s for Gemini 3.8 Flash low/high, ~9 s for Sonnet), and it keeps everyday turns off the Claude pool. It is text-only, so images go through `vision`. |
+| `smol` | prewalk / plan-yolo execution target, Ctrl+P cycle, agents bound to `@smol` | Sonnet 5.5 → GLM-5.3 Flash → GPT-6 Luna → Grok Build | Here `smol` implements after Opus has planned, so it needs a capable model. With a small main pool, use GLM-5.3 Flash or Luna instead. |
+| `slow` | deep reasoning (`@slow`), the `architect` agent | Opus 5.5 → Sol 6.1 → Grok 4.7 | Strongest depth model on the largest pool. Each fallback is the depth model of another subscription. |
 | `plan` | the model used while plan mode is active | same chain as `slow` | Planning gets the same depth as `slow`. |
-| `task` | `task` subagents | Sonnet 5.5 → Sol 6.1 → Gemini 4 Hydrogen high → GLM-5.3 → Grok Build | Kept over GLM-5.3 and Gemini 3.8 Flash after a head-to-head ([research](research/TASK-ROLE-EVALUATION.md)). |
+| `task` | `task` subagents | Sonnet 5.5 → Sol 6.1 → GLM-5.3 → Grok Build | Kept over GLM-5.3 and Gemini 3.8 Flash after a head-to-head ([research](research/TASK-ROLE-EVALUATION.md)). |
 | `vision` | answering image questions for text-only models (`read` on an image) | Gemini 3.8 Flash → Sonnet 5.5 → Sol 6.1 → Mistral Large 4 → Grok 4.7 | Accurate on the owner's screenshot, code, UI, and table probes at ~4-5 s with no thinking tokens, and it runs on the Google pool, not Claude's. |
-| `commit` | `omp commit` messages | Haiku 5.5 (low) → Luna → Gemini 3.5 Flash-Lite → Grok Build | 5.6 s vs 44.8 s for Grok Build on the same commit. Short, bounded work. |
-| `tiny` | session titles and small jobs; `sonic` subagents (override below) | Haiku 5.5 (low) → GLM-5.3 Flash → Luna → Gemini 3.5 Flash-Lite → Grok Composer 2.5 Fast | Cheapest capable model for frequent tiny calls. |
-| `widget` | live widgets for background jobs | Haiku 5.5 (low) → Gemini 3.5 Flash-Lite → Grok Composer 2.5 Fast | If unassigned, it resolves like `smol` (Sonnet), which is wasteful for status widgets. |
+| `commit` | `omp commit` messages | Haiku 5.5 (low) → Luna → Grok Build | 5.6 s vs 44.8 s for Grok Build on the same commit. Short, bounded work. |
+| `tiny` | session titles and small jobs; `sonic` subagents (override below) | Haiku 5.5 (low) → GLM-5.3 Flash → Luna → Grok Composer 2.5 Fast | Cheapest capable model for frequent tiny calls. |
+| `widget` | live widgets for background jobs | Haiku 5.5 (low) → Grok Composer 2.5 Fast | If unassigned, it resolves like `smol` (Sonnet), which is wasteful for status widgets. |
 | `advisor` | the per-turn advisor, **only if `advisor.enabled`** (off by default and here) | Gemini 3.8 Flash → Haiku 5.5 (low) → Luna → Grok Build | A cheap reviewer on a non-Claude pool. It does nothing unless you enable it. |
 | `judge` | semantic `find`, the `auto` thinking level, auto-prewalk, `judge()` in eval, smart stop detection | TypeSafe Jev 1.14 → OpenRouter Jev 1.14 → Jev 1.13 → Liquid d1.1 | Needs a native judgment API. No chat subscription includes one; see [Judge options](#judge-options). |
 
@@ -89,11 +87,11 @@ Other settings in the overlay:
 
 | Login (owner's plan) | What it carries here | Without it |
 |---|---|---|
-| `anthropic` (Claude Max 5x, $100) | `smol`/`slow`/`plan`/`task` primaries, Haiku for `commit`/`tiny`/`widget`, many hops | `slow`/`plan` → `openai-codex/gpt-6.1-sol` or Gemini 4 Argon; `task`/`smol` → Sol or GLM-5.3; `commit`/`tiny`/`widget` → Luna or GLM-5.3 Flash. Remove the `anthropic/*` hops. Claude Pro is a fifth of Max 5x, so keep it to one or two roles. |
+| `anthropic` (Claude Max 5x, $100) | `smol`/`slow`/`plan`/`task` primaries, Haiku for `commit`/`tiny`/`widget`, many hops | `slow`/`plan` → `openai-codex/gpt-6.1-sol`; `task`/`smol` → Sol or GLM-5.3; `commit`/`tiny`/`widget` → Luna or GLM-5.3 Flash. Remove the `anthropic/*` hops. Claude Pro is a fifth of Max 5x, so keep it to one or two roles. |
 | `openai-codex` (ChatGPT Plus, $20) | first fallback of the depth chains, Luna hops | Delete those hops; nothing else depends on them. |
-| `google-antigravity` (Google AI Pro, ~$20) | `vision` and `advisor` primaries; Hydrogen hops in `default`, `task`, and `smol`; Argon and Flash-Lite hops | `vision` → Sonnet 5.5 or GLM-5.3 Flash (both read images); `advisor` → Haiku; to drop image generation, turn `generate_image` off. Free Google accounts serve Gemini models but not Antigravity Opus. |
+| `google-antigravity` (Google AI Pro, ~$20) | `vision` and `advisor` primaries (no fallback hops anywhere) | `vision` → Sonnet 5.5 or GLM-5.3 Flash (both read images); `advisor` → Haiku; to drop image generation, turn `generate_image` off. |
 | `xai-oauth` (X Premium, $8) | last hop of most chains | Delete those hops. |
-| `mistral` (Education plan, $5.99) | `default` primary, GLM hops, Large 4 `vision` hop | `default` → `google-antigravity/gemini-4-hydrogen-high` (chain Sonnet 5.5), which is what `default` already runs on whenever Mistral returns 402; or Sonnet 5.5. Delete the `mistral/*` hops and the GLM compaction threshold. |
+| `mistral` (Education plan, $5.99) | `default` primary, GLM hops, Large 4 `vision` hop | `default` → Sonnet 5.5, which is what `default` already runs on whenever Mistral returns 402. Delete the `mistral/*` hops and the GLM compaction threshold. |
 | `typesafe` (prepaid API key) | `judge` primary | `judge` → `openrouter/typesafe/jev-1.14` (same price), or one of the other [judge routes](#judge-options). |
 | `openrouter` (prepaid API key) | `judge` fallbacks only | Delete them and keep `judge` on TypeSafe alone. |
 
@@ -124,10 +122,10 @@ thinking partner on Fable. Skip them unless you want that workflow.
 
 | Role / agent | Model → fallbacks | Purpose |
 |---|---|---|
-| `review` + bundled `reviewer` (`task.agentModelOverrides.reviewer: "@review"`) | Sol 6.1 → Argon → Grok 4.7 → GLM-5.3 → Antigravity Opus 5.5 | PR/diff review by a family other than the author's ([evaluation](research/REVIEW-ROLE-EVALUATION.md)) |
-| `security` + bundled `security-reviewer` | Sonnet 5.5 → Sol 6.1 → Argon → Antigravity Opus 5.5 → Grok 4.7 | vulnerability hunting |
-| `critical` + [agents/critical.md](agents/critical.md) | Sol 6.1 → Argon → Grok 4.7 | adversarial go/no-go before releases, migrations, and destructive commands |
-| `sage` + [agents/sage.md](agents/sage.md) | Fable 5.2 → Opus 5.5 → Antigravity Opus 5.5 → Sol 6.1 → Argon → Grok 4.7 (model-level `anthropic/claude-fable-*` chains) | thinking partner; Fable needs Claude Max |
+| `review` + bundled `reviewer` (`task.agentModelOverrides.reviewer: "@review"`) | Sol 6.1 → Grok 4.7 → GLM-5.3 | PR/diff review by a family other than the author's ([evaluation](research/REVIEW-ROLE-EVALUATION.md)) |
+| `security` + bundled `security-reviewer` | Sonnet 5.5 → Sol 6.1 → Grok 4.7 | vulnerability hunting |
+| `critical` + [agents/critical.md](agents/critical.md) | Sol 6.1 → Grok 4.7 | adversarial go/no-go before releases, migrations, and destructive commands |
+| `sage` + [agents/sage.md](agents/sage.md) | Fable 5.2 → Opus 5.5 → Sol 6.1 → Grok 4.7 (model-level `anthropic/claude-fable-*` chains) | thinking partner; Fable needs Claude Max |
 | [agents/architect.md](agents/architect.md) | binds to `@slow` (no extra role) | read-only design/implementation review |
 
 **To skip them:** remove `review`, `security`, `critical`, and `sage` from `modelRoles`. Remove their
