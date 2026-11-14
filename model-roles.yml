@@ -1,12 +1,12 @@
 ## OMP model-role export — comprehensive quota-aware allocation
-## Generated: 2026-11-13 · Snapshot version: 42
+## Generated: 2026-11-14 · Snapshot version: 43
 ## Stale? See research/RESEARCH-PLAYBOOK.md's staleness check before importing or re-deriving.
 ## Version history and rationale per version: CHANGELOG.md.
 ##
 ## Assumes these logins exist on the target machine:
 ##   - anthropic        (Claude Max 5x, $100/mo — primary workhorse and depth pool: task/smol/slow/plan/security/sage; Haiku for tiny/commit/widget/sonic; Sonnet 5.5 also last default hop and first vision fallback)
 ##   - openai-codex      (ChatGPT Plus, $20/mo — critical + review primary (gpt-6.1-sol); first fallback in slow/plan/security/task and second in vision; Luna in smol/tiny/commit/advisor)
-##   - google-antigravity (Google AI Pro, ~$20/mo — vision/advisor on 3.8 Flash; Gemini 4 Hydrogen high as default's first and task's second fallback, Hydrogen medium in smol (v42); image generation on Nano Banana Pro (gemini-3-pro-image) with Nano Banana 2 (gemini-3.1-flash-image) fallback (v41); Gemini 4 Argon (review/critical first hop, depth-chain tier 2) and Antigravity Opus 5.5 (depth-chain tier 3); lightweight fallbacks on 3.5 Flash-Lite in tiny/commit/widget)
+##   - google-antigravity (Google AI Pro, ~$20/mo — vision/advisor on 3.8 Flash; Gemini 4 Hydrogen high as default's first and task's second fallback, Hydrogen medium in smol (v42); Gemini 4 Argon (review/critical first hop, depth-chain tier 2) and Antigravity Opus 5.5 (depth-chain tier 3); lightweight fallbacks on 3.5 Flash-Lite in tiny/commit/widget)
 ##   - xai-oauth         (X Premium, $8/mo bundled SuperGrok credits — last-tier fallbacks; Grok Build/Composer end the cheap chains)
 ##   - mistral           (Mistral EDU/student Pro plan key via /login mistral — default primary GLM-5.3 (v38) plus fallback hops: smol/tiny GLM-5.3 Flash, task/review GLM-5.3, vision Large 4; no omp usage meter)
 ##   - typesafe          (API key with prepaid credit via /login typesafe — judge primary: typesafe/jev-1.14.0)
@@ -27,7 +27,7 @@ modelRoles:
 
   # --- Model-Kind Roles ---
   judge: typesafe/jev-1.14.0
-  image: google-antigravity/gemini-3-pro-image
+
   # --- Custom Workflow, Review & Architecture Roles ---
   review: openai-codex/gpt-6.1-sol
   security: anthropic/claude-sonnet-5-5
@@ -92,9 +92,6 @@ retry:
       - openrouter/typesafe/jev-1.14
       - openrouter/typesafe/jev-1.13
       - openrouter/liquid/d1.1
-    image:
-      - google-antigravity/gemini-3.1-flash-image
-      - openai-codex/gpt-image-2
     review:
       - google-antigravity/gemini-4-argon
       - xai-oauth/grok-4.7

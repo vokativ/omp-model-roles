@@ -1,6 +1,6 @@
 # OMP model roles: a reasoned setup you can adapt
 
-**Snapshot: 2026-11-13 · v42** (verified on omp 18.18.8). Stale after ~4-6 weeks, or right away if
+**Snapshot: 2026-11-14 · v43** (verified on omp 18.18.8). Stale after ~4-6 weeks, or right away if
 a model below is missing from `omp models`.
 
 This is the owner's [OMP](https://github.com/can1357/oh-my-pi) role and fallback configuration
@@ -70,7 +70,6 @@ whether I want the optional custom roles, and apply nothing until I confirm.
 | `widget` | live widgets for background jobs | Haiku 5.5 (low) → Gemini 3.5 Flash-Lite → Grok Composer 2.5 Fast | If unassigned, it resolves like `smol` (Sonnet), which is wasteful for status widgets. |
 | `advisor` | the per-turn advisor, **only if `advisor.enabled`** (off by default and here) | Gemini 3.8 Flash → Haiku 5.5 (low) → Luna → Grok Build | A cheap reviewer on a non-Claude pool. It does nothing unless you enable it. |
 | `judge` | semantic `find`, the `auto` thinking level, auto-prewalk, `judge()` in eval, smart stop detection | TypeSafe Jev 1.14 → OpenRouter Jev 1.14 → Jev 1.13 → Liquid d1.1 | Needs a native judgment API. No chat subscription includes one; see [Judge options](#judge-options). |
-| `image` | the `generate_image` tool | Nano Banana Pro (`gemini-3-pro-image`) → Nano Banana 2 → `gpt-image-2` | Paid from the Google AI Pro Gemini quota with no separate bill. Pro beat Flash on prompt adherence and text (n=1). |
 
 Overrides: `task.agentModelOverrides.sonic: "@tiny"` sends bundled `sonic` workers to Haiku
 instead of Sonnet.
@@ -83,7 +82,7 @@ Other settings in the overlay:
 - `defaultThinkingLevel: auto` lets the judge pick the thinking effort per prompt.
 - `update.auto: false` because an automatic update (omp 18.18.6) once dropped the
   `google-antigravity` provider; update deliberately instead.
-- `generate_image.enabled: true` turns on image generation.
+- `generate_image.enabled: true` turns on image generation; no `image` role is set, so OMP picks the image model itself.
 - `cycleOrder` sets the Ctrl+P order: `smol`, `default`, `slow`, `sage`.
 
 ## Swapping models by login
@@ -91,8 +90,8 @@ Other settings in the overlay:
 | Login (owner's plan) | What it carries here | Without it |
 |---|---|---|
 | `anthropic` (Claude Max 5x, $100) | `smol`/`slow`/`plan`/`task` primaries, Haiku for `commit`/`tiny`/`widget`, many hops | `slow`/`plan` → `openai-codex/gpt-6.1-sol` or Gemini 4 Argon; `task`/`smol` → Sol or GLM-5.3; `commit`/`tiny`/`widget` → Luna or GLM-5.3 Flash. Remove the `anthropic/*` hops. Claude Pro is a fifth of Max 5x, so keep it to one or two roles. |
-| `openai-codex` (ChatGPT Plus, $20) | first fallback of the depth chains, Luna hops, last image hop | Delete those hops; nothing else depends on them. |
-| `google-antigravity` (Google AI Pro, ~$20) | `vision`, `advisor`, and `image` primaries; Hydrogen hops in `default`, `task`, and `smol`; Argon and Flash-Lite hops | `vision` → Sonnet 5.5 or GLM-5.3 Flash (both read images); `advisor` → Haiku; `image` → `openai-codex/gpt-image-2`, or turn `generate_image` off. Free Google accounts serve Gemini models but not Antigravity Opus. |
+| `openai-codex` (ChatGPT Plus, $20) | first fallback of the depth chains, Luna hops | Delete those hops; nothing else depends on them. |
+| `google-antigravity` (Google AI Pro, ~$20) | `vision` and `advisor` primaries; Hydrogen hops in `default`, `task`, and `smol`; Argon and Flash-Lite hops | `vision` → Sonnet 5.5 or GLM-5.3 Flash (both read images); `advisor` → Haiku; to drop image generation, turn `generate_image` off. Free Google accounts serve Gemini models but not Antigravity Opus. |
 | `xai-oauth` (X Premium, $8) | last hop of most chains | Delete those hops. |
 | `mistral` (Education plan, $5.99) | `default` primary, GLM hops, Large 4 `vision` hop | `default` → `google-antigravity/gemini-4-hydrogen-high` (chain Sonnet 5.5), which is what `default` already runs on whenever Mistral returns 402; or Sonnet 5.5. Delete the `mistral/*` hops and the GLM compaction threshold. |
 | `typesafe` (prepaid API key) | `judge` primary | `judge` → `openrouter/typesafe/jev-1.14` (same price), or one of the other [judge routes](#judge-options). |

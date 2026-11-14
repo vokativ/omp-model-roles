@@ -2,6 +2,14 @@
 
 Version history of `model-roles.yml`, newest first. Rationale and evidence live in `research/`.
 
+## v43
+
+Image generation back to OMP's automatic model selection (owner decision, 2026-11-14). Removes the `image`
+role (`modelRoles.image`) and the `retry.fallbackChains.image` chain; `generate_image.enabled: true` stays so
+the tool remains available and OMP picks the image model itself.
+
+- Revert: none needed beyond restoring the v41 entries below if an explicit image role is wanted again.
+
 ## v42
 
 Gemini 4 Hydrogen in three Google fallback hops (owner decision, 2026-11-13). Evidence and limits:

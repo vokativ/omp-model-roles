@@ -124,14 +124,6 @@ the $150 Vibe Code allowance was used elsewhere (Ubuntu server, omarchy, or Mist
 admin.mistral.ai. Revert: restore `google-antigravity/gemini-3.8-flash` for `default` hop 1 and `task` hop 2, and
 `google-antigravity/gemini-3.5-flash-lite` for `smol` hop 3.
 
-**2026-11-12 (v41), image generation on Antigravity** ([CHANGELOG.md](CHANGELOG.md)):
-`generate_image.enabled: true`; `image` model-kind role on `google-antigravity/gemini-3-pro-image`
-(Nano Banana Pro), chain Nano Banana 2 (`gemini-3.1-flash-image`) $\to$ `openai-codex/gpt-image-2` (last
-resort). Verified with one identical prompt through both Antigravity models: image calls draw the shared
-Gemini weekly/5h subscription buckets (3.7% $\to$ 4.1% weekly for two images; no separate billing, no Argon
-or Claude/GPT movement), and Pro beat Flash on prompt adherence and text rendering in the vision-model
-rubric (n=1 each). `vision` (image analysis) is unchanged; `image` is the generation runner.
-
 **2026-11-11 (v40), from the Fable 5.2 review** ([CHANGELOG.md](CHANGELOG.md)): `extendedContext`
 off; GLM-5.3 keeps its own 150k compaction trigger because the toggle does not shrink its 1M window;
 `commit` falls back to Luna first; `update.auto: false` and `defaultThinkingLevel: auto` are carried in
